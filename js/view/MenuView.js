@@ -53,7 +53,7 @@
       const rows = [
         ['← → / A D', 'Moverse'], ['Z / W / ↑', 'Saltar (mantén para saltar más)'], ['X / Shift', 'Correr'], ['Espacio / C', 'Disparar (EVO3 y Glob Caca)'],
         ['↓ / S en el aire', 'Culetazo (rompe bloques si eres grande)'], ['Esc / Enter', 'Pausa'],
-        ['Editor: clic', 'Colocar'], ['Editor: clic derecho', 'Borrar'], ['Editor: rueda / flechas', 'Desplazar'], ['Editor: Ctrl+Z / Ctrl+Y', 'Deshacer / rehacer'], ['Editor: P', 'Probar nivel'], ['Editor: 1-5', 'Categorías']
+        ['Editor: clic', 'Colocar'], ['Editor: clic derecho', 'Borrar'], ['Editor: rueda / flechas', 'Desplazar'], ['Editor: Ctrl+Z / Ctrl+Y', 'Deshacer / rehacer'], ['Editor: P', 'Probar nivel'], ['Probando: Esc / Ctrl+P', 'Volver al editor al instante'], ['Editor: 1-5', 'Categorías']
       ];
       const tbl = el('table', 'keys');
       rows.forEach(([k, v]) => { const tr = el('tr'); tr.appendChild(el('td', 'k', k)); tr.appendChild(el('td', '', v)); tbl.appendChild(tr); });

@@ -20,6 +20,8 @@
     destroy() { this.offs.forEach((f) => f()); S.View.SoundView.stopMusic(); }
 
     update(dt, inp) {
+      // Al probar un nivel: Esc o Ctrl+P vuelven al editor directamente (sin menú de pausa)
+      if (this.opts.testMode && inp.editExitPressed && !this.finished) { this.app.backToEditor(); return; }
       if (inp.pausePressed && !this.finished) { this.togglePause(); return; }
       if (this.paused || this.finished) return;
       this.acc = Math.min(this.acc + dt, 0.1);

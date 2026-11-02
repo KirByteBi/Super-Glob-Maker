@@ -1,7 +1,102 @@
-El modo historia sera un world-map con 5 mundos diferentes de 9 niveles + castillo.
-Cada uno tendra unos elementos en mente, por ejemplo un mundo de circo puede tener plataformas moviles, rosquillas y mucho enemigo saltarin.
-Cada nivel aporta su idea al mundo, que puede ser diverso, mientras sirva de puente. Los castillos pueden ser fabricas, vortices o espacio-tiempos (cada uno cuenta como uno de estos).
-Pueden haber metas ocultas, palacios de interruptores "!" y demas secretos en los mundos, puede que incluso los palacios esten conectados a todos los niveles.
-La historia aqui es detener a MoonStar, NOeye, NOsense/NOIRrupt de apoderarse del mundo, que quieren sumir en las tinieblas.
+==============================================================
+  SUPER GLOB MAKER - MODO HISTORIA (idea general)
+==============================================================
+Esto es la VISION del modo, no el plan tecnico. Es una idea
+general para tener claro hacia donde va; los detalles de
+implementacion se concretan al construirlo.
 [ESTO NO ES CANON EN GLOB DEFENDERS]
-Si quieres darle mas lore, puedes, esto es una idea general.
+
+
+--------------------------------------------------------------
+ QUE ES
+--------------------------------------------------------------
+Un world-map navegable al estilo Super Mario World: en vez de
+una lista de niveles, el jugador mueve su Glob por un mapa con
+caminos, nodos y secretos.
+
+Estructura: 5 mundos. Cada mundo tiene 9 niveles + 1 castillo
+final. El castillo adopta la forma tematica del mundo: puede ser
+una fabrica, un vortice, un espacio-tiempo... (cada mundo elige
+uno segun su ambientacion).
+
+Cada mundo gira en torno a una idea, pero con variedad: por
+ejemplo, un mundo de circo puede combinar plataformas moviles,
+rosquillas y enemigos saltarines. Cada nivel aporta su propia
+vuelta de tuerca a esa idea, de modo que sirva de puente hacia
+el siguiente sin volverse repetitivo.
+
+
+--------------------------------------------------------------
+ NAVEGACION Y CAMINOS
+--------------------------------------------------------------
+El mapa no es una fila recta: hay CRUCES. En ciertos nodos el
+camino se bifurca y el jugador elige por donde seguir. Unas
+rutas son mas directas; otras, mas largas pero con premios o
+niveles especiales.
+
+Algunos caminos (y nodos) empiezan ocultos y se abren al
+descubrir secretos, de forma que explorar tenga recompensa.
+
+
+--------------------------------------------------------------
+ METAS OCULTAS
+--------------------------------------------------------------
+Ademas de la Medalla normal, un nivel puede esconder una META
+OCULTA (una 2a Medalla secreta, al estilo de las salidas
+secretas de SMW / SMM). Maximo una por zona.
+
+Pasar un nivel por la meta oculta NO cuenta como "completado
+normal", sino como "completado en META OCULTA". En el mapa, un
+nivel con salida secreta se marca con dos huecos (normal +
+oculta) para que se vea que aun queda algo por encontrar.
+
+Encontrar una meta oculta es lo que abre los caminos y nodos
+secretos del mundo.
+
+
+--------------------------------------------------------------
+ PALACIOS DE INTERRUPTORES "!"
+--------------------------------------------------------------
+Hay niveles especiales de PALACIO cuyo objetivo es activar un
+INTERRUPTOR "!" de un color. Al activarlo, los BLOQUES "!" de
+ese mismo color se vuelven solidos.
+
+Lo importante: ese estado es PERSISTENTE. No alterna como los
+bloques A/B; una vez activado, se recuerda entre niveles del
+mundo (y potencialmente entre zonas). Eso cambia como se juegan
+otros niveles despues: caminos que antes no existian aparecen.
+
+Activar el interruptor de un palacio tambien cuenta como pasar
+ese nivel por META OCULTA.
+
+Idea potente a futuro: poder ENLAZAR que palacio activa los
+bloques "!" de que nivel/zona, dando mucha libertad en el
+diseno del mundo (un nivel puede "preparar" otro).
+
+Colores: reutilizar los 3 de los bloques A/B (rojo, verde,
+rosa) para que la paleta sea coherente.
+
+
+--------------------------------------------------------------
+ LA HISTORIA
+--------------------------------------------------------------
+El mundo esta amenazado por un grupo que quiere sumirlo en las
+tinieblas: MoonStar, NOeye y NOsense / NOIRrupt. El objetivo del
+jugador es detenerlos, mundo a mundo, hasta el enfrentamiento
+final.
+
+Esto es solo el marco. Hay libertad para ampliar el lore
+(motivaciones, jefes intermedios, por que cada mundo esta
+corrompido, etc.) mientras encaje con esa premisa.
+
+
+--------------------------------------------------------------
+ EN RESUMEN (lo que define el modo)
+--------------------------------------------------------------
+  - 5 mundos x (9 niveles + castillo)
+  - World-map navegable con el Glob, no una lista
+  - Cruces: caminos a elegir
+  - Metas ocultas que abren rutas y nodos secretos
+  - Palacios con interruptores "!" de estado persistente
+  - Castillos tematicos (fabrica / vortice / espacio-tiempo...)
+  - Detener a MoonStar, NOeye y NOsense / NOIRrupt

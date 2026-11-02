@@ -17,16 +17,21 @@
   class InputController {
     constructor() {
       this.keys = {}; this.prev = {}; this.enabled = true;
+      // Volver al editor al vuelo: Esc o Ctrl+P mientras pruebas un nivel.
+      // Se consume una sola vez (editExit) desde el GameController en modo prueba.
+      this.editExit = false;
       window.addEventListener('keydown', (e) => {
         const a = acts(e.code);
         if (!a || !this.enabled) return;
         if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+        if (!e.repeat && (e.code === 'Escape' || (e.code === 'KeyP' && (e.ctrlKey || e.metaKey)))) this.editExit = true;
         a.forEach((k) => { this.keys[k] = true; });
         if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault();
       });
       window.addEventListener('keyup', (e) => { const a = acts(e.code); if (a) a.forEach((k) => { this.keys[k] = false; }); });
       window.addEventListener('blur', () => { this.keys = {}; });
     }
+
     gamepad() {
       const out = {};
       const pads = navigator.getGamepads ? navigator.getGamepads() : [];
@@ -53,6 +58,8 @@
         s[a + 'Pressed'] = s[a] && !this.prev[a];
       });
       ACTIONS.forEach((a) => { this.prev[a] = s[a]; });
+      // Señal de "volver al editor" (Esc o Ctrl+P), se consume una sola vez
+      s.editExitPressed = this.editExit; this.editExit = false;
       return s;
     }
     clear() { this.keys = {}; }

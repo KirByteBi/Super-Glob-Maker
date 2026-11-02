@@ -66,9 +66,11 @@
   // Raíles diagonales: D1 sube hacia la derecha (↗↙), D2 baja hacia la derecha (↘↖)
   class PlatformD1 extends Platform { constructor(tx, ty) { super(tx, ty, 'platformD1', false, -1); } }
   class PlatformD2 extends Platform { constructor(tx, ty) { super(tx, ty, 'platformD2', false, 1); } }
-  // Setas (semisólido): en Darkness Forest Corrupto se mueven; en el resto de casos están quietas
-  class ShroomH extends Platform { constructor(tx, ty) { super(tx, ty, 'shroomH', false); this.r = 2; } moves(g) { return !!g.fx.movingShrooms; } }
-  class ShroomV extends Platform { constructor(tx, ty) { super(tx, ty, 'shroomV', true); this.r = 2; } moves(g) { return !!g.fx.movingShrooms; } }
+  // Setas (semisólido): solo se mueven mientras hay alguien encima (el jugador montado).
+  // En Darkness Forest Corrupto (movingShrooms) se mueven siempre, aunque nadie las pise.
+  // Si nadie va encima se quedan quietas donde estén (conservan la fase 'ph').
+  class ShroomH extends Platform { constructor(tx, ty) { super(tx, ty, 'shroomH', false); this.r = 2; } moves(g) { return !!g.fx.movingShrooms || (g.player && g.player.ridePlat === this); } }
+  class ShroomV extends Platform { constructor(tx, ty) { super(tx, ty, 'shroomV', true); this.r = 2; } moves(g) { return !!g.fx.movingShrooms || (g.player && g.player.ridePlat === this); } }
 
   // Rosquilla que cae (se crea cuando te quedas encima de un bloque Rosquilla)
   class DonutFall extends Entity {

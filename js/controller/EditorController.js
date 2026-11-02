@@ -121,7 +121,7 @@
         if (ctrl && e.code === 'KeyZ') { e.preventDefault(); e.shiftKey ? m.redo() : m.undo(); }
         else if (ctrl && e.code === 'KeyY') { e.preventDefault(); m.redo(); }
         else if (ctrl && e.code === 'KeyS') { e.preventDefault(); this.save(); }
-        else if (e.code === 'KeyP') this.play();
+        else if (e.code === 'KeyP' && !e.repeat) this.play();
         else if (/^Digit[1-5]$/.test(e.code)) {
           const cat = S.Model.Catalog.PALETTE[+e.code.slice(5) - 1];
           if (cat) { this.view.cat = cat.id; this.view.buildToolbar(m, this.handlers()); }
