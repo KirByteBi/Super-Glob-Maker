@@ -1,0 +1,356 @@
+==============================================================
+  SUPER GLOB MAKER - PLANNING
+==============================================================
+Orden: primero el 2D completo, despues el 3D.
+Leyenda: [X] hecho   [~] a medias   [ ] pendiente
+
+
+--------------------------------------------------------------
+ 0a. META OCULTA E INTERRUPTORES "!"   (PRIORIDAD, pendiente)
+--------------------------------------------------------------
+Dos formas nuevas de pasar un nivel. Las dos cuentan como
+"completado en META OCULTA" (no como completado normal), al
+estilo de las salidas secretas de SMW / SMM.
+
+[ ] META OCULTA: una 2a Medalla escondida (aparte de la normal).
+    Maximo 1 por zona. El nivel se marca con dos huecos
+    (normal + oculta) en Mis niveles y Modo Historia.
+[ ] INTERRUPTOR "!" + BLOQUES "!":
+    - Interruptor "!" de color que, al activarse, vuelve solidos
+      los bloques "!" de ese color.
+    - A diferencia del A/B, el estado es PERSISTENTE: se recuerda
+      entre zonas y entre niveles del Modo Historia (no alterna).
+    - Activarlo cuenta como pasar el nivel por meta oculta.
+    - ENLACE: se elige que mapa/zona hace de interruptor y a que
+      mapa/zona activa los bloques. Solo se puede enlazar si YA
+      hay un interruptor (de ahi "a partir del 2o nivel, o antes
+      si ya tenias uno"). Da mucha libertad en Modo Historia.
+    - Reusa el selector de SUBZONAS / ENLACES (seccion 5).
+    - Colores: reutilizar los 3 de los A/B (rojo, verde, rosa).
+
+
+--------------------------------------------------------------
+ 0. ESTADO ACTUAL
+--------------------------------------------------------------
+[X] Estructura MVC: js/model, js/view, js/controller
+    (el modelo avisa con eventos y las vistas solo dibujan)
+[X] Jugable: menus, Modo Historia, editor, guardado, musica,
+    sonidos, 12 mapas, modo Paz / Corrupto
+[X] Controles: Espacio (o C) dispara, Z / W / Flecha arriba salta,
+    X / Shift corre
+[X] Limpieza: duplicados de Enemigos/ borrados,
+    capturas guardadas en miniaturas/
+[~] Ampliacion a medio cambio:
+    [X] Catalog.js nuevo (Pyces, A/B, pendientes, rosquillas,
+        nota, POW, tuberia, capsulas, mecanismos)
+    [X] Level.js traduce los nombres antiguos de enemigos
+        y guarda el recorrido de cada objeto
+    [X] Mecanica (modelo) terminada y probada: Physics (pendientes,
+        A/B), todos los Pyces (Enemies.js + EnemiesSpecial.js),
+        objetos y mecanismos (Objects.js), GameModel (tuberias,
+        puertas, llaves, nota, POW, rosquillas, P, explosiones,
+        efectos Corruptos), 3 modos de inicio
+    [~] VISTA: dibujar Pyces, bloques y mecanismos nuevos.
+        [X] Pyces: ya se dibujan (PNG volteado segun dir, como
+            los Globs). Faltaba incluir PyceArt.js en index.html
+            y que Sprites.drawEntity cayera al PNG cuando no hay
+            dibujo procedural. Tambien en la paleta del editor.
+        [ ] Bloques y mecanismos nuevos: siguen invisibles.
+[-] Descartado por ahora: redibujar los Pyces de perfil.
+    Con voltearlos horizontalmente ya vale para la mayoria;
+    el perfil estilo ordenador queda para los que lo necesiten.
+
+
+--------------------------------------------------------------
+ 1. PYCES REDIBUJADOS DE PERFIL
+--------------------------------------------------------------
+Los Pyces son ordenadores (monitor + teclado + raton).
+Se redibujan de lado, no se deforma el dibujo original.
+
+[ ] Todos miran a la izquierda (<-); el juego los voltea al girarse
+[ ] Perfil de ordenador: monitor de lado (pantalla a la izquierda,
+    carcasa detras), teclado de canto, raton colgando del cable
+[ ] Estilo Glob: contorno negro grueso, colores planos; se mantienen
+    los rasgos de cada uno (gorros, alas, armas, cara de la pantalla)
+[ ] PNG transparente en Enemigos/Lateral/<id>.png
+    (el frontal original se queda como referencia)
+[ ] Poses extra solo si hacen falta: SkeleBone desmontado,
+    Bomb con mecha encendida, Wingel sin alas, SnowCapsule en capsula
+[ ] Hoja de muestra en miniaturas/ para aprobarla antes de meterlos
+
+
+--------------------------------------------------------------
+ 2. ENEMIGOS PYCE (mas basico el dibujo = enemigo mas sencillo)
+--------------------------------------------------------------
+Nivel 1
+  [ ] Stupid Pyce ........ como un Goomba
+  [ ] SO Pyce ............ casi transparente, gira en los bordes
+  [ ] Symbol Pyce ........ va a saltitos
+  [ ] Pyce Glob .......... deja un charco al morir
+Nivel 2
+  [ ] Pyce 2.0 ........... 2 golpes; al primero se enfada y acelera
+  [ ] Guest Pyce ......... ataque de espada sencillo
+  [ ] Noob Pyce .......... dispara
+  [ ] Elf Pyce ........... brinca hacia ti
+  [ ] Umbrella Pyce ...... baja flotando
+  [ ] ZomPyce ............ se levanta una vez
+Nivel 3
+  [ ] Knight Pyce ........ inmune a proyectiles
+  [ ] Rebel Pyce ......... su spray crea niebla
+  [ ] SkeleBone Pyce ..... se desmonta al morir, se recompone,
+                           lanza huesos
+  [ ] Crystal Pyce ....... no se puede pisar
+  [ ] SnowCapsule Pyce ... se vuelve capsula que se patea
+  [ ] Festive Pyce ....... lanza regalos
+  [ ] Bomb / ToyBomb ..... explotan
+  [ ] Wingel Pyce ........ vuela; al pisarlo pierde las alas
+  [ ] Strechy Pyce ....... se estira hacia arriba
+  [ ] Flower Pyce ........ planta fija que escupe petalos
+  [ ] Cannon Pycer ....... cañon
+Nivel 4
+  [ ] Ghost Pyce ......... avanza cuando le das la espalda
+  [ ] HoloPyce ........... a ratos es intangible
+  [ ] 4motions Pyce ...... cambia de emocion y de ataque
+Nivel 5
+  [ ] 1x1x1x1 Pyce ....... atraviesa paredes
+
+Pyces acuaticos (familia Pysh)
+  Viven en el agua, pero pueden ponerse fuera; ahi son peores.
+  Funcionan en cualquier liquido que les pongas (agua, lava,
+  veneno, gelatina...).
+  - Si tocan un liquido peligroso se transforman:
+      lava -> version ignea, veneno -> version venenosa.
+    Transformados no se pueden pisar (quema / envenena);
+    solo disparos, Brillo Estelar o caparazon.
+  - Sin agua ni liquido cerca solo dan brincos pequenos.
+  [ ] Pysh ............... (nivel 2) el basico: nada de lado
+                           a lado, gira en las paredes y salta
+                           fuera del agua/liquido. 1 golpe.
+  [ ] Clown Pysh ......... (nivel 3) version fuerte de Pysh:
+                           mas rapido y salta mas alto haciendo
+                           arcos hacia ti. 2 golpes.
+  [ ] Axolotl Pyce ....... (nivel 3) nada despacio y dispara
+                           burbujas que te persiguen un poco.
+                           Fuera del agua camina lento y
+                           escupe menos.
+  [ ] Shark Pyce ......... (nivel 4) patrulla y te embiste a toda
+                           velocidad si te pones en su linea.
+                           No se puede pisar (solo disparos,
+                           Brillo Estelar o caparazon).
+                           Fuera del agua se arrastra y solo
+                           embiste en distancias cortas.
+
+Raros (10 pisotones, dan 1UP al morir)
+  [ ] Mimic Pyce, Dirty Pyce, NOmic Pyce
+  [ ] Golden Mimic Pyce (da 3UP y suelta monedas)
+
+Jefes
+  [ ] NOeye Pyce ......... como Boom Boom, 3 golpes
+  [ ] MoonStar Pyce ...... como Bowser, 5 golpes, jefe final
+
+Jefes fantasma (NOIRrupt = version fuerte de NOsense)
+  Comun: atraviesan paredes, se esconden si los miras y te
+  persiguen si les das la espalda. Los disparos no les hacen nada.
+  Tras atacar se marean unos segundos: ahi se les pisa.
+  [ ] NOsense Pyce ....... 4 golpes. Se mueve sin sentido
+                           (embestidas en direcciones al azar)
+                           y lanza ojos.
+  [ ] NOIRrupt Pyce ...... 6 golpes. Igual pero mas rapido, se
+                           teletransporta a tu lado, dispara ojos
+                           en abanico e invoca Ghost Pyces.
+
+Reglas generales
+  [ ] Los enemigos de tierra nadan bajo el agua (como en SMM)
+  [ ] Se pueden pisar, disparar, golpear con un bloque desde abajo
+      o aplastar con el culetazo
+
+
+--------------------------------------------------------------
+ 3. ELEMENTOS DE SMM1 Y SMM2
+--------------------------------------------------------------
+[ ] Semisolidos tematicos, 2 variantes por mapa
+      Ciudad ... edificio con tejado / vigas
+      Playa .... muelle del puerto / toldo
+      Fabrica .. vigas en construccion / andamio
+      (el resto de mapas ya estan definidos en Themes.js)
+[ ] Pendientes: empinada (45 grados) y suave (2 casillas)
+[ ] Rosquilla (cae si te quedas encima), Bloque Nota, Bloque POW,
+    bloque Pincho, hielo, cintas
+[ ] Bloques A/B: 3 pares de colores (rojo/azul, verde/amarillo,
+    rosa/cian) = 6 bloques + 3 interruptores
+[ ] Interruptor P (monedas <-> bloques)
+[ ] Tuberias y puertas enlazadas
+      Cada nivel: zona base + hasta 2 subzonas (3 en total).
+      Tuberias y puertas pueden llevar a cualquiera de ellas
+      (tambien dentro de la misma zona).
+      Puertas: normales o con llave (las dos)
+      Tuberias: normales o con tapa (la tapa se abre con llave)
+      Llave: se recoge, la llevas encima y se gasta al abrir;
+      una vez abierta, la puerta / tuberia queda abierta
+[ ] Barra Estelar (como la Fire Bar), carambanos, muelles,
+    plataformas <-> y vertical
+[ ] Setas moviles (semisolido) con recorrido ajustable
+[ ] Capsulas de personaje: te convierten en el Glob que elijas
+[ ] Cajas con cualquier contenido (tambien llaves), monedas rojas
+[ ] Railes para plataformas y enemigos
+[ ] Condiciones de victoria (sin saltar, matar X enemigos,
+    coger X monedas...)
+[ ] Bloques de hielo y de luz adaptados a Paz / Corrupto
+
+
+--------------------------------------------------------------
+ 4. MAPAS Y MODO CORRUPTO   ((N) = se vuelve de noche)
+--------------------------------------------------------------
+[~] Gelatin Lake ............ rebote en cadena tras saltar
+[~] Urbanistic Road (N) ..... apagon: solo dan luz tu Glob
+                              y los proyectiles
+[ ] Sunlight Seaside (N) .... el agua se vuelve veneno y mata
+[~] Spooktacular Ruins ->
+    Aridez Escalofriante (N)  enemigos espectrales, solo se ven
+                              de cerca
+[~] Pumpkin Circus .......... enemigos, obstaculos y musica
+                              mas rapidos
+[X] Frosty Christmas (N) .... ventisca: todo resbala
+[X] Vortice Oscuro .......... gravedad del vacio
+    (fortaleza aerea, suelo lila y negro)
+[ ] Abismo Gelatinoso ....... saltos altos, gravedad baja,
+    (acuatico)                enemigos que nadan
+[~] Darkness Forest ......... Paz: bosque normal de arboles.
+                              Corrupto: bosque de setas
+                              alucinogenas y las setas se mueven
+                              arriba/abajo o izq/der
+                              (recorrido elegido en el editor)
+[X] Cotton Skies ............ espejo
+[ ] Nucleo Fundido .......... lluvia de meteoritos
+[ ] Fabrica PixelStar ->
+    MadStars (castillo) ..... las nubes desaparecen tras 1 s encima
+                              y lanzan rayos hacia abajo
+
+MAPAS NUEVOS
+[ ] Gambling Gaming ......... casino de verdad (luces de neon,
+                              mesas, fichas, ruletas, tragaperras,
+                              cartas, dados). No es una casa
+                              encantada: solo ocupa su HUECO de
+                              SMM (el nivel "laberinto con trucos":
+                              puertas trampa, salidas falsas,
+                              caminos que se repiten)
+    Corrupto: cada cierto tiempo gira
+    una ruleta y cambia una regla del nivel (enemigos dobles,
+    cajas con monedas falsas, gravedad invertida un rato...)
+[ ] Time Attack ............. espacio-tiempo (relojes, engranajes,
+                              portales)
+    Corrupto: el tiempo, enemigos y obstaculos va a ratos mas lento y a ratos mas rapido
+[ ] Sound Discotech ......... musical (altavoces, pista de baile,
+                              notas)
+    Corrupto: plataformas y enemigos se mueven al ritmo de la musica
+[ ] Event Hub ............... interdimensional verde
+    Corrupto: la salida esta cerrada y solo se abre recogiendo
+    las Medallas del nivel (como las monedas llave)
+
+Cada mapa nuevo necesita: paleta Paz/Corrupto, fondo con parallax,
+2 semisolidos, musica, nivel de Modo Historia y su efecto Corrupto.
+Semisolidos propuestos:
+  Gambling Gaming .. mesa de poker / pila de fichas
+  Time Attack ...... reloj de arena / engranaje
+  Sound Discotech .. altavoz / teclado de piano
+  Event Hub ........ plataforma portal / cristal verde
+
+
+--------------------------------------------------------------
+ 5. EDITOR
+--------------------------------------------------------------
+[X] Al crear un nivel nuevo se elige como empieza (3 modos):
+      Clasico .......... solo la zona del spawn tiene tierra;
+                         el resto del nivel esta vacio
+      Aireado .......... sin suelo inicial (todo vacio)
+      Campo de Pruebas . suelo firme en todo el nivel
+                         (el estandar, opcion por defecto)
+[ ] Paleta por categorias: Terreno, Bloques, Pyces, Pyces raros,
+    Objetos, Mecanismos, Especial
+[ ] Clic otra vez sobre un objeto con recorrido para cambiar
+    su tamano (setas, plataformas, barra estelar)
+[ ] Selector de semisolido A/B con la variante del mapa actual
+[ ] Enlazar tuberias y puertas
+[ ] Subzonas: zona base + hasta 2 subzonas (3 en total), con pestanas para cambiar de
+    zona y elegir a cual lleva cada tuberia / puerta
+    (cada subzona con su propio mapa y modo Paz/Corrupto)
+[ ] Condicion de victoria y numero de Medallas (para Event Hub)
+[ ] Comprobar que el nivel se puede superar antes de guardarlo
+[ ] El tiempo del nivel se puede modificar, de 10 hasta 500 
+
+--------------------------------------------------------------
+ 5b. NIVELES GUARDADOS Y CUENTA GLOB DEFENDERS
+--------------------------------------------------------------
+[X] Limite: 207 niveles guardados como maximo
+    (al llegar al limite avisa y no deja guardar mas;
+    el contador se ve en "Mis niveles")
+[ ] Vincular la cuenta con Glob Defenders (igual que Star Jump):
+    +1/4 de espacio -> hasta 258 niveles
+[ ] Mostrar tus niveles en el perfil de Glob Defenders
+[ ] Boton con iconito de internet (globo) en el menu = iniciar
+    sesion. Vincular = iniciar sesion con tu cuenta de GlD:
+    Super Glob Maker no tiene cuentas propias, usas la misma
+    cuenta (usuario y contrasena de GlD). Con la sesion iniciada:
+      - se ve tu usuario de GlD junto al iconito
+      - tus niveles se guardan en tu cuenta de GlD (y el limite
+        sube a 258)
+      - cerrar sesion = desvincular (los niveles se quedan en
+        este dispositivo)
+    Para que sirve vincular:
+      - Guardar tus niveles en la nube: los tienes estes donde
+        estes (otro PC, otro navegador, movil) al iniciar sesion
+      - Publicar niveles para que otros jugadores los jueguen
+        (con nombre del autor = tu usuario de GlD)
+      - Enseñar tus niveles en el perfil de GlD
+      - Mas espacio: 258 niveles en vez de 207
+[ ] Niveles publicados: lista para buscar y jugar niveles de
+    otros, marcar "me gusta", contador de partidas y de
+    jugadores que lo han superado (como SMM)
+
+Como lo hace Star Jump (leido de StarJump/js/game.js, sin tocarlo):
+  - Servidor: Supabase de GlD (https://ptrbixfozzumtzraxtsm.supabase.co)
+    con la clave publica "publishable" (los datos van protegidos
+    por RLS). Libreria supabase-js por CDN.
+  - Inicio de sesion: signInWithPassword con el email
+    "<usuario>@accounts.glob-defenders.invalid" + contrasena.
+    La contrasena nunca se guarda, solo el token de sesion.
+  - Vinculo: funcion rpc link_star_jump_account.
+    Progreso en la nube: tabla star_jump_progress.
+  - Desvincular: cerrar sesion local.
+
+Para Super Glob Maker hace falta en el Supabase de GlD:
+  - tabla del vinculo (sgm_links) y tabla de niveles (sgm_levels)
+    con RLS: cada usuario solo lee/escribe lo suyo; los niveles
+    marcados como publicos se pueden ver en el perfil de GlD.
+  - funcion rpc link_super_glob_maker_account.
+  !! Crear tablas en el Supabase de Glob Defenders es un cambio en
+     PRODUCCION: preparo el SQL y te lo enseno antes de aplicarlo.
+  !! El perfil de Glob Defenders (la web) tambien tendra que leer sgm_levels
+     para ensenar los niveles: eso es en el codigo de GlD.
+
+
+--------------------------------------------------------------
+ 6. PULIDO Y PRUEBAS
+--------------------------------------------------------------
+[ ] Prueba automatica: todos los mapas x personajes x modos
+[ ] Capturas de cada mapa y modo en miniaturas/
+[ ] Modo Historia con 16 mapas en orden de dificultad
+[ ] Balance de enemigos y power-ups
+
+
+--------------------------------------------------------------
+ 7. MODO 3D (cuando el 2D este terminado)
+--------------------------------------------------------------
+Estilo Super Mario 64 / Galaxy 1 y 2, con Globs y Medallas
+en vez de estrellas.
+
+[ ] Descargar Blender x64 (el zip del pendrive es ARM64
+    y no funciona en este PC)
+[ ] Motor Three.js en el navegador, tambien con MVC
+[ ] Modelos de Globs, Pyces y Medallas hechos con Blender por
+    script, exportados a .glb
+[ ] Movimiento 3D: salto triple, culetazo, salto de pared,
+    camara orbital
+[ ] Mundos con planetoides y gravedad esferica (como Galaxy), o mundos cuadrados al estilo SM64. Ambos entran dentro del plan.
+[ ] Editor 3D de niveles por bloques
+[ ] Los mismos mapas y el modo Corrupto, adaptados al 3D

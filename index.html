@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Glob Maker</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="stage">
+    <canvas id="game" width="1024" height="576" aria-label="Super Glob Maker"></canvas>
+    <div id="editor-ui"></div>
+    <div id="screen" class="screen"></div>
+    <div id="modal"></div>
+    <div id="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <!-- Núcleo -->
+  <script src="js/core/sgm.js"></script>
+  <!-- Modelo -->
+  <script src="js/model/Characters.js"></script>
+  <script src="js/model/Themes.js"></script>
+  <script src="js/model/Catalog.js"></script>
+  <script src="js/model/Level.js"></script>
+  <script src="js/model/LevelStorage.js"></script>
+  <script src="js/model/GldAccount.js"></script>
+  <script src="js/model/Physics.js"></script>
+  <script src="js/model/entities/Entity.js"></script>
+  <script src="js/model/entities/Enemies.js"></script>
+  <script src="js/model/entities/EnemiesSpecial.js"></script>
+  <script src="js/model/entities/Objects.js"></script>
+  <script src="js/model/Player.js"></script>
+  <script src="js/model/GameModel.js"></script>
+  <script src="js/model/EditorModel.js"></script>
+  <script src="js/model/SampleLevels.js"></script>
+  <!-- Vista -->
+  <script src="js/view/PyceArt.js"></script>
+  <script src="js/view/Assets.js"></script>
+  <script src="js/view/Sprites.js"></script>
+  <script src="js/view/BackgroundView.js"></script>
+  <script src="js/view/ParticlesView.js"></script>
+  <script src="js/view/WorldRenderer.js"></script>
+  <script src="js/view/HUDView.js"></script>
+  <script src="js/view/SoundView.js"></script>
+  <script src="js/view/EditorView.js"></script>
+  <script src="js/view/MenuView.js"></script>
+  <!-- Controlador -->
+  <script src="js/controller/InputController.js"></script>
+  <script src="js/controller/GameController.js"></script>
+  <script src="js/controller/EditorController.js"></script>
+  <script src="js/controller/AppController.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

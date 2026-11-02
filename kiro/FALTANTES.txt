@@ -1,0 +1,302 @@
+==============================================================
+  SUPER GLOB MAKER - LO QUE FALTA
+==============================================================
+Resumen: la MECANICA del 2D esta casi entera y probada.
+Lo que mas falta es la VISTA (dibujarlo todo), varias partes
+del editor, los 4 mapas nuevos, la cuenta de GlD y el 3D.
+
+Leyenda:
+  (funciona, invisible) = ya funciona en partida pero todavia
+                          no se dibuja en pantalla
+  (sin hacer)           = no existe todavia
+
+
+--------------------------------------------------------------
+ 0. META OCULTA E INTERRUPTORES "!"  <- PRIORIDAD (sin hacer)
+--------------------------------------------------------------
+Dos formas nuevas de pasar un nivel. Las dos, en vez de contar
+como "completado normal", cuentan como "completado en META
+OCULTA" (como las salidas secretas de SMW / SMM).
+
+A) META OCULTA  [HECHO]
+   - Objeto 'goalhidden' (2a Medalla, tenue y con "?"). Tocarla
+     da clear por meta oculta (secretClear + evento goal/cleared
+     con secret:true). Max 1 por zona en el editor. Verificado.
+   - Pendiente de la UI: mostrar los dos huecos (normal/oculta)
+     en Mis niveles / Modo Historia.
+
+B) INTERRUPTOR "!" + BLOQUES "!"  [HECHO en modelo]
+   - Interruptor "!" (objeto 2x2, 3 colores: exswitch0/1/2).
+     Bloques "!" (tiles EX0/EX1/EX2): empiezan intangibles y se
+     vuelven solidos al activar su color. Estado PERSISTENTE en
+     la partida (g.exState, se conserva entre zonas). Activar un
+     interruptor cuenta como meta oculta. Verificado.
+   - Pendiente: persistencia ENTRE niveles (la conectara el
+     Modo Historia mejorado) y el enlace interruptor->bloques de
+     otro mapa (reusa el sistema de zonas). Idea original:
+   - Al activarlo se encienden (se vuelven solidos) los bloques
+     "!" de su mismo color.
+   - Activar un interruptor "!" tambien cuenta como pasar el
+     nivel por META OCULTA.
+   - ENLACE (lo potente): se elige QUE mapa/zona hace de
+     interruptor y a QUE mapa/zona activa los bloques.
+       * Solo se puede crear el enlace si YA existe un
+         interruptor que enlazar (si no, no tiene sentido:
+         "a partir del 2o nivel, o antes si ya tenias uno").
+       * A nivel Modo Historia esto da mucha libertad: un nivel
+         puede activar bloques de otro nivel.
+   - Depende del sistema de SUBZONAS / ENLACES (seccion 2):
+     reusar ese mismo selector para elegir interruptor->bloques.
+
+Colores propuestos para "!": reutilizar los 3 pares de color
+de los A/B (rojo, verde, rosa) para que la paleta sea coherente.
+
+
+--------------------------------------------------------------
+ 1. DIBUJAR (VISTA)  <- lo siguiente
+--------------------------------------------------------------
+Pyces: YA SE DIBUJAN (hecho).
+  - Antes eran invisibles por dos motivos: PyceArt.js no estaba
+    incluido en index.html, y Sprites.drawEntity solo pintaba
+    los dibujos procedurales (D[type]) y hacia return con los
+    Pyces. Arreglado: ahora drawEntity usa el PNG del Pyce
+    (Assets.pyce(type)) cuando no hay dibujo procedural, y lo
+    voltea segun dir igual que a los Globs. Tambien en la paleta
+    del editor (drawIcon). Verificado: 38 Pyces se dibujan y
+    voltean bien.
+  - De momento se usa el PNG frontal volteado (como pediste:
+    con invertirlos ya vale para muchos). El redibujo de perfil
+    estilo ordenador queda PENDIENTE solo para los que lo
+    necesiten, con hoja de muestra para aprobarla antes.
+  - Poses extra PENDIENTES: SkeleBone desmontado, Bomb con mecha,
+    Wingel sin alas, SnowCapsule en capsula, Pysh igneo
+    y venenoso, jefes fantasma mareados
+
+Bloques (funciona, invisible):
+  - Semisolido B, Rosquilla, Bloque Nota, POW, Tuberia
+  - Bloques A/B (6) e interruptores (3)
+  - Pendientes empinadas y suaves
+
+Semisolidos tematicos con el dibujo de cada mapa
+(edificio con tejado, vigas, muelle, toldo, andamio...)
+  - Ahora todos usan el mismo dibujo generico (sin hacer)
+
+Objetos y mecanismos (funciona, invisible):
+  - Cápsulas de personaje, Llave, Interruptor P
+  - Puertas (normal / con llave), entradas de tuberia
+    (normal / con tapa)
+  - Setas moviles, Barra Estelar, carambanos
+  - Proyectiles de los Pyces (balas, huesos, regalos,
+    petalos, burbujas, ojos, lagrimas, espadazo, onda)
+  - Explosion, niebla del spray de Rebel, meteoritos,
+    rayos de las nubes, rosquilla cayendo, monedas del
+    Golden Mimic
+  - La llave que llevas encima en el HUD
+
+Efectos visuales del modo Corrupto:
+  - Sunlight Seaside: el agua debe verse venenosa (sin hacer)
+  - Darkness Forest Corrupto: los semisolidos con forma de
+    seta alucinogena (sin hacer)
+  - Particulas y sonidos de los eventos nuevos (puerta,
+    tuberia, llave, POW, A/B, P, explosion...) (sin hacer)
+
+
+--------------------------------------------------------------
+ 1b. MONEDAS (familia nueva)   [HECHO en modelo + vista basica]
+--------------------------------------------------------------
+Hecho: tiles RCOIN(38) BCOIN(39) GCOIN(40) KCOIN=rosa(41)
+C10(42) C30(43) C50(44) C100(45), interruptor G SWG(46) y
+verde oculta GHID(47). Valores en Catalog.COIN_VALUE; se
+recogen en GameModel.collectTiles. Roja = 8->1UP. Verde oculta
+solo con interruptor G activo (gSwitch/gTimer, 10s como el P).
+FIFO de 8 rojas en el editor (EditorModel.placeRedCoin). Se
+dibujan todas (vista basica) y estan en la paleta de Bloques.
+Verificado (14/14) y regresion 144/0.
+Pendiente: Monedas ESTRELLA coleccionables (tipo Star Coin) con
+sus reskins; iconos mas trabajados; contador en el HUD.
+--------------------------------------------------------------
+A) Monedas de VALOR (suman al marcador/monedas):
+   - Amarilla (normal) ....... ya existe
+   - Roja .................... coleccionable; juntar 8 = 1UP
+                               (estilo SM64). Set de EXACTAMENTE
+                               8 por nivel: en el editor, al
+                               poner la 9a desaparece la mas
+                               vieja (cola FIFO, maximo 8).
+   - Azul .................... vale un poco mas que la amarilla
+   - Verde ................... aparece al tocar un INTERRUPTOR G
+                               (como el P pero verde, con "G")
+   - Rosa .................... sale de sitios ocultos; vale un
+                               poco mas que la verde
+   - De 10 / 30 / 50 / 100 ... monedas de valor multiple
+B) Monedas ESTRELLA (coleccionables del nivel, estilo Star Coin;
+   no dan puntos, se coleccionan). Las reskins solo cambian el
+   dibujo, no el comportamiento:
+   - Estandar
+   - Lunares (version de modo Corrupto)
+   - Reskins de la estandar: Gigamonedas rosadas, Estrellas
+     verdes/rojas
+   - Reskins de la lunar: Monedas NOeye, Estrellas magicas
+     (guino a MoonStar)
+   Modelo: un tipo con campo 'skin'; valor coleccionable igual.
+
+
+--------------------------------------------------------------
+ 2. ELEMENTOS DE SMM QUE FALTAN (sin hacer)
+--------------------------------------------------------------
+  - [HECHO en modelo] Subzonas: zona base + hasta 2 subzonas
+    (3 zonas). Level.subs guarda cada subzona (tiles/objetos/
+    tema/modo/win). GameModel.enterZone recarga la zona.
+    Enlace MANUAL: cada tuberia/puerta puede llevar a o.to =
+    {z: zona, i: gizmo}; si no, enlaza a la siguiente como antes.
+    Retrocompatible (nivel sin subs = 1 zona). Verificado 10/10.
+  - [HECHO] UI del editor para subzonas: pestanas de zona
+    (Base / Sub 1 / Sub 2) con boton + para anadir y ✕ para
+    borrar; herramienta "Enlazar" en la paleta Especial (clic
+    origen -> clic destino, puede cruzar zonas). Verificado 13/13.
+  - Elegir a mano a que tuberia / puerta lleva cada una
+    (ahora va a la siguiente que pusiste)
+  - [HECHO] Railes para plataformas: plataformas diagonales
+    platformD1 (↗↙) y platformD2 (↘↖), con recorrido ajustable.
+    Clic de nuevo sobre una plataforma/seta/firebar cambia su
+    tamaño (cicla r 2/3/5/7). Modelo + vista + editor.
+  - [HECHO en modelo] Monedas rojas: tile RCOIN (id 38).
+    GameModel cuenta redCoins/redTotal, evento redCoin y
+    redCoinsDone al cogerlas todas. Ya se dibujan (rojas).
+    Falta: que al cogerlas todas aparezca algo (caja/premio)
+    si se quiere, y el contador en el HUD.
+  - [HECHO en modelo] Condiciones de victoria: Level.win
+    { type, n }. Tipos: none, nojump, kills, coins, redcoins.
+    GameModel.winMet() bloquea la Medalla si no se cumple y
+    emite winLocked con el texto; winProgress()/winText() para
+    el HUD. Falta: elegirla en el editor y mostrarla en el HUD.
+  - Bloques de luz adaptados a Paz / Corrupto
+
+
+--------------------------------------------------------------
+ 3. EDITOR
+--------------------------------------------------------------
+  - [HECHO] Rotar objetos/enemigos en el editor: tecla R gira
+    horizontal (hacia donde mira/se mueve) y E gira vertical
+    (arriba/abajo), sobre el objeto del cursor. Solo los que
+    tienen sentido (enemigos, cannon, flower, firebar, icicle,
+    muelle); terreno y bloques no. Se guarda en el nivel
+    (o.dir / o.fv) y lo aplica la vista y el modelo.
+  - Revisar la paleta con todas las categorias nuevas
+    (estan en el catalogo, pero sin iconos dibujados)
+  - Clic otra vez sobre un objeto con recorrido para
+    cambiar su tamano (setas, plataformas, Barra Estelar)
+  - Selector de semisolido A/B con la variante del mapa
+  - Pestanas de subzonas
+  - Condicion de victoria y numero de Medallas (Event Hub)
+  - Comprobar que el nivel se puede superar antes de guardar
+  - Tiempo del nivel de 10 a 500
+    (ahora mismo el juego permite de 30 a 999)
+
+
+--------------------------------------------------------------
+ 4. MAPAS NUEVOS (sin hacer)
+--------------------------------------------------------------
+Cada uno necesita: paleta Paz/Corrupto, fondo, 2 semisolidos,
+musica, nivel de Modo Historia y su efecto Corrupto.
+  - Gambling Gaming (casino). Corrupto: ruleta que cambia
+    una regla del nivel cada cierto tiempo
+  - Time Attack (espacio-tiempo). Corrupto: el tiempo,
+    enemigos y obstaculos van a ratos lentos y a ratos rapidos
+  - Sound Discotech (musical). Corrupto: plataformas y
+    enemigos al ritmo de la musica
+  - Event Hub (interdimensional verde). Corrupto: la salida
+    se abre recogiendo las Medallas del nivel
+
+
+--------------------------------------------------------------
+ 5. CUENTA GLOB DEFENDERS (en curso)
+--------------------------------------------------------------
+  - [HECHO] SQL de las tablas (sgm_links, sgm_levels,
+    sgm_level_likes) + RLS + RPC: kiro/supabase_setup.sql.
+    APLICADO en el Supabase de GlD por el usuario.
+  - [HECHO] Modulo cliente js/model/GldAccount.js (login,
+    vinculo, cloudSave, publicar, listar publicos, me gusta,
+    contadores). Funciona offline hasta poner la ANON_KEY.
+    LevelStorage.setLinked ya refleja la sesion.
+  - FALTA: la ANON_KEY publica de GlD (la pega el usuario) para
+    activar la nube de verdad.
+  - FALTA UI: boton con iconito de internet = login; pantallas
+    de publicar / lista de niveles de otros / me gusta.
+  !! El perfil de GlD (la web) debe leer esos niveles:
+     cambio en el codigo de GlD (fuera de este repo).
+
+
+--------------------------------------------------------------
+ 5c. GLOBS Y POWER-UPS (pendiente de rehacer)
+--------------------------------------------------------------
+En base los Globs son casi iguales; solo se nota UN POQUITO lo
+que hara cada uno (anticipo de su habilidad de power-up):
+  - Verde .. no destaca en nada
+  - Rojo ... un pelin mas rapido
+  - Azul ... resbala al caminar, pero mientras resbala IGNORA
+             cintas y pinchos (puede ser util)
+  - Gris ... (con la familia negra) su habilidad de power-up es
+             DISPARAR; de especial, nadan mas rapido
+  - Negro .. saltan mas alto y lanzan proyectiles con power-up
+Power-ups / evoluciones (como SMB):
+  - Gota Evo (hoja) = Super Champinon: EVO1 -> EVO2 (crecer).
+    Solo UNA subida.
+  - Falta CREAR un 2o power-up = Flor de Fuego: EVO2 -> EVO3,
+    la forma que da la habilidad (disparar en gris/negro, etc.).
+
+
+--------------------------------------------------------------
+ 6. PULIDO Y PRUEBAS (sin hacer)
+--------------------------------------------------------------
+  - Modo Historia con 16 mapas (ahora 12) en orden de
+    dificultad
+  - Balance de enemigos y power-ups
+  - Capturas de cada mapa y modo en miniaturas/
+  - Probarlo jugando de verdad (hasta ahora solo hay
+    pruebas automaticas: todo pasa)
+
+
+--------------------------------------------------------------
+ 6b. IDIOMAS (lo ULTIMO, cuando TODO lo demas este hecho)
+--------------------------------------------------------------
+  - Traduccion del juego Espanol -> Ingles (sistema i18n):
+    extraer todos los textos de la UI/menus/HUD a tablas de
+    idioma y un selector de idioma. Se hace al final, cuando
+    ya no se vayan a anadir mas textos nuevos.
+
+--------------------------------------------------------------
+ 6c. README (LO ABSOLUTAMENTE ULTIMO, tras i18n y Supabase)
+--------------------------------------------------------------
+  - Documento README: de que va el juego + guia de TODOS los
+    items y elementos (bloques, Pyces, monedas, power-ups,
+    mecanismos, mapas, modos). A modo de manual para aprender
+    que hace cada cosa. Se hace cuando TODO lo demas este hecho,
+    incluida la parte de Supabase.
+
+
+--------------------------------------------------------------
+ 7. MODO 3D (cuando el 2D este terminado)
+--------------------------------------------------------------
+  - Descargar Blender x64 (el del pendrive es ARM64)
+  - Motor Three.js con MVC
+  - Modelos de Globs, Pyces y Medallas con Blender
+  - Movimiento 3D (salto triple, culetazo, salto de pared,
+    camara orbital), planetoides con gravedad (Galaxy), o modo SM64.
+  - Editor 3D y los mismos mapas / modo Corrupto en 3D
+
+
+--------------------------------------------------------------
+ YA HECHO (para que no se repita)
+--------------------------------------------------------------
+  - MVC, menus, Modo Historia (12 mapas), editor, guardado,
+    musica, sonidos, modo Paz / Corrupto
+  - Mecanica de todos los Pyces, puertas, tuberias, llaves,
+    Nota, POW, Rosquilla, A/B, P, pendientes, capsulas,
+    Barra Estelar, carambanos, explosiones
+  - Efectos Corruptos: rebote en cadena, apagon, agua
+    venenosa, espectros, circo acelerado, ventisca, gravedad
+    del vacio, Abismo, setas moviles, espejo, meteoritos,
+    nubes con rayos
+  - 3 modos de inicio (Campo de Pruebas, Clasico, Aireado)
+  - Limite de 207 niveles
+  - Controles: Espacio dispara
