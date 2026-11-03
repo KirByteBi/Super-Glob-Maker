@@ -101,6 +101,7 @@
     //  - Un nivel ya publicado NO se puede volver a publicar (queda marcado con el Glob Cometa).
     //  - Una copia solo se publica si cambia el tema/modo o es bastante distinta del original.
     canPublish(levelJSON) {
+      if (levelJSON.downloaded) return { ok: false, error: 'downloaded', author: levelJSON.downloaded.author };
       if (levelJSON.publishedAt || levelJSON.cloudId || Gld.cloudIdOf(levelJSON.id)) return { ok: false, error: 'already' };
       const chk = S.Model.Level.copyCheck(levelJSON);
       if (!chk.ok) return Object.assign({ error: 'too-similar' }, chk);

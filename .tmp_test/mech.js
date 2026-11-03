@@ -219,3 +219,27 @@ ok('nivel publicado: no se puede volver a publicar', S.Model.Gld.canPublish(pubd
 ok('la marca de publicado se guarda y se carga', new Lv(pubd).toJSON().publishedAt === pubd.publishedAt);
 ok('exportar no incluye marcas ni historial', (() => { const c = Lv.content(Object.assign({}, cp.toJSON(), { publishedAt: 1, cloudId: 'x' })); return !c.publishedAt && !c.cloudId && !c.copyOf; })());
 ok('firma: igual para el mismo contenido aunque cambie el nombre', Lv.signature(tj) === Lv.signature(Object.assign({}, tj, { name: 'Otro', id: 'zzz' })) && Lv.signature(tj) !== Lv.signature(cp.toJSON()));
+
+// Monedas púrpura y a qué meta se aplica el requisito
+L = base(); for (let i = 0; i < 6; i++) L.set(8 + i, gy - 1, TT.VCOIN);
+g = game(L);
+ok('púrpura: con monedas púrpura la Medalla empieza bloqueada', g.goalLocked && g.purpleNeed === 6);
+g.player.x = g.goal.x - 4; g.player.y = g.goal.y + g.goal.h - g.player.h; step(g, {}, 3);
+ok('púrpura: la Medalla bloqueada no se puede tocar', g.state === 'play');
+g.player.x = 8 * T; g.player.y = (gy - 1) * T; for (let i = 0; i < 6; i++) { g.player.x = (8 + i) * T + 2; g.collectTiles(g.player); }
+step(g, {}, 2);
+ok('púrpura: al juntarlas aparece la Medalla', !g.goalLocked && g.purpleCoins === 6 && ev['game:goalAppear'] > 0);
+L = base(); for (let i = 0; i < 130; i++) L.set(4 + (i % 100), 2 + Math.floor(i / 100), TT.VCOIN);
+ok('púrpura: como mucho hacen falta 100', game(L).purpleNeed === 100);
+L = base(); L.win = { type: 'kills', n: 3, target: 'hidden' }; g = game(L);
+ok('requisito solo en la meta oculta: la normal sí deja pasar', g.winMet(false) && !g.winMet(true));
+L = base(); L.win = { type: 'kills', n: 3, target: 'normal' }; g = game(L);
+ok('requisito solo en la Medalla: la oculta sí deja pasar', !g.winMet(false) && g.winMet(true));
+L = base(); L.win = { type: 'kills', n: 3 }; g = game(L);
+ok('requisito en las dos (por defecto)', !g.winMet(false) && !g.winMet(true));
+ok('el destino del requisito se guarda', new S.Model.Level(Object.assign(base().toJSON(), { win: { type: 'redcoins', target: 'hidden' } })).toJSON().win.target === 'hidden');
+// Niveles descargados de Online
+const dlj = Object.assign(base().toJSON(), { downloaded: { author: 'otro', cloudId: 'c9' } });
+ok('descargado: se guarda quién lo hizo', new S.Model.Level(dlj).toJSON().downloaded.author === 'otro');
+ok('descargado: no se puede publicar', S.Model.Gld.canPublish(dlj).error === 'downloaded');
+ok('descargado: no va en el contenido exportable', !S.Model.Level.content(dlj).downloaded);

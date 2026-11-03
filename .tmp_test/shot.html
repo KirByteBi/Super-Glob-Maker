@@ -46,6 +46,15 @@
           col(3, 1); col(5, 2); col(7, 3); col(9, 4); col(12, 2, 2); col(15, 3, 2); col(18, 4, 2); col(22, 3, 3);
           S.app.openEditor(L);
         }
+        else if (what === 'purple') {
+          const L = S.Model.Level.createDefault(), TT = S.Model.Catalog.T, gy = L.height - 3;
+          L.width = 40; L.resize(40, L.height); L.tiles = L.tiles.map((t, i) => t);
+          for (let x = 0; x < 40; x++) for (let y = gy; y < L.height; y++) L.set(x, y, TT.GROUND);
+          for (let x = 8; x < 26; x++) L.set(x, gy - 2, TT.VCOIN);
+          L.objects = [{ type: 'start', x: 3, y: gy - 1 }, { type: 'goal', x: 30, y: gy - 1 }];
+          L.win = { type: 'redcoins', target: 'hidden' };
+          S.app.playLevel(L.toJSON(), {}); const g = S.app.game.model; g.t = 3; for (let i = 0; i < 60; i++) g.update(1 / 120, { right: true });
+        }
         else if (what === 'mylevels') {
           const St = S.Model.LevelStorage, Lv = S.Model.Level;
           St.list().forEach((l) => St.remove(l.id));

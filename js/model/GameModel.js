@@ -78,6 +78,11 @@
       this.redTotal = 0;
       for (let i = 0; i < this.level.tiles.length; i++) if (this.level.tiles[i] === TT.RCOIN) this.redTotal++;
       this.redCoins = 0;
+      // Monedas púrpura (de TODO el nivel: base + subzonas). Con alguna, la Medalla aparece al juntar 100.
+      this.purpleCoins = 0;
+      this.purpleTotal = this.countPurple();
+      this.purpleNeed = Math.min(C.PURPLE_NEED, this.purpleTotal);
+      this.goalLocked = this.purpleNeed > 0;
       // Interruptor G: activa las monedas verdes ocultas (GHID) un tiempo, como el P
       this.gTimer = 0;
       // Interruptor P clásico: mientras pTimer > 0, pActive = true (monedas P <-> bloques P)
@@ -132,6 +137,16 @@
       while (this.coins >= 100) { this.coins -= 100; this.oneUp(x, y); }
     }
     oneUp(x, y) { this.lives++; this.emit('oneUp', { x, y }); }
+    countPurple() {
+      let n = 0; const src = this.sourceLevel || this.level;
+      const zones = [src.tiles].concat((src.subs || []).map((s) => S.Model.Level.decode(s.tiles, s.width * s.height)));
+      zones.forEach((tl) => { for (let i = 0; i < tl.length; i++) if (tl[i] === TT.VCOIN) n++; });
+      return n;
+    }
+    addPurpleCoin(x, y) {
+      this.purpleCoins++; this.addCoin(x, y);
+      this.emit('purpleCoin', { x, y, got: this.purpleCoins, need: this.purpleNeed });
+    }
     // Moneda roja: cada 8 recogidas = 1UP (como en SM64)
     addRedCoin(x, y) {
       this.redCoins++; this.score += 200;
@@ -203,14 +218,16 @@
       this.entities = this.entities.filter((e) => !e.remove);
 
       // Meta: la Medalla (solo si se cumple la condición de victoria)
-      if (this.goal && this.state === 'play' && p.x + p.w > this.goal.x && p.x < this.goal.x + this.goal.w + 8 && p.y + p.h > this.goal.y) {
-        if (this.winMet()) this.reachGoal(false);
+      // Monedas púrpura: la Medalla normal no existe hasta juntar las necesarias
+      if (this.goal && this.goalLocked && this.purpleCoins >= this.purpleNeed) { this.goalLocked = false; this.emit('goalAppear', { x: this.goal.x, y: this.goal.y + this.goal.h / 2 }); }
+      if (this.goal && !this.goalLocked && this.state === 'play' && p.x + p.w > this.goal.x && p.x < this.goal.x + this.goal.w + 8 && p.y + p.h > this.goal.y) {
+        if (this.winMet(false)) this.reachGoal(false);
         else if (!this.winMsgT || this.t - this.winMsgT > 1.2) { this.winMsgT = this.t; this.emit('winLocked', { x: this.goal.x, y: this.goal.y, text: this.winText() }); }
       }
       // Meta OCULTA: pasa el nivel por salida secreta (también sujeta a la condición de victoria)
       const gh = this.goalHidden;
       if (gh && this.state === 'play' && p.x + p.w > gh.x && p.x < gh.x + gh.w + 8 && p.y + p.h > gh.y) {
-        if (this.winMet()) this.reachGoal(true);
+        if (this.winMet(true)) this.reachGoal(true);
         else if (!this.winMsgT || this.t - this.winMsgT > 1.2) { this.winMsgT = this.t; this.emit('winLocked', { x: gh.x, y: gh.y, text: this.winText() }); }
       }
 
@@ -578,6 +595,7 @@
         const px = x * T + T / 2, py = y * T + T / 2;
         if (t === TT.COIN) { this.level.set(x, y, 0); this.addCoin(px, py); }
         else if (t === TT.RCOIN) { this.level.set(x, y, 0); this.addRedCoin(px, py); }
+        else if (t === TT.VCOIN) { this.level.set(x, y, 0); this.addPurpleCoin(px, py); }
         // Bloque del Interruptor P que ahora mismo es moneda: se recoge (y ya no vuelve)
         else if (C.isPCoin(t, this.level.pActive)) { this.level.set(x, y, 0); this.addCoin(px, py); }
         else if (t === TT.GHID) { if (this.gTimer > 0) { this.level.set(x, y, 0); this.addValueCoin(px, py, C.coinValue(TT.GCOIN)); } }
@@ -824,11 +842,14 @@
     }
 
     // ---------------------------------------------------------------- condición de victoria
-    winMet() {
+    // ¿Aplica la condición de victoria a esta meta? (secret = meta oculta). target: both|normal|hidden
+    winApplies(secret) { const tg = (this.level.win && this.level.win.target) || 'both'; return tg === 'both' || (secret ? tg === 'hidden' : tg === 'normal'); }
+    winMet(secret) {
       // Event Hub (medalGate): la meta está sellada hasta coger todas las Monedas Estrella
       if (this.fx.medalGate && this.starTotal > 0 && this.stars < this.starTotal) return false;
       const w = this.level.win;
       if (!w || w.type === 'none') return true;
+      if (secret !== undefined && !this.winApplies(secret)) return true;
       switch (w.type) {
         case 'nojump': return !this.jumped;
         case 'kills': return this.kills >= w.n;
@@ -852,10 +873,11 @@
       const w = this.level.win, types = S.Model.Level.WIN_TYPES, def = types[w.type] || types.none;
       if (this.fx.medalGate && this.starTotal > 0 && this.stars < this.starTotal) return `Coge las Monedas Estrella (${this.stars}/${this.starTotal})`;
       if (w.type === 'nojump') return 'Llega sin saltar';
-      if (w.type === 'kills') return `Derrota ${w.n} enemigos (${Math.min(this.kills, w.n)}/${w.n})`;
-      if (w.type === 'coins') return `Junta ${w.n} monedas (${Math.min(this.coins, w.n)}/${w.n})`;
-      if (w.type === 'redcoins') return `Coge las monedas rojas (${this.redCoins}/${this.redTotal})`;
-      return def.name;
+      const tag = w.target === 'hidden' ? ' · meta oculta' : w.target === 'normal' ? ' · Medalla' : '';
+      if (w.type === 'kills') return `Derrota ${w.n} enemigos (${Math.min(this.kills, w.n)}/${w.n})` + tag;
+      if (w.type === 'coins') return `Junta ${w.n} monedas (${Math.min(this.coins, w.n)}/${w.n})` + tag;
+      if (w.type === 'redcoins') return `Coge las monedas rojas (${this.redCoins}/${this.redTotal})` + tag;
+      return def.name + tag;
     }
 
     reachGoal(secret) {

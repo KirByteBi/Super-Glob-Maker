@@ -37,7 +37,7 @@
         mode: () => { m.mutate((L) => { L.mode = L.mode === 'corrupt' ? 'peace' : 'corrupt'; }); this.view.refreshItems(m); const th = S.Model.Themes.get(m.level.theme); menu.toast(m.level.mode === 'corrupt' ? '☠ Modo Corrupto: ' + th.effectLabel : '☀ Modo Paz'); },
         character: () => menu.characterPicker(m.level.character, (id) => { m.mutate((L) => { L.character = id; }); this.view.refreshItems(m); }, () => {}, 'Glob del nivel'),
         settings: () => menu.levelSettings(m.level, (v) => { m.mutate((L) => { L.name = v.name; L.time = U.clamp(v.time | 0, 10, 500); L.win = S.Model.Level.normWin(v.win); L.resize(v.width, v.height); }); this.clampCam(); }, {
-          exportLevel: () => { menu.closeModal(); menu.textBox('Exportar nivel (copia este texto)', JSON.stringify(m.full().toJSON())); },
+          exportLevel: () => { menu.closeModal(); menu.textBox('Exportar nivel (copia este texto)', JSON.stringify(S.Model.Level.content(m.full().toJSON()))); },
           importLevel: () => { menu.closeModal(); this.app.importDialog((lvl) => { lvl.id = m.level.id; m.setLevel(lvl); m.dirty = true; this.view.buildToolbar(m, this.handlers()); }); },
           clearLevel: () => { m.mutate((L) => { const d = Level.createDefault(); d.resize(L.width, L.height); L.tiles = d.tiles; L.objects = d.objects; L.contents = {}; }); }
         }),

@@ -171,11 +171,16 @@
       winSel.value = (level.win && level.win.type) || 'none';
       field('Condición de victoria', winSel);
       const winN = field('Cantidad', inp('number', (level.win && level.win.n) || 5, { min: 1, max: 999 }));
-      const syncWinN = () => { const def = WT[winSel.value] || {}; winN.parentNode.style.display = def.hasN ? '' : 'none'; };
+      // A qué meta se aplica la condición (normal, oculta o ambas)
+      const tgSel = document.createElement('select'), TG = S.Model.Level.WIN_TARGETS;
+      Object.keys(TG).forEach((k) => { const op = document.createElement('option'); op.value = k; op.textContent = TG[k]; tgSel.appendChild(op); });
+      tgSel.value = (level.win && level.win.target) || 'both';
+      field('Se aplica a', tgSel);
+      const syncWinN = () => { const def = WT[winSel.value] || {}; winN.parentNode.style.display = def.hasN ? '' : 'none'; tgSel.parentNode.style.display = winSel.value === 'none' ? 'none' : ''; };
       winSel.addEventListener('change', syncWinN); syncWinN();
       b.appendChild(form);
       const row = el('div', 'row');
-      row.appendChild(button('Aplicar', 'primary', () => { this.closeModal(); onApply({ name: name.value.trim() || 'Nivel sin nombre', width: +width.value, height: +height.value, time: +time.value, win: { type: winSel.value, n: +winN.value } }); }));
+      row.appendChild(button('Aplicar', 'primary', () => { this.closeModal(); onApply({ name: name.value.trim() || 'Nivel sin nombre', width: +width.value, height: +height.value, time: +time.value, win: { type: winSel.value, n: +winN.value, target: tgSel.value } }); }));
       row.appendChild(button('Exportar', '', h.exportLevel));
       row.appendChild(button('Importar', '', h.importLevel));
       row.appendChild(button('🗑 Vaciar', 'danger', () => { this.confirm('¿Borrar todo el contenido del nivel?', h.clearLevel); }));
@@ -250,8 +255,9 @@
       const head = el('div', 'head');
       head.appendChild(button('← Volver', '', h.back));
       head.appendChild(el('h1', '', '🌐 Online'));
-      const acc = button(st.user ? '👤 ' + st.user : '🔑 Iniciar sesión', st.user ? '' : 'primary', h.account);
+      const acc = button(st.user ? '👤 ' + st.user : '🔑 Iniciar sesión', st.user ? '' : 'primary', st.user ? h.profile : h.account);
       head.appendChild(acc);
+      if (st.user) head.appendChild(button('⚙', '', h.account)); // cuenta (cerrar sesión)
       s.appendChild(head);
       const TABS = [['home', '⭐ Destacados'], ['top', '🏆 Top 10'], ['new', '🆕 Recientes'], ['plays', '🔥 Más jugados'], ['hard', '💀 Más difíciles'], ['search', '🔍 Buscar'], ['me', '👤 Mi perfil']];
       const tabs = el('div', 'tabs');
@@ -303,6 +309,7 @@
       info.appendChild(el('small', 'stats', '👍 ' + r.likes + '   👎 ' + r.dislikes + '   ⭐ ' + (r.score > 0 ? '+' : '') + r.score + '   ▶ ' + (r.plays || 0) + '   🏁 ' + pct + ' superado'));
       row.appendChild(info);
       row.appendChild(button('▶ Jugar', 'primary', () => h.play(r)));
+      if (h.download) row.appendChild(button('⬇', '', () => h.download(r))).title = 'Descargar a Mis niveles (solo para jugar)';
       return row;
     }
     onlineProfile(wrap, st, h) {
@@ -319,7 +326,7 @@
       wrap.appendChild(el('h3', 'sec', '🌐 En la nube'));
       if (!mine.length) wrap.appendChild(el('p', 'empty', 'Aún no has subido niveles.'));
       mine.forEach((m) => {
-        const row = this.onlineRow(m, -1, h);
+        const row = this.onlineRow(m, -1, Object.assign({}, h, { download: null }));
         row.lastChild.remove(); // el botón Jugar se sustituye por los de gestión
         row.appendChild(el('span', 'badge ' + (m.is_public ? 'on' : 'off'), m.is_public ? '☄ Público' : 'Oculto'));
         // un nivel publicado se puede ocultar, pero no volver a publicar
@@ -372,7 +379,14 @@
         info.appendChild(el('small', '', S.Model.Themes.name(theme, l.mode) + ' · ' + S.Model.Characters.get(l.character).name + ' · ' + new Date(l.updated || Date.now()).toLocaleString()));
         row.appendChild(info);
         // Publicado: marcado con el Glob Cometa (no se puede volver a publicar)
-        const pub = !!(l.publishedAt || l.cloudId);
+        const pub = !!(l.publishedAt || l.cloudId), dl = !!l.downloaded;
+        if (dl) {
+          info.insertBefore(el('span', 'pub-tag dl-tag', '⬇ de @' + l.downloaded.author + ' · solo jugar'), info.firstChild);
+          row.appendChild(button('▶ Jugar', 'primary', () => h.play(l)));
+          row.appendChild(button('🔒 Editar', 'disabled', () => h.edit(l)));
+          row.appendChild(button('🗑', 'danger', () => this.confirm('¿Borrar "' + l.name + '" de tus descargas?', () => h.remove(l))));
+          wrap.appendChild(row); return;
+        }
         if (pub) {
           const tag = el('span', 'pub-tag'); tag.title = 'Publicado: no se puede volver a publicar';
           tag.appendChild(globImg(S.Model.Characters.get('black').paths[0], 'mini')); tag.appendChild(document.createTextNode('Publicado'));

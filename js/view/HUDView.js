@@ -38,6 +38,12 @@
           else { Sp.star(ctx, cx, cy, 12, 5.5, 5, -Math.PI / 2); ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.lineWidth = 2; ctx.setLineDash([3, 3]); ctx.lineJoin = 'round'; ctx.stroke(); ctx.setLineDash([]); }
         }
       }
+      // Monedas púrpura: contador hasta que aparece la Medalla
+      if (g.purpleNeed > 0) {
+        const done = !g.goalLocked, px0 = W / 2 + 102; // a la derecha de los puntos
+        pill(ctx, px0, 10, 150, 44); Sp.coin(ctx, px0 + 22, 32, 10, t * 3, '#a43bff');
+        txt(ctx, done ? '¡Medalla!' : Math.min(g.purpleCoins, g.purpleNeed) + '/' + g.purpleNeed, px0 + 40, 32, 18, done ? '#8fff9a' : '#e6d0ff');
+      }
       // Condicion de victoria del nivel (si la hay): texto + progreso.
       // Verde cuando ya se cumple (puedes ir a por la Medalla).
       const win = g.level.win;

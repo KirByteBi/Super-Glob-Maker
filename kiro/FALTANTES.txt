@@ -498,6 +498,18 @@ ESTADO REAL (ya implementado, pendiente de AFINAR al gusto):
     Glob Cometa y avisa si lo intentas otra vez. Copiar (📄) crea
     una copia que solo se publica si cambia tema/modo o >=25% del
     contenido (Level.copyCheck). Exportar (📤) en Mis niveles.
+  - [HECHO] Monedas purpura (tile 55): con alguna en el nivel, la
+    Medalla normal no aparece hasta juntar 100 (o todas si hay menos).
+    Ajustes del nivel: "Se aplica a" = las dos metas / solo la
+    Medalla / solo la meta oculta.
+  - [HECHO] Descargar niveles online (⬇): quedan en Mis niveles con
+    el autor y SOLO para jugar (no se editan, copian, exportan ni
+    publican; avisa de que el creador te lo tiene que pasar).
+    Tu nombre en 🌐 Online lleva a tu perfil.
+  - [HECHO] 7 niveles de KiroDEV en niveles_kirodev/ (generados por
+    tools/kirodev_levels.js, que comprueba que se pueden recorrer).
+    Importar + Publicar con la cuenta KiroDEV.
+  - PENDIENTE (pedido): traduccion ES/EN y semisolidos de fondo.
   - SIGUIENTE: Modo Historia jugable de verdad (niveles hechos a
     mano por aspecto, mundos con idea y dificultad; en Corrupto
     rutas alternas: bajo tierra, tubos rotos, puertas bloqueadas).

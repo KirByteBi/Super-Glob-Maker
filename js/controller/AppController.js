@@ -128,12 +128,13 @@
           this.menu.toast(r === 'ok' ? 'Nivel importado' : r === 'full' ? 'Máximo de ' + Storage.limit() + ' niveles alcanzado' : 'No se pudo importar');
         }),
         play: (l) => this.playLevel(l, {}),
-        edit: (l) => this.openEditor(new S.Model.Level(l)),
+        edit: (l) => { if (this.lockedDownload(l)) return; this.openEditor(new S.Model.Level(l)); },
         remove: (l) => { Storage.remove(l.id); this.showLevels(); },
         // Publicar en la nube de Glob Defenders (una sola vez por nivel; requiere sesión)
         publish: (l) => this.publishLocal(l, () => this.showLevels()),
         // Copiar: nivel nuevo editable que recuerda de dónde viene
         copy: (l) => {
+          if (this.lockedDownload(l)) return;
           const c = S.Model.Level.copy(l), r = Storage.save(c.toJSON());
           if (r !== 'ok') { this.menu.toast(r === 'full' ? 'Máximo de ' + Storage.limit() + ' niveles alcanzado' : 'No se pudo copiar'); return; }
           this.showLevels();
@@ -145,7 +146,28 @@
     }
 
     // Texto exportable de un nivel (sin marcas de publicación ni historial de copias)
+    // Niveles descargados de Online: solo se juegan. Devuelve true (y avisa) si está bloqueado.
+    lockedDownload(l) {
+      if (!l || !l.downloaded) return false;
+      this.menu.notice('🔒 Nivel de @' + l.downloaded.author, 'Este nivel lo descargaste de 🌐 Online y es de @' + l.downloaded.author + '. Puedes jugarlo, pero no editarlo, copiarlo ni exportarlo. Si quieres editarlo, su creador tiene que darte el nivel (desde 📤 Exportar) para que lo importes.');
+      return true;
+    }
+    // Descarga un nivel publicado a "Mis niveles" (bloqueado: solo para jugar)
+    downloadOnline(row) {
+      const Gld = S.Model.Gld, id = 'dl-' + row.id;
+      if (Storage.get(id)) { this.menu.toast('Ya lo tienes en 📁 Mis niveles'); return; }
+      this.menu.toast('Descargando…', 1200);
+      Gld.getLevel(row.id).then((data) => {
+        if (!data) { this.menu.toast('No se pudo descargar'); return; }
+        const L = new S.Model.Level(Object.assign({}, S.Model.Level.content(data), { id, name: row.name }));
+        L.downloaded = { author: row.author || 'desconocido', cloudId: row.id, at: Date.now() };
+        const r = Storage.save(L.toJSON());
+        this.menu.toast(r === 'ok' ? '⬇ Guardado en 📁 Mis niveles (de @' + L.downloaded.author + ')' : r === 'full' ? 'Máximo de ' + Storage.limit() + ' niveles alcanzado' : 'No se pudo guardar', 2600);
+      }).catch(() => this.menu.toast('No se pudo descargar'));
+    }
+
     exportLevel(l) {
+      if (this.lockedDownload(l)) return;
       const txt = JSON.stringify(S.Model.Level.content(l));
       this.menu.textBox('Exportar "' + l.name + '"', txt, null);
       const box = this.menu.modal.querySelector('.modal-box'), row = box && box.querySelector('.row');
@@ -165,6 +187,7 @@
     // demasiado parecida a su original. done() se llama tras publicar con éxito.
     publishLocal(l, done) {
       const Gld = S.Model.Gld;
+      if (this.lockedDownload(l)) return;
       const can = Gld.canPublish(l);
       if (!can.ok && can.error === 'already') {
         this.menu.notice('☄ Nivel ya publicado', 'Este nivel ya está publicado y no se puede volver a publicar. Si quieres otra versión, haz una COPIA (📄) y cámbiale el tema, el modo o bastantes cosas.', S.Model.Characters.get('black').paths[0]);
@@ -206,6 +229,9 @@
         search: (q) => (q && q[0] === '@' ? this.showOnline('author', q.slice(1)) : this.showOnline('search', q)),
         account: () => this.accountDialog(() => this.showOnline(tab, arg)),
         play: (row) => this.playOnline(row, () => this.showOnline(tab, arg)),
+        download: (row) => this.downloadOnline(row),
+        // con sesión, tu nombre lleva a tu perfil; sin sesión, abre el login
+        profile: () => this.showOnline('me'),
         publish: (l) => this.publishLocal(l, () => this.showOnline('me')),
         setPublic: (m, on) => Gld.setPublic(m.id, on).then((r) => { this.menu.toast(r.ok ? (on ? '🌐 Publicado' : '🙈 Ahora es privado') : err(r.error)); this.showOnline('me'); }),
         removeCloud: (m) => Gld.removeCloud(m.id).then((r) => { if (r.ok && m.local) Gld.setCloudId(m.local, null); this.menu.toast(r.ok ? 'Borrado de la nube' : err(r.error)); this.showOnline('me'); })

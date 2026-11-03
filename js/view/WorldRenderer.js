@@ -97,7 +97,12 @@
         tileOpt.liquidTopCol = U.mix(col, '#ffffff', 0.45);
       }
       drawTiles(ctx, g.level, g.pal, cam, t, tileOpt);
-      if (g.goal) S.View.Sprites.goal(ctx, g.goal, t, g.player.ch.color);
+      // Medalla bloqueada por monedas púrpura: solo se ve su silueta punteada
+      if (g.goal && g.goalLocked) {
+        const gg = g.goal; ctx.save(); ctx.globalAlpha = 0.45 + Math.sin(t * 3) * 0.1; ctx.setLineDash([6, 6]); ctx.strokeStyle = '#c38bff'; ctx.lineWidth = 3;
+        ctx.strokeRect(gg.x - 2, gg.y, gg.w + 4, gg.h); ctx.beginPath(); ctx.arc(gg.x + gg.w / 2, gg.y + 14, 14, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = '#e6d0ff'; ctx.font = 'bold 13px "Trebuchet MS",sans-serif'; ctx.textAlign = 'center'; ctx.fillText(g.purpleCoins + '/' + g.purpleNeed, gg.x + gg.w / 2, gg.y + 19); ctx.textAlign = 'left'; ctx.restore();
+      } else if (g.goal) S.View.Sprites.goal(ctx, g.goal, t, g.player.ch.color);
       if (g.goalHidden) { ctx.save(); ctx.globalAlpha = 0.55; S.View.Sprites.goal(ctx, g.goalHidden, t, '#b44dff'); ctx.restore(); }
       const opt = { pal: g.pal, color: g.player.ch.color };
       const onCam = (e) => e.x + e.w > cam.x - 64 && e.x < cam.x + cam.w + 64;

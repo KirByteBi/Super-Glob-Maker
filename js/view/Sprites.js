@@ -668,6 +668,7 @@
       }
       case TT.COIN: coin(ctx, px + T / 2, py + T / 2, 10, time * 4 + x * 0.4); break;
       case TT.RCOIN: coin(ctx, px + T / 2, py + T / 2, 10, time * 4 + x * 0.4, '#ff3b3b'); break;
+      case TT.VCOIN: coin(ctx, px + T / 2, py + T / 2, 9, time * 4 + x * 0.4 + y, '#a43bff'); break;
       case TT.BCOIN: coin(ctx, px + T / 2, py + T / 2, 10, time * 4 + x * 0.4, '#3b8bff'); break;
       case TT.GCOIN: coin(ctx, px + T / 2, py + T / 2, 10, time * 4 + x * 0.4, '#00d45a'); break;
       case TT.KCOIN: coin(ctx, px + T / 2, py + T / 2, 10, time * 4 + x * 0.4, '#ff4fd8'); break;

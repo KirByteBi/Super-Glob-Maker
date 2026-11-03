@@ -51,13 +51,17 @@
       this.publishedAt = d.publishedAt || null;
       this.cloudId = d.cloudId || null;
       this.copyOf = Array.isArray(d.copyOf) && d.copyOf.length ? d.copyOf.slice(0, 3) : null;
+      // Descargado de Online: se puede jugar, pero NO editar, copiar, exportar ni publicar.
+      // Para editarlo, su creador tiene que pasarte el nivel (Exportar → Importar).
+      this.downloaded = d.downloaded && typeof d.downloaded === 'object'
+        ? { author: String(d.downloaded.author || 'desconocido').slice(0, 40), cloudId: d.downloaded.cloudId ? String(d.downloaded.cloudId) : null, at: d.downloaded.at || null } : null;
     }
 
     // ---------- copias y comparación de contenido (para publicar) ----------
     // Contenido "jugable" del nivel, sin datos de publicación ni de copia
     static content(j) {
       const c = Object.assign({}, j instanceof Level ? j.toJSON() : j);
-      delete c.publishedAt; delete c.cloudId; delete c.copyOf; delete c.updated;
+      delete c.publishedAt; delete c.cloudId; delete c.copyOf; delete c.updated; delete c.downloaded;
       return c;
     }
     // Copia de un nivel: id nuevo, sin marca de publicado y recordando de dónde viene
@@ -151,12 +155,16 @@
         redcoins: { name: 'Coger todas las monedas rojas', hasN: false }
       };
     }
+    // A qué meta se aplica la condición: la Medalla normal, la meta oculta o las dos
+    static get WIN_TARGETS() { return { both: 'Las dos metas', normal: 'Solo la Medalla normal', hidden: 'Solo la meta oculta' }; }
     static normWin(w) {
       const types = Level.WIN_TYPES;
       if (!w || !types[w.type] || w.type === 'none') return { type: 'none', n: 0 };
       const def = types[w.type];
       const n = def.hasN ? U.clamp(w.n | 0 || def.def, 1, def.max) : 0;
-      return { type: w.type, n };
+      const out = { type: w.type, n };
+      if (w.target === 'normal' || w.target === 'hidden') out.target = w.target; // por defecto, las dos
+      return out;
     }
 
     // style: 'test' = Campo de Pruebas (suelo en todo el nivel, por defecto)
@@ -225,9 +233,10 @@
           if (o.deco) j.deco = o.deco;
           return j;
         }), contents: Object.assign({}, this.contents),
-        win: { type: this.win.type, n: this.win.n },
+        win: Object.assign({ type: this.win.type, n: this.win.n }, this.win.target ? { target: this.win.target } : {}),
         subs: this.subs && this.subs.length ? this.subs.map((s) => ({ theme: s.theme, mode: s.mode, width: s.width, height: s.height, tiles: s.tiles, objects: s.objects, contents: s.contents, win: s.win })) : undefined,
-        publishedAt: this.publishedAt || undefined, cloudId: this.cloudId || undefined, copyOf: this.copyOf || undefined };
+        publishedAt: this.publishedAt || undefined, cloudId: this.cloudId || undefined, copyOf: this.copyOf || undefined,
+        downloaded: this.downloaded || undefined };
     }
     clone() { return new Level(this.toJSON()); }
   }

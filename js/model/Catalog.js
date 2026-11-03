@@ -20,7 +20,10 @@
     // (vigas, montaña rusa, casas, runas...). Se dibuja en js/view/GroundStyles.js.
     GROUND2: 53,
     // Raíl (no sólido): las plataformas y enemigos colocados encima lo siguen (ver Rail en Entity.js)
-    RAIL: 54, WALL: 99
+    RAIL: 54,
+    // Moneda púrpura: si el nivel tiene, la Medalla normal NO aparece hasta juntar 100
+    // (o todas las que haya, si son menos de 100)
+    VCOIN: 55, WALL: 99
   };
   const EXCLAIM = [{ c: '#ffd000', name: 'amarillo' }, { c: '#2fd46a', name: 'verde' }, { c: '#ff4fd8', name: 'rosa' }];
   const SOLID = new Set([T.GROUND, T.GROUND2, T.BRICK, T.BOX, T.HARD, T.SPIKE, T.BOUNCE, T.ICE, T.USED, T.CONV_L, T.CONV_R, T.DONUT, T.NOTE, T.SW0, T.SW1, T.SW2, T.SWG, T.PSW, T.POW, T.PIPE, T.LIGHT, T.WALL]);
@@ -30,7 +33,8 @@
   // Monedas de valor (se recogen al tocarlas). RCOIN se cuenta aparte (8 = 1UP).
   // GHID (verde latente) solo se recoge mientras el interruptor G está activo.
   const COIN_VALUE = { [T.COIN]: 1, [T.BCOIN]: 5, [T.GCOIN]: 8, [T.KCOIN]: 12 };
-  const COINS = new Set(Object.keys(COIN_VALUE).map(Number).concat([T.RCOIN, T.GHID]));
+  const COINS = new Set(Object.keys(COIN_VALUE).map(Number).concat([T.RCOIN, T.GHID, T.VCOIN]));
+  const PURPLE_NEED = 100; // monedas púrpura que hacen aparecer la Medalla
   // Pares A/B: 3 colores para A y 3 para B (6 variaciones) + 3 interruptores
   const AB = [{ a: '#ff3b3b', b: '#3b8bff', name: 'Rojo / Azul' }, { a: '#00d45a', b: '#ffd000', name: 'Verde / Amarillo' }, { a: '#ff4fd8', b: '#00e5ff', name: 'Rosa / Cian' }];
   const abInfo = (t) => (t >= T.A0 && t <= T.B2 ? { k: (t - T.A0) >> 1, b: (t - T.A0) & 1 } : null);
@@ -49,7 +53,8 @@
     49: 'Bloque "!" amarillo', 50: 'Bloque "!" verde', 51: 'Bloque "!" rosa',
     52: 'Tubería pequeña (decoración)',
     53: 'Suelo temático (según el mapa)',
-    54: 'Raíl (pon encima plataformas, setas, Barras Estelares o Pyces y lo seguirán)'
+    54: 'Raíl (pon encima plataformas, setas, Barras Estelares o Pyces y lo seguirán)',
+    55: 'Moneda púrpura (junta 100 y aparece la Medalla)'
   };
 
   // anchor: bottom = apoyado en el suelo de la casilla, center, top = colgando del techo
@@ -178,7 +183,7 @@
   const objs = (ids) => ids.map((type) => ({ kind: 'obj', type }));
   const PALETTE = [
     { id: 'terrain', name: 'Terreno', items: tiles([1, 53, 5, 17, 11, 29, 30, 31, 32, 33, 34, 37, 52, 8, 6, 9, 16, 14, 15, 48]) },
-    { id: 'blocks', name: 'Bloques', items: tiles([2, 3, 13, 4, 7, 19, 18, 36, 12, 38, 39, 41, 40, 47, 46, 20, 21, 22, 23, 24, 25, 26, 27, 28, 49, 50, 51, 35, 42, 43]) },
+    { id: 'blocks', name: 'Bloques', items: tiles([2, 3, 13, 4, 7, 19, 18, 36, 12, 38, 55, 39, 41, 40, 47, 46, 20, 21, 22, 23, 24, 25, 26, 27, 28, 49, 50, 51, 35, 42, 43]) },
     { id: 'pyces', name: 'Pyces', items: objs(['stupid', 'so', 'symbol', 'pyce2', 'guest', 'noob', 'elf', 'umbrella', 'zom', 'crystal', 'knight', 'rebel', 'skelebone', 'builder', 'miner', 'snowcap', 'festive', 'bomb', 'toybomb', 'wingel', 'strechy', 'flower', 'cannon']) },
     { id: 'pyces2', name: 'Pyces raros', items: objs(['ghost', 'holo', 'motions', 'hacker', 'pysh', 'clownpysh', 'axolotl', 'squid', 'shark', 'mimic', 'dirty', 'nomic', 'goldmimic', 'noeye', 'nosense', 'noir', 'moonstar']) },
     { id: 'items', name: 'Objetos', items: objs(['evo', 'flor', 'caca', 'vacio', 'brillo', 'miniglob'].concat(S.Model.Characters.list.map((c) => 'cap_' + c.id)).concat(['coin10', 'coin30', 'coin50', 'coin100', 'spring', 'checkpoint', 'starcoin', 'starcoin_giga', 'starcoin_moon', 'starcoin_rg', 'starcoin_magic', 'starcoin_traitor'])) },
@@ -206,7 +211,7 @@
   const exInfo = (t) => (t >= T.EX0 && t <= T.EX2 ? t - T.EX0 : -1);
 
   S.Model.Catalog = {
-    T, OBJECTS, PALETTE, TILE_NAMES, BOX_ITEMS, AB, ENEMY_TYPES, COIN_VALUE, EXCLAIM,
+    T, OBJECTS, PALETTE, TILE_NAMES, BOX_ITEMS, AB, ENEMY_TYPES, COIN_VALUE, EXCLAIM, PURPLE_NEED,
     isSolid, abInfo, canRotate, exInfo, isPCoin,
     isSemi: (t) => SEMI.has(t),
     isSlope: (t) => SLOPES.has(t),
