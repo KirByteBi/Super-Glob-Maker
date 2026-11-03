@@ -339,7 +339,7 @@
       card.appendChild(el('span', '', pub.length + ' / 120 publicados · 👍 ' + tl + ' · 👎 ' + td + ' · ⭐ ' + (tl - td) + ' · ▶ ' + tp + ' partidas'));
       wrap.appendChild(card);
       wrap.appendChild(el('h3', 'sec', '🌐 En la nube'));
-      if (!mine.length) wrap.appendChild(el('p', 'empty', 'Aún no has subido niveles.'));
+      if (!mine.length) wrap.appendChild(el('p', 'empty compact', 'Aún no has publicado niveles. Ve a 📁 Mis niveles, impórtalos o créalos y pulsa 🌐 Publicar.'));
       mine.forEach((m) => {
         const row = this.onlineRow(m, -1, Object.assign({}, h, { download: null }));
         row.lastChild.remove(); // el botón Jugar se sustituye por los de gestión
