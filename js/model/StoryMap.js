@@ -53,35 +53,35 @@
       { t: 'lake' }, { t: 'lake' }, { t: 'city' }, { t: 'seaside' }, { t: 'lake' },
       { t: 'city' }, { t: 'seaside' }, { t: 'city' }, { t: 'seaside' }, { t: 'lake' },
       { t: 'factory', type: 'castle' }
-    ], { perRow: 6, palaceAfter: 3, palaceTheme: 'lake', excolor: 0 }),
+    ], { perRow: 6, palaceAfter: 3, palaceTheme: 'lake', excolor: 0, scenery: 'isle' }),
 
     // 2. Wildsand Leaf — Jungla, Circo, Ruinas, Nieve; castillo Time Attack. 11 niveles.
     buildWorld('w2', 'Mundo 2 · Wildsand Leaf', [
       { t: 'jungle' }, { t: 'ruins' }, { t: 'circus' }, { t: 'snow' }, { t: 'jungle' },
       { t: 'ruins' }, { t: 'circus' }, { t: 'snow' }, { t: 'jungle' }, { t: 'ruins' }, { t: 'snow' },
       { t: 'clock', type: 'castle' }
-    ], { perRow: 7, palaceAfter: 5, palaceTheme: 'jungle', excolor: 1 }),
+    ], { perRow: 7, palaceAfter: 5, palaceTheme: 'jungle', excolor: 1, scenery: 'wild' }),
 
     // 3. Wonders Circus — Circo, Casino y bizarros (disco, hub); castillo Fabrica. 10 niveles.
     buildWorld('w3', 'Mundo 3 · Wonders Circus', [
       { t: 'circus' }, { t: 'casino' }, { t: 'disco' }, { t: 'circus' }, { t: 'hub' },
       { t: 'casino' }, { t: 'disco' }, { t: 'circus' }, { t: 'casino' }, { t: 'hub' },
       { t: 'factory', type: 'castle' }
-    ], { perRow: 6, palaceAfter: 4, palaceTheme: 'casino', excolor: 2 }),
+    ], { perRow: 6, palaceAfter: 4, palaceTheme: 'casino', excolor: 2, scenery: 'circus' }),
 
     // 4. Tormenta Volcanica — Volcan, Nubes, GL, variados; castillo Fabrica. 10 niveles.
     buildWorld('w4', 'Mundo 4 · Tormenta Volcánica', [
       { t: 'volcano' }, { t: 'sky' }, { t: 'lake' }, { t: 'volcano' }, { t: 'sky' },
       { t: 'underwater' }, { t: 'volcano' }, { t: 'sky' }, { t: 'lake' }, { t: 'volcano' },
       { t: 'factory', type: 'castle' }
-    ], { perRow: 6, palaceAfter: 6, palaceTheme: 'volcano', excolor: 0 }),
+    ], { perRow: 6, palaceAfter: 6, palaceTheme: 'volcano', excolor: 0, scenery: 'volcano' }),
 
     // 5. Ruptura Dimensional — todos los mapas, 3 castillos (tras cada tercio). Final: Vortice.
     buildWorld('w5', 'Mundo 5 · Ruptura Dimensional', [
       { t: 'lake' }, { t: 'city' }, { t: 'seaside' }, { t: 'factory', type: 'castle' },
       { t: 'jungle' }, { t: 'ruins' }, { t: 'circus' }, { t: 'snow' }, { t: 'factory', type: 'castle' },
       { t: 'casino' }, { t: 'disco' }, { t: 'volcano' }, { t: 'sky' }, { t: 'vortex', type: 'castle' }
-    ], { perRow: 5, palaceAfter: 2, palaceTheme: 'hub', excolor: 2 })
+    ], { perRow: 5, palaceAfter: 2, palaceTheme: 'hub', excolor: 2, scenery: 'dimension' })
   ];
 
   const byId = {};
