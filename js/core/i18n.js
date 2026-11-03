@@ -21,7 +21,7 @@
     '¡Nivel superado!': 'Level cleared!', 'Fin de la partida': 'Game over', 'Te has quedado sin vidas…': 'You ran out of lives…', '¡Medalla conseguida!': 'Medal get!',
     '🏅 ¡Has conseguido la Medalla!': '🏅 You got the Medal!', '🏅 ¡Medalla por META OCULTA!': '🏅 Medal via the HIDDEN GOAL!',
     '🔍 Este nivel esconde una META OCULTA y un interruptor "!"': '🔍 This level hides a HIDDEN GOAL and a "!" switch', '🔍 Este nivel esconde una META OCULTA': '🔍 This level hides a HIDDEN GOAL', '🔍 Este nivel esconde un interruptor "!"': '🔍 This level hides a "!" switch',
-    '¡Ups!': 'Oops!', 'Idioma': 'Language', '¡Aún no!': 'Not yet!', 'Salida': 'Start', '⚠ Palacio del interruptor "!"': '⚠ "!" Switch Palace',
+    '¡Ups!': 'Oops!', 'Idioma': 'Language', '¡Aún no!': 'Not yet!', '🔓 ¡Abierta!': '🔓 Open!', '🔒 Necesitas una llave': '🔒 You need a key', 'Esta puerta no lleva a ningún sitio': "This door doesn't lead anywhere", 'Esta tubería no lleva a ningún sitio': "This pipe doesn't lead anywhere", 'Salida': 'Start', '⚠ Palacio del interruptor "!"': '⚠ "!" Switch Palace',
     // ---- controles
     'Controles': 'Controls', 'Moverse': 'Move', 'Saltar (mantén para saltar más)': 'Jump (hold to jump higher)', 'Correr': 'Run', 'Disparar (EVO3 y Glob Caca)': 'Shoot (EVO3 and Poop Glob)',
     'Culetazo (rompe bloques si eres grande)': 'Ground pound (breaks blocks when big)', 'Colocar': 'Place', 'Borrar': 'Erase', 'Desplazar': 'Scroll', 'Deshacer / rehacer': 'Undo / redo',

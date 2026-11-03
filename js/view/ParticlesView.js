@@ -40,6 +40,12 @@
       on('goal', (d) => { this.burst(d.x, d.y, 30, ['#ffc400', '#ff3b6b', '#ffffff'], 300, 'star'); this.text(d.x, d.y - 30, '+' + d.bonus, '#ffe600', 2, 22); });
       // Meta tocada sin cumplir la condición de victoria: aviso de lo que falta
       on('winLocked', (d) => { this.burst(d.x, d.y + 10, 8, ['#ff4f4f', '#ffffff'], 140, 'ring'); this.text(d.x, d.y - 18, '🔒 ' + (S.tr ? S.tr('¡Aún no!') : '¡Aún no!'), '#ff6b6b', 1.4, 20); this.text(d.x, d.y + 6, S.tr ? S.tr(d.text) : d.text, '#ffe600', 1.4, 15); this.shake = 2; });
+      // Llaves y puertas/tuberías con llave
+      const tr = (s) => (S.tr ? S.tr(s) : s);
+      on('key', (d) => { this.burst(d.x, d.y, 12, ['#ffd000', '#ffffff'], 180, 'star'); this.text(d.x, d.y - 16, '🔑 ×' + d.keys, '#ffe600', 1.2, 18); });
+      on('unlock', (d) => { this.burst(d.x, d.y, 18, ['#ffd000', '#ffffff'], 220, 'star'); this.text(d.x, d.y - 30, tr('🔓 ¡Abierta!'), '#8fff9a', 1.2, 18); });
+      on('locked', (d) => { this.text(d.x, d.y - 14, tr('🔒 Necesitas una llave'), '#ff6b6b', 1.3, 16); this.shake = 2; });
+      on('noLink', (d) => this.text(d.x, d.y - 14, tr(d.family === 'pipe' ? 'Esta tubería no lleva a ningún sitio' : 'Esta puerta no lleva a ningún sitio'), '#ffb347', 1.4, 14));
       on('cannon', (d) => this.dust(d.x, d.y, 5, '#888888'));
       S.events.on('render:sparkle', (d) => this.add({ x: d.x, y: d.y, vx: 0, vy: -30, g: 0, life: 0.4, max: 0.4, size: 3, color: `hsl(${Math.random() * 360},100%,70%)`, shape: 'star', rot: 0 }));
     }

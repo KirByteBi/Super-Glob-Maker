@@ -56,7 +56,7 @@
         if (!e) return;
         if (o.type === 'checkpoint' && this.checkpoint && this.checkpoint.x === o.x && this.checkpoint.y === o.y) e.taken = true;
         // las puertas/tuberías con llave que ya abriste siguen abiertas tras morir
-        if (e.locked && this.unlocked && this.unlocked[o.x + ',' + o.y]) e.locked = false;
+        if (e.locked && this.unlocked && this.unlocked['0:' + o.x + ',' + o.y]) e.locked = false;
         // Abismo Corrupto: más de la mitad de los enemigos de tierra nadan en vez de caminar
         if (this.fx.abyss && e.enemy && !e.boss && !C.OBJECTS[o.type].water && U.hash(o.x * 7 + o.y) < 0.6) e.swims = true;
         // Encima de un raíl: lo sigue
@@ -363,6 +363,8 @@
         if (!e) return;
         if (this.fx.abyss && e.enemy && !e.boss && !C.OBJECTS[o.type].water && U.hash(o.x * 7 + o.y) < 0.6) e.swims = true;
         if (this.level.get(o.x, o.y) === TT.RAIL && S.Model.Rail.rideable(e)) S.Model.Rail.attach(e, this.level, o.x, o.y, o.dir);
+        // puertas/tuberías con llave que ya abriste en esta zona siguen abiertas al volver
+        if (e.locked && this.unlocked && this.unlocked[z + ':' + o.x + ',' + o.y]) e.locked = false;
         this.entities.push(e);
       });
       ['pipe', 'door'].forEach((family) => {
@@ -420,11 +422,12 @@
           // delante de la puerta y pulsando arriba
           if (!inp.upPressed || !p.onGround || !U.overlap(p, e)) continue;
         }
+        // sin destino: no gastes la llave en una puerta que no lleva a ningún sitio
+        if (!e.link && !e.toZone) { if (!this.lockMsgT || this.t - this.lockMsgT > 1) { this.lockMsgT = this.t; this.emit('noLink', { x: e.cx(), y: e.y, family: e.family }); } continue; }
         if (e.locked) {
-          if (this.keys > 0) { this.keys--; e.locked = false; this.unlocked[e.tx + ',' + e.ty] = true; this.emit('unlock', { x: e.cx(), y: e.cy(), family: e.family }); }
+          if (this.keys > 0) { this.keys--; e.locked = false; this.unlocked[this.zone + ':' + e.tx + ',' + e.ty] = true; this.emit('unlock', { x: e.cx(), y: e.cy(), family: e.family }); }
           else { if (!this.lockMsgT || this.t - this.lockMsgT > 1) { this.lockMsgT = this.t; this.emit('locked', { x: e.cx(), y: e.y, family: e.family }); } continue; }
         }
-        if (!e.link && !e.toZone) { this.emit('bumpSoft', { x: e.cx(), y: e.y }); continue; }
         this.warping = { from: e, to: e.link, toZone: e.toZone, fam: e.family, t: 0, phase: 'in' };
         p.vx = 0; p.vy = 0;
         if (e.family === 'door') e.open = 1;
@@ -452,13 +455,16 @@
           // Destino en otra zona: recargar esa zona y salir en el gizmo destino
           if (w.toZone) {
             const d = this.enterZone(w.toZone.z, w.toZone.i, w.fam);
-            if (d) { if (d.family === 'pipe') placeAtPipe(d); else { p.x = d.cx() - p.w / 2; p.y = d.y + d.h - p.h; d.open = 1; } }
+            if (d) {
+              if (d.family === 'pipe') placeAtPipe(d); else { p.x = d.cx() - p.w / 2; p.y = d.y + d.h - p.h; d.open = 1; }
+              if (d.locked) { d.locked = false; this.unlocked[this.zone + ':' + d.tx + ',' + d.ty] = true; } // sales por ella: queda abierta
+            }
           } else {
             const d = w.to;
             // salir en la boca de la tubería destino (según orientación) o delante de la puerta destino
             if (d.family === 'pipe') placeAtPipe(d);
             else { p.x = d.cx() - p.w / 2; p.y = d.y + d.h - p.h; d.open = 1; }
-            if (d.locked) { d.locked = false; this.unlocked[d.tx + ',' + d.ty] = true; }
+            if (d.locked) { d.locked = false; this.unlocked[this.zone + ':' + d.tx + ',' + d.ty] = true; }
           }
           w.phase = 'out'; w.t = 0;
           this.updateCamera(1);
