@@ -40,7 +40,7 @@
         const tt = level.get(x, y);
         if (!tt) continue;
         // agua, raíles y fondos (cueva, cuerpo de semisólido de fondo) van por detrás
-        const back = tt === TT.WATER || tt === TT.RAIL || tt === TT.BGFILL || tt === TT.CAVEBG || tt === TT.SEMIBG;
+        const back = tt === TT.WATER || tt === TT.WATERCOIN || tt === TT.RAIL || tt === TT.BGFILL || tt === TT.CAVEBG || tt === TT.SEMIBG;
         if ((pass === 0) !== back) continue;
         Sp.drawTile(ctx, level, x, y, tt, pal, t, { bump: bumps[x + ',' + y] || 0, editor: opt.editor, convDir: opt.convDir, semi: semiStyle, mush: opt.mush, waveH: opt.waveH, theme: level.theme, mode: level.mode, liquidCol: opt.liquidCol, liquidTopCol: opt.liquidTopCol });
         if (opt.editor && opt.contents && opt.contents[x + ',' + y]) drawContentBadge(ctx, x, y, opt.contents[x + ',' + y], pal, opt.ch);

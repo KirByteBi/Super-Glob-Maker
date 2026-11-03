@@ -44,11 +44,15 @@
       let dt = Math.min(0.05, (ts - this.last) / 1000); this.last = ts;
       if (!(dt >= 0)) dt = 0; // primer fotograma / reloj raro: sin NaN (rompía el fondo del menú)
       this.t = (this.t || 0) + dt;
-      const inp = this.input.poll();
-      if (this.mode === 'game' && this.game) { this.game.update(dt, inp); this.game.render(this.t); }
-      else if (this.mode === 'editor' && this.editor) { this.editor.update(dt); this.editor.render(this.t); }
-      else if (this.mode === 'map' && this.worldmap) { this.worldmap.update(dt, inp); this.worldmap.render(this.t); }
-      else this.drawMenuBackdrop();
+      // En try/catch: si una escena lanza, NO debe matar el bucle (si no, el juego entero se
+      // congela y no responde ni al teclado). Se registra una vez y se sigue reprogramando el frame.
+      try {
+        const inp = this.input.poll();
+        if (this.mode === 'game' && this.game) { this.game.update(dt, inp); this.game.render(this.t); }
+        else if (this.mode === 'editor' && this.editor) { this.editor.update(dt); this.editor.render(this.t); }
+        else if (this.mode === 'map' && this.worldmap) { this.worldmap.update(dt, inp); this.worldmap.render(this.t); }
+        else this.drawMenuBackdrop();
+      } catch (e) { if (!this._loopErr) { this._loopErr = true; console.error('Error en el bucle (' + this.mode + '):', e); } }
       requestAnimationFrame((t) => this.loop(t));
     }
 

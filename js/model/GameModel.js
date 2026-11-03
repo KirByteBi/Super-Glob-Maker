@@ -127,6 +127,7 @@
       this.bumps = []; // bloques golpeados (para la animación de la vista)
       this.boss = this.entities.find((e) => e.boss) || null;
       this.camera = { x: 0, y: 0, w: S.VIEW_W, h: S.VIEW_H };
+      this.scrollX = 0; // posicion del autoscroll (solo crece)
       this.updateCamera(1);
       this.emit('start', { first });
     }
@@ -309,7 +310,7 @@
     liquidAt(px, py) {
       // Las olas de Sunlight Seaside Corrupto cuentan como el líquido del que salen
       const t = this.level.get(Math.floor(px / T), Math.floor(py / T)) || this.waveTileAt(px, py);
-      if (t === TT.WATER) return 'water';
+      if (t === TT.WATER || t === TT.WATERCOIN) return 'water';
       if (t === TT.LIQUID) return this.theme.id === 'volcano' ? 'lava' : this.theme.id === 'lake' ? 'jelly' : 'poison';
       if (py > this.liquidY + 6) return 'lava';
       if (this.theme.swim && py > 0) return 'water';
@@ -591,11 +592,40 @@
     }
 
     updateCamera(dt) {
-      const c = this.camera, p = this.player;
-      const tx = U.clamp(p.x + p.w / 2 - c.w / 2 + p.face * 40, 0, Math.max(0, this.level.width * T - c.w));
-      const ty = U.clamp(p.y + p.h / 2 - c.h * 0.55, 0, Math.max(0, this.level.height * T - c.h));
+      const c = this.camera, p = this.player, L = this.level;
+      const maxX = Math.max(0, L.width * T - c.w);
+      // AUTOSCROLL: la camara avanza sola y nunca retrocede; si te quedas detras, mueres.
+      if (L.scroll && dt < 1 && this.state === 'play') {
+        this.scrollX = Math.min(maxX, (this.scrollX || 0) + L.scrollSpeed * dt);
+        c.x = this.scrollX;
+        const ty0 = U.clamp(p.y + p.h / 2 - c.h * 0.55, 0, Math.max(0, L.height * T - c.h));
+        c.y = U.lerp(c.y, ty0, Math.min(1, (dt * 8) * 0.8));
+        // empuja al jugador para que no se quede detras del borde; si lo cruza, muere
+        if (p.x < c.x + 2) { p.x = c.x + 2; if (p.vx < 0) p.vx = 0; }
+        if (p.x + p.w > c.x + c.w - 2 && p.vx > 0) p.x = c.x + c.w - 2 - p.w; // tope derecho suave
+        if (p.x + p.w < c.x - 4) this.die('fall');
+        return;
+      }
+      let tx = U.clamp(p.x + p.w / 2 - c.w / 2 + p.face * 40, 0, maxX);
+      // LIMITE DE SCROLL: una columna de suelo TANGIBLE de arriba abajo frena la camara (sala SMW).
+      // Se busca la primera a la derecha del centro de la pantalla, dentro del rango visible.
+      const camLimit = this.solidColumnLimit(c);
+      if (camLimit != null) tx = Math.min(tx, camLimit);
+      const ty = U.clamp(p.y + p.h / 2 - c.h * 0.55, 0, Math.max(0, L.height * T - c.h));
       const k = dt >= 1 ? 1 : Math.min(1, dt * 8);
       c.x = U.lerp(c.x, tx, k); c.y = U.lerp(c.y, ty, Math.min(1, k * 0.8));
+    }
+    // Primera columna completamente sólida (de arriba abajo) por delante de la mitad de la pantalla.
+    // Devuelve el tope de cámara (px) para no enseñar más allá, o null si no hay.
+    solidColumnLimit(c) {
+      const L = this.level, H = L.height;
+      const from = Math.floor((c.x + c.w * 0.5) / T) + 1, to = Math.min(L.width - 1, Math.floor((c.x + c.w) / T) + 2);
+      for (let x = from; x <= to; x++) {
+        let full = true;
+        for (let y = 0; y < H; y++) { const t = L.get(x, y); if (!C.isSolid(t, L) || t === C.T.WATER) { full = false; break; } }
+        if (full) return Math.max(0, (x + 1) * T - c.w); // la cámara no pasa de esta columna
+      }
+      return null;
     }
 
     // Monedas y punto de control
@@ -606,6 +636,8 @@
         const t = this.level.get(x, y);
         const px = x * T + T / 2, py = y * T + T / 2;
         if (t === TT.COIN) { this.level.set(x, y, 0); this.addCoin(px, py); }
+        // Moneda dentro del agua: se recoge y queda el AGUA (no vacio)
+        else if (t === TT.WATERCOIN) { this.level.set(x, y, TT.WATER); this.addCoin(px, py); }
         else if (t === TT.RCOIN) { this.level.set(x, y, 0); this.addRedCoin(px, py); }
         else if (t === TT.VCOIN) { this.level.set(x, y, 0); this.addPurpleCoin(px, py); }
         // Bloque del Interruptor P que ahora mismo es moneda: se recoge (y ya no vuelve)

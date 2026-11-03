@@ -15,6 +15,10 @@
       this.width = U.clamp(d.width | 0 || 120, 32, 400);
       this.height = U.clamp(d.height | 0 || 24, 18, 40);
       this.time = U.clamp(d.time | 0 || 300, 10, 500);
+      // Autoscroll: 0 = normal; 1 = la camara avanza sola (nivel de scroll forzado). Si te quedas
+      // atras del borde izquierdo, mueres. Velocidad en 'scrollSpeed' (px/s).
+      this.scroll = d.scroll ? 1 : 0;
+      this.scrollSpeed = U.clamp(d.scrollSpeed | 0 || 40, 15, 120);
       const n = this.width * this.height;
       if (Array.isArray(d.tiles)) this.tiles = d.tiles.slice(0, n);
       else if (typeof d.tiles === 'string') this.tiles = Level.decode(d.tiles, n);
@@ -221,7 +225,7 @@
 
     toJSON() {
       return { v: 1, id: this.id, name: this.name, theme: this.theme, mode: this.mode, character: this.character,
-        width: this.width, height: this.height, time: this.time, tiles: Level.encode(this.tiles),
+        width: this.width, height: this.height, time: this.time, scroll: this.scroll || undefined, scrollSpeed: this.scroll ? this.scrollSpeed : undefined, tiles: Level.encode(this.tiles),
         objects: this.objects.map((o) => {
           const j = { type: o.type, x: o.x, y: o.y };
           if (o.r != null) j.r = o.r;

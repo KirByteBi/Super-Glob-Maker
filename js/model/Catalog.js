@@ -27,7 +27,10 @@
     // Semisólido DE FONDO (estilo SMM): SEMIBG = borde de arriba (semisólido, se pisa);
     // BGFILL = su cuerpo de relleno (sin colisión, se pinta detrás). El editor solo ofrece SEMIBG
     // y convierte solo las casillas de debajo en cuerpo. CAVEBG = pared de cueva de fondo.
-    SEMIBG: 56, BGFILL: 57, CAVEBG: 58, WALL: 99
+    SEMIBG: 56, BGFILL: 57, CAVEBG: 58,
+    // Moneda DENTRO del agua: agua + moneda conviven. Al recogerla queda WATER (no vacio).
+    // Se crea al pintar moneda sobre agua (o agua sobre moneda) en el editor.
+    WATERCOIN: 59, WALL: 99
   };
   const EXCLAIM = [{ c: '#ffd000', name: 'amarillo' }, { c: '#2fd46a', name: 'verde' }, { c: '#ff4fd8', name: 'rosa' }];
   const SOLID = new Set([T.GROUND, T.GROUND2, T.BRICK, T.BOX, T.HARD, T.SPIKE, T.BOUNCE, T.ICE, T.USED, T.CONV_L, T.CONV_R, T.DONUT, T.NOTE, T.SW0, T.SW1, T.SW2, T.SWG, T.PSW, T.POW, T.PIPE, T.LIGHT, T.WALL]);

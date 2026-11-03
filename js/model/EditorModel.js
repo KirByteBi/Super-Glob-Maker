@@ -92,6 +92,9 @@
       if (tool.kind === 'tile') {
         // Moneda sobre una caja = caja con moneda
         if (tool.id === C.T.COIN && C.isContainer(tile)) { if (L.contents[key] !== 'coin') { L.contents[key] = 'coin'; this.changed = true; } return; }
+        // Moneda + agua CONVIVEN: moneda sobre agua, o agua sobre moneda = WATERCOIN
+        if (tool.id === C.T.COIN && (tile === C.T.WATER || tile === C.T.WATERCOIN)) { L.set(x, y, C.T.WATERCOIN); delete L.contents[key]; this.changed = true; return; }
+        if (tool.id === C.T.WATER && (tile === C.T.COIN || tile === C.T.WATERCOIN)) { L.set(x, y, C.T.WATERCOIN); delete L.contents[key]; this.changed = true; return; }
         if (tile === tool.id) return;
         // Monedas rojas: set de máximo 8. Al poner la 9a desaparece la más vieja (FIFO).
         if (tool.id === C.T.RCOIN) { this.placeRedCoin(x, y); return; }

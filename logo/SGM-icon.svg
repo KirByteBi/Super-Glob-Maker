@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="42%" cy="34%" r="88%">
+      <stop offset="0%" stop-color="#ffbe5c"/>
+      <stop offset="55%" stop-color="#ff8c1a"/>
+      <stop offset="100%" stop-color="#d95400"/>
+    </radialGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6bff8f"/>
+      <stop offset="55%" stop-color="#19e65a"/>
+      <stop offset="100%" stop-color="#00c24a"/>
+    </linearGradient>
+    <linearGradient id="comet" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00e5ff" stop-opacity="0"/>
+      <stop offset="60%" stop-color="#00e5ff" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#fff07a"/>
+    </linearGradient>
+    <radialGradient id="cometHead" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="35%" stop-color="#fff07a"/>
+      <stop offset="100%" stop-color="#00e5ff"/>
+    </radialGradient>
+    <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9c6b2e"/>
+      <stop offset="50%" stop-color="#7a4e1d"/>
+      <stop offset="100%" stop-color="#5e3a13"/>
+    </linearGradient>
+    <linearGradient id="yellow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff34d"/>
+      <stop offset="100%" stop-color="#ffd000"/>
+    </linearGradient>
+    <clipPath id="round"><rect x="0" y="0" width="512" height="512" rx="104" ry="104"/></clipPath>
+  </defs>
+
+  <!-- orange background -->
+  <rect x="0" y="0" width="512" height="512" rx="104" ry="104" fill="url(#bg)"/>
+
+  <g clip-path="url(#round)">
+    <!-- PixelStar-style star: an OPEN 5-point star outline, drawn as a
+         single unfinished stroke (cyan -> yellow), a recognizable silhouette -->
+    <g transform="rotate(-12 350 170) translate(-24 20)">
+      <!-- soft glow behind -->
+      <path d="M 350 70 L 374 136 L 444 138 L 388 180 L 408 248
+               L 350 208 L 292 248 L 312 180 L 256 138 L 326 136 Z"
+            fill="url(#cometHead)" opacity="0.18"/>
+      <!-- the open outline: starts top, traces the star, stops before closing -->
+      <path d="M 350 70 L 374 136 L 444 138 L 388 180 L 408 248
+               L 350 208 L 292 248 L 312 180 L 256 138 L 326 136"
+            fill="none" stroke="url(#comet)" stroke-width="12"
+            stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- little drawing dot at the unfinished end -->
+      <circle cx="326" cy="136" r="9" fill="#fff07a" stroke="#00bcd4" stroke-width="3"/>
+      <circle cx="350" cy="70" r="7" fill="#fff"/>
+    </g>
+  </g>
+
+  <!-- ===== top word: GLOB (green, hand-drawn, with the Glob as the O) ===== -->
+  <g transform="rotate(-4 256 180) translate(0 24)">
+    <!-- G -->
+    <path d="M 118 92
+             C 70 86 52 120 54 160
+             C 56 198 84 224 124 220
+             C 150 217 166 200 168 176
+             L 168 158 L 126 158 L 126 182 L 142 182
+             C 140 192 132 196 122 196
+             C 100 198 86 180 86 158
+             C 85 134 98 114 120 116
+             C 134 117 142 124 146 134 L 174 120
+             C 164 100 146 90 118 92 Z"
+          fill="url(#green)" stroke="#063a17" stroke-width="12" stroke-linejoin="round"/>
+    <!-- L -->
+    <path d="M 196 96 L 196 214 L 262 214 L 262 186 L 226 186 L 226 96 Z"
+          fill="url(#green)" stroke="#063a17" stroke-width="12" stroke-linejoin="round"/>
+
+    <!-- Glob Verde as the "O" -->
+    <g transform="translate(316 158) scale(1.02)">
+      <path d="M -52 30 C -62 26 -64 8 -54 2 C -52 -22 -34 -40 -6 -40
+               C 28 -40 46 -22 48 2 C 60 6 62 24 50 30
+               C 38 38 16 40 -2 40 C -22 40 -40 38 -52 30 Z"
+            fill="#0a0a0a"/>
+      <path d="M -44 24 C -52 20 -54 6 -46 2 C -44 -16 -30 -30 -6 -30
+               C 22 -30 38 -16 40 2 C 50 6 52 20 42 24
+               C 32 32 14 34 -2 34 C -20 34 -34 32 -44 24 Z"
+            fill="url(#green)"/>
+      <rect x="-26" y="-16" width="18" height="20" rx="6" fill="#0a0a0a"/>
+      <rect x="2" y="-6" width="18" height="22" rx="6" fill="#0a0a0a"/>
+      <path d="M -30 18 L 4 22" stroke="#0a0a0a" stroke-width="9" stroke-linecap="round"/>
+    </g>
+
+    <!-- B -->
+    <path d="M 376 96 L 376 214 L 418 214
+             C 448 214 464 200 464 180
+             C 464 166 456 158 444 154
+             C 453 150 458 142 458 132
+             C 458 110 444 96 416 96 Z
+             M 406 120 L 416 120 C 426 120 430 126 430 132 C 430 139 425 144 415 144 L 406 144 Z
+             M 406 164 L 418 164 C 429 164 434 170 434 178 C 434 185 429 190 418 190 L 406 190 Z"
+          fill="url(#green)" stroke="#063a17" stroke-width="12" stroke-linejoin="round" fill-rule="evenodd"/>
+
+    <!-- green drips under the word (GlD slime style) -->
+    <g fill="url(#green)" stroke="#063a17" stroke-width="6">
+      <path d="M 150 212 q -2 28 8 34 q 10 -6 8 -34 Z"/>
+      <path d="M 250 210 q -2 36 9 44 q 11 -8 9 -44 Z"/>
+      <path d="M 420 206 q -2 26 8 32 q 10 -6 8 -32 Z"/>
+    </g>
+  </g>
+
+  <!-- SUPER little ribbon -->
+  <text x="150" y="104" transform="rotate(-6 150 104)"
+        font-family="Arial Black, Arial, sans-serif" font-weight="900"
+        font-size="40" letter-spacing="6"
+        fill="#ffe600" stroke="#000" stroke-width="7"
+        paint-order="stroke" stroke-linejoin="round">SUPER</text>
+
+  <!-- ===== bottom wooden sign: MAKER (pulled up to touch GLOB) ===== -->
+  <g transform="rotate(-2 256 356)">
+    <rect x="86" y="296" width="340" height="120" rx="20" fill="#2a1708"/>
+    <rect x="98" y="308" width="316" height="96" rx="12" fill="url(#wood)"/>
+    <!-- plank lines -->
+    <g stroke="#4a2d10" stroke-width="3" opacity="0.5">
+      <line x1="110" y1="338" x2="402" y2="334"/>
+      <line x1="110" y1="374" x2="402" y2="376"/>
+    </g>
+    <!-- MAKER graffiti yellow -->
+    <text x="256" y="382"
+          font-family="Arial Black, Arial, sans-serif" font-weight="900"
+          font-size="74" letter-spacing="2" text-anchor="middle"
+          fill="url(#yellow)" stroke="#5a3a00" stroke-width="7"
+          paint-order="stroke" stroke-linejoin="round">MAKER</text>
+  </g>
+</svg>

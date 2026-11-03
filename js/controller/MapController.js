@@ -71,11 +71,12 @@
       // fondo con el tema del nodo actual (ambiente)
       const cur = this.world.map[this.cursor];
       ctx.save();
-      this.drawScenery(ctx, t);          // paisaje de mapa propio del mundo
-      this.drawPaths(ctx);               // senda solida entre nodos
-      this.drawNodes(ctx, t);            // nodos con icono/miniatura
-      this.drawGlob(ctx, t, cur);        // el Glob en el nodo actual
-      this.drawHud(ctx, cur);            // titulo + cartel del nivel + ayuda
+      // cada capa protegida: un fallo de dibujo no debe tumbar el mapa entero
+      try { this.drawScenery(ctx, t); } catch (e) { ctx.fillStyle = '#20406a'; ctx.fillRect(0, 0, W, H); }
+      try { this.drawPaths(ctx); } catch (e) { /* sin caminos */ }
+      try { this.drawNodes(ctx, t); } catch (e) { /* sin nodos */ }
+      try { this.drawGlob(ctx, t, cur); } catch (e) { /* sin glob */ }
+      try { this.drawHud(ctx, cur); } catch (e) { /* sin hud */ }
       ctx.restore();
     }
 
@@ -134,6 +135,11 @@
     // ---- nodos con icono/miniatura del tema ----
     drawNodes(ctx, t) {
       this.world.nodes.forEach((n) => {
+        try { this.drawOneNode(ctx, t, n); } catch (e) { const p = this.nodePos(n); ctx.fillStyle = '#ffd000'; ctx.beginPath(); ctx.arc(p.x, p.y, 14, 0, 7); ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#000'; ctx.stroke(); }
+      });
+    }
+    drawOneNode(ctx, t, n) {
+      {
         const p = this.nodePos(n), unlocked = SM.isUnlocked(this.worldId, n.id), cleared = SM.isCleared(this.worldId, n.id);
         const sel = n.id === this.cursor;
         if (n.type === 'start') { // banderin de salida
@@ -179,7 +185,7 @@
         // insignia de completado
         if (cleared) { ctx.fillStyle = '#2fd46a'; ctx.beginPath(); ctx.arc(r - 4, -r + 4, 7, 0, 7); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = '#000'; ctx.stroke(); ctx.fillStyle = '#fff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('✓', r - 4, -r + 5); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; }
         ctx.restore();
-      });
+      }
     }
 
     drawGlob(ctx, t, cur) {

@@ -42,7 +42,11 @@
         const surface = g.liquidAt(this.cx(), this.y - T * 0.6) == null;
         // cuando le toca saltar, sube nadando hasta la superficie
         if (this.jumpT <= 0 && !surface) this.vy = -80 * this.power;
-        if (this.jumpT <= 0 && surface) {
+        // El Pysh PREFIERE quedarse en el agua: al llegar a la superficie con el timer, la
+        // mayoria de las veces solo se asoma y vuelve a bajar; solo salta fuera de vez en cuando.
+        if (this.jumpT <= 0 && surface && U.hash2(Math.floor(this.t), this.spawnX) > 0.65) {
+          this.vy = 40; this.jumpT = U.rand(1.2, 2.2) / this.power; // se queda nadando, reintenta luego
+        } else if (this.jumpT <= 0 && surface) {
           this.dir = dirTo(this, g.player); this.leap = true; this.jumpT = U.rand(2, 3.5) / this.power;
           this.vy = -(520 + 220 * (this.power - 1)); this.vx = this.dir * (90 + 80 * (this.power - 1));
           g.emit('pyshLeap', { x: this.cx(), y: this.y, element: this.element });

@@ -444,6 +444,11 @@ Para Super Glob Maker hace falta en el Supabase de GlD:
 [ ] Capturas de cada mapa y modo en miniaturas/
 [ ] Modo Historia con 16 mapas en orden de dificultad
 [ ] Balance de enemigos y power-ups
+[ ] MOVIL: comprobar que el scroll de camara al EDITAR funciona
+    (arrastre/desplazamiento tactil) y el resto de funciones del
+    editor. Adaptar CONTROLES segun el dispositivo: en PC teclado,
+    en movil botones tactiles en pantalla (cruceta + saltar/correr/
+    disparar) y gestos. Detectar PC vs movil y mostrar lo que toque.
 
 
 --------------------------------------------------------------

@@ -181,9 +181,14 @@
       field('Se aplica a', tgSel);
       const syncWinN = () => { const def = WT[winSel.value] || {}; winN.parentNode.style.display = def.hasN ? '' : 'none'; tgSel.parentNode.style.display = winSel.value === 'none' ? 'none' : ''; };
       winSel.addEventListener('change', syncWinN); syncWinN();
+      // Nivel de SCROLL (la camara avanza sola; si te quedas atras, mueres)
+      const scroll = field('Nivel de scroll (la cámara avanza sola)', inp('checkbox', '', { checked: !!level.scroll }));
+      const scrollSpeed = field('Velocidad del scroll (15-120)', inp('number', level.scrollSpeed || 40, { min: 15, max: 120 }));
+      const syncScroll = () => { scrollSpeed.parentNode.style.display = scroll.checked ? '' : 'none'; };
+      scroll.addEventListener('change', syncScroll); syncScroll();
       b.appendChild(form);
       const row = el('div', 'row');
-      row.appendChild(button('Aplicar', 'primary', () => { this.closeModal(); onApply({ name: name.value.trim() || 'Nivel sin nombre', width: +width.value, height: +height.value, time: +time.value, win: { type: winSel.value, n: +winN.value, target: tgSel.value } }); }));
+      row.appendChild(button('Aplicar', 'primary', () => { this.closeModal(); onApply({ name: name.value.trim() || 'Nivel sin nombre', width: +width.value, height: +height.value, time: +time.value, win: { type: winSel.value, n: +winN.value, target: tgSel.value }, scroll: scroll.checked ? 1 : 0, scrollSpeed: +scrollSpeed.value }); }));
       row.appendChild(button('Exportar', '', h.exportLevel));
       row.appendChild(button('Importar', '', h.importLevel));
       row.appendChild(button('🗑 Vaciar', 'danger', () => { this.confirm('¿Borrar todo el contenido del nivel?', h.clearLevel); }));

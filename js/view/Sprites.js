@@ -19,6 +19,14 @@
   function ink(ctx, w) { ctx.strokeStyle = INK; ctx.lineWidth = w || 3.5; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; }
   function fillStroke(ctx, fill, w) { if (fill) { ctx.fillStyle = fill; ctx.fill(); } ink(ctx, w); ctx.stroke(); }
   function rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+  // ¿El agua/líquido en (x,y) dibuja SUPERFICIE arriba? Sí salvo que la casilla de encima
+  // sea el MISMO líquido (ahí es interior) o un bloque TANGIBLE (suelo/sólido real lo tapa).
+  // Un bloque A/B o "!" INTANGIBLE no tapa: el líquido pasa por él y la superficie se ve igual.
+  function liquidSurface(level, x, y, self) {
+    const up = level.get(x, y - 1);
+    if (up === self) return false;                 // interior de la columna de líquido
+    return !S.Model.Catalog.isSolid(up, level);    // solo un bloque tangible tapa la superficie
+  }
   // Olas de Sunlight Seaside Corrupto: altura (px) de la ola en wx para la superficie (x, y),
   // limitada igual que en el modelo (no entra en un bloque 2 casillas por encima). null = sin olas.
   function waveFn(o, level, x, y, base) {
@@ -648,8 +656,9 @@
         }
         break;
       case TT.LIQUID: {
-        // solo hay superficie si arriba está el aire (si toca techo/bloque, no sale superficie)
-        const top = level.get(x, y - 1) === TT.EMPTY;
+        // superficie salvo que arriba haya el mismo líquido o un bloque TANGIBLE (un A/B o "!"
+        // intangible no tapa: el líquido lo atraviesa y su superficie se ve igual)
+        const top = liquidSurface(level, x, y, TT.LIQUID);
         // Sound Discotech pasa un color cambiante en o.liquidCol/o.liquidTopCol
         const liqCol = o.liquidCol || pal.liquid, liqTop = o.liquidTopCol || pal.liquidTop;
         ctx.fillStyle = liqCol; ctx.fillRect(px, py + (top ? 8 : 0), T, T - (top ? 8 : 0));
@@ -671,6 +680,12 @@
         ctx.beginPath(); ctx.arc(px + 9, py + 13, 9, 0, 7); ctx.arc(px + 20, py + 9, 11, 0, 7); ctx.arc(px + 27, py + 15, 7, 0, 7); ctx.rect(px + 2, py + 12, T - 4, 10);
         ink(ctx, 6); ctx.stroke(); ctx.fill();
         ctx.fillStyle = INK; ctx.fillRect(px + 12, py + 10, 3, 3); ctx.fillRect(px + 17, py + 12, 3, 3);
+        break;
+      }
+      case TT.WATERCOIN: { // agua + moneda dentro
+        ctx.fillStyle = U.rgba(pal.water || '#3c8cff', 0.5); ctx.fillRect(px, py, T, T);
+        if (liquidSurface(level, x, y, TT.WATER)) { ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 2; ctx.beginPath(); for (let i = 0; i <= 8; i++) ctx.lineTo(px + i * 4, py + 2 + Math.sin(time * 3 + x * 8 + i) * 1.5); ctx.stroke(); }
+        coin(ctx, px + T / 2, py + T / 2, 10, time * 4 + x * 0.4);
         break;
       }
       case TT.COIN: coin(ctx, px + T / 2, py + T / 2, 10, time * 4 + x * 0.4); break;
@@ -772,8 +787,8 @@
       }
       case TT.WATER: {
         ctx.fillStyle = U.rgba(pal.water || '#3c8cff', 0.5); ctx.fillRect(px, py, T, T);
-        // superficie solo si arriba está el aire (si toca techo no sale superficie)
-        if (level.get(x, y - 1) === TT.EMPTY) {
+        // superficie salvo que arriba haya más agua o un bloque TANGIBLE (A/B o "!" intangible no tapa)
+        if (liquidSurface(level, x, y, TT.WATER)) {
           // Sunlight Seaside Corrupto: la ola crece por encima de la casilla
           const wv = waveFn(o, level, x, y, 0), hh = (i) => (wv ? wv(px + i * 4) : 0);
           if (wv) { ctx.beginPath(); ctx.moveTo(px, py); for (let i = 0; i <= 8; i++) ctx.lineTo(px + i * 4, py - hh(i)); ctx.lineTo(px + T, py); ctx.closePath(); ctx.fill(); }

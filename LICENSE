@@ -1,0 +1,173 @@
+==============================================================================
+                       SUPER GLOB MAKER — LICENSE
+==============================================================================
+
+Copyright (c) KirByte_Bi. All rights reserved.
+Todos los derechos reservados.
+
+The game "Super Glob Maker", including its source code, design, mechanics,
+text and ALL of its images and artwork, is created and owned by KirByte_Bi.
+Super Glob Maker is the official level-maker / companion project of
+"Glob Defenders" and shares its account, characters and resources.
+
+------------------------------------------------------------------------------
+1. OWNERSHIP / PROPIEDAD
+------------------------------------------------------------------------------
+
+EN: Every asset in this project — code, images, sprites, logos, UI, sounds and
+    written content — is the intellectual property of KirByte_Bi unless an
+    explicit third-party credit is listed in section 3. The names, characters,
+    Globs, Pyces and visual identity of Super Glob Maker (shared with Glob
+    Defenders) are original works.
+
+ES: Todo el contenido de este proyecto — código, imágenes, sprites, logos,
+    interfaz, sonidos y textos — es propiedad intelectual de KirByte_Bi salvo
+    los créditos de terceros indicados en la sección 3. Los nombres,
+    personajes, Globs, Pyces y la identidad visual de Super Glob Maker
+    (compartida con Glob Defenders) son obras originales.
+
+------------------------------------------------------------------------------
+2. USAGE TERMS / CONDICIONES DE USO
+------------------------------------------------------------------------------
+
+EN: You MAY NOT use, copy, reproduce, redistribute, modify or publish this
+    game, any part of its code, or any of its images (ESPECIALLY the images)
+    in personal, public or commercial projects without written permission from
+    KirByte_Bi.
+
+    Doing so — whether it is the whole game, portions of the code, or the
+    artwork — may result in an IMMEDIATE legal complaint for improper use of
+    images, improper use of code, or theft of the game.
+
+ES: NO puedes usar, copiar, reproducir, redistribuir, modificar ni publicar
+    este juego, ninguna parte de su código, ni ninguna de sus imágenes
+    (SOBRE TODO las imágenes) en proyectos personales, públicos o comerciales
+    sin permiso por escrito de KirByte_Bi.
+
+    Hacerlo — ya sea el juego completo, partes del código o las imágenes —
+    puede suponer una DENUNCIA INMEDIATA por uso indebido de imágenes, uso
+    indebido de código o robo del juego.
+
+------------------------------------------------------------------------------
+3. CREDITS / CRÉDITOS
+------------------------------------------------------------------------------
+
+Development / Desarrollo:      KirByte_Bi
+Glob Creators / Creadores:     JustAUser, Credible
+Pyce Creators / Pyces:         Luna1255 (Axolotl Pyce, Shark Pyce)
+Skin Creators / Skins:         KirByte_Bi, Nitrogen, Credible
+Collaborators / Colaboradores: Eithancrea (Cube Adventure), Star Jump (KirByte_Bi + MikaNBC)
+
+Specific contributions / Contribuciones concretas:
+  - Worker Glob — made by Credible, supervised by KirByte_Bi.
+  - Bomb Glob — made by JustAUser, supervised by KirByte_Bi.
+  - DJ Glob — designed by Credible, planned by KirByte_Bi.
+  - Fracstral Glob (IEx. skin) — made by Credible, supervised by KirByte_Bi.
+  - Axolotl Pyce & Shark Pyce — created by Luna1255.
+  - Star Jump collaboration — drawed by MikaNBC with supervision of KirByte_Bi.
+  - Cube Adventure (Eithancrea) collaboration — Interstellar Menace quest.
+
+------------------------------------------------------------------------------
+4. ORIGIN & HISTORY / ORIGEN E HISTORIAL
+------------------------------------------------------------------------------
+
+EN: Super Glob Maker (SGM) is the level-maker and companion of Glob Defenders
+    (GlD): it reuses the same characters, Globs, Pyces, resources and GlD
+    account. Glob Defenders was created in May 2026, but the Pyces and Globs
+    themselves have existed since roughly 2023, and have been continuously
+    redrawn and remodeled up to their current form. Resources from the ROBLOX
+    games "Find the Pyces" (2) and "Find Those Pyces" (1) are reused frequently.
+
+    Most of the resources (Globs, Monsters, Bits/Bytes and more) come from
+    "Iniciation Defenses" (I.D.). Any I.D. resource is property of the group
+    that developed it; however, POPLIO_30 granted KirByte_Bi the freedom to use
+    them for Glob Defenders and Super Glob Maker. Therefore, any I.D. resources
+    that do not carry their own credits are also property of KirByte_Bi. The
+    Monsters remain attributed to POP (POPLIO_30).
+
+ES: Super Glob Maker (SGM) es el creador de niveles y companion de Glob
+    Defenders (GlD): reutiliza los mismos personajes, Globs, Pyces, recursos y
+    la cuenta de GlD. Glob Defenders se creó en mayo de 2026, pero los Pyces y
+    los Globs existen desde aproximadamente 2023, y han sido redibujados y
+    remodelados continuamente hasta su forma actual. Se reutilizan con
+    frecuencia recursos de los juegos de ROBLOX "Find the Pyces" (2) y
+    "Find Those Pyces" (1).
+
+    La mayoría de los recursos (Globs, Monsters, Bits/Bytes y más) provienen de
+    "Iniciation Defenses" (I.D.). Cualquier recurso de I.D. es propiedad del
+    grupo que lo desarrolló; no obstante, POPLIO_30 dio a KirByte_Bi la libertad
+    de usarlos para Glob Defenders y Super Glob Maker. Por ello, los recursos de
+    I.D. que no tienen créditos propios son también propiedad de KirByte_Bi. Los
+    Monsters siguen atribuidos a POP (POPLIO_30).
+
+------------------------------------------------------------------------------
+5. THIRD-PARTY REFERENCES / REFERENCIAS DE TERCEROS
+------------------------------------------------------------------------------
+
+EN: Some cosmetics are original artwork that merely takes inspiration from or
+    references the following properties. All trademarks and copyrights belong
+    to their respective owners; no affiliation or endorsement is implied.
+
+ES: Algunos cosméticos son arte original que únicamente se inspira en o hace
+    referencia a las siguientes propiedades. Todas las marcas y derechos
+    pertenecen a sus respectivos dueños; no implica afiliación ni respaldo.
+
+  - Pinkbot Reskin        — inspired by Kirby (© HAL Laboratory / Nintendo)
+  - Silent Habitant Reskin — Waddle Dee reference (© HAL Laboratory)
+  - Cutely Haired         — inspired by Hatsune Miku (© Crypton Future Media, Inc.)
+  - Lovely Haired         — inspired by Kasane Teto (© AHS Co., Ltd.)
+  - The Watcher           — inspired by Yo-kai Watch (© LEVEL-5 Inc.)
+  - Monobear Bombot Reskin — Danganronpa reference
+  - Bunnity Bombot Reskin  — Danganronpa reference
+  - Glamour Hat           — a subtle nod to Cappy from Super Mario Odyssey
+  - Furnace Bombot        — a reference to Tower Heroes (Hiloh / Tower Heroes, ROBLOX)
+  - Clockwork Bombot      — original design; loosely mixes inspiration from
+                            Tower Heroes (ROBLOX) and Super Mario 64. Being a
+                            clock or a furnace does not tie it to anything by
+                            itself.
+
+------------------------------------------------------------------------------
+6. INSPIRATION & ACKNOWLEDGEMENTS / INSPIRACIÓN Y AGRADECIMIENTOS
+------------------------------------------------------------------------------
+
+EN: Super Glob Maker is a non-commercial fan project. Its core idea — a game
+    where you build, play and share your own platforming levels — is directly
+    inspired by the following works. All trademarks and copyrights belong to
+    their respective owners; no affiliation or endorsement is implied.
+
+ES: Super Glob Maker es un proyecto fan sin ánimo de lucro. Su idea principal
+    — un juego donde construyes, juegas y compartes tus propios niveles de
+    plataformas — está directamente inspirada en las siguientes obras. Todas
+    las marcas y derechos pertenecen a sus respectivos dueños; no implica
+    afiliación ni respaldo.
+
+  - Super Mario Maker 1 & 2 — © Nintendo.
+        The original level-maker concept Super Glob Maker is built upon.
+
+  - Super Mario Maker: World Engine (SMMWE) — by Strato and their staff.
+        Fan engine that hugely inspired this project.
+
+  - Dream Crafter — by Strato and their staff.
+        Fan engine that hugely inspired this project.
+
+EN: Huge thanks to Strato and their team for SMMWE and Dream Crafter, whose
+    work showed what a fan-made level maker can be.
+ES: Enorme agradecimiento a Strato y su equipo por SMMWE y Dream Crafter, cuyo
+    trabajo demostró lo que puede llegar a ser un creador de niveles fan.
+
+==============================================================================
+EN: If you are unsure whether a use is allowed, assume it is NOT and contact
+    KirByte_Bi first.
+ES: Si dudas si un uso está permitido, asume que NO lo está y contacta antes
+    con KirByte_Bi.
+==============================================================================
+
+Side Note by KirByte | Nota de KirByte:
+EN: I assume you will want to make fanart or skins/Globs, Pyces, Enemies, Bosses or anything for the game, when summiting one you accepting that it will be Kirb's propety, with the deserved credits as a original author. Publishing or commercializing it on your own is still NOT allowed without Kirb's permission.
+ES: Si quieres crear fanart, skins, Globs, Pyces, enemigos, jefes o cualquier otro contenido para el juego, eres bienvenido a hacerlo. Sin embargo, al enviarlo aceptas que tu creación pasa a ser propiedad de KirByte_Bi, y siempre se mostrará con los créditos que mereces como su autor original. Publicarlo o comercializarlo por tu cuenta sigue SIN estar permitido sin permiso de Kirb.
+
+==============================================================================
+Super Glob Maker © 2026 KirByte_Bi. All rights reserved. / Todos los derechos
+reservados. Companion of Glob Defenders. Characters and resources originate
+from ~2023. | Pyces, Globs and I.D. resources used with permission (POPLIO_30).
+==============================================================================
