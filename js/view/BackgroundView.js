@@ -313,28 +313,237 @@
     hillsBand(ctx, cx, 0.3, H - 70, 60, p.mid, 0.01, true);
   };
 
+  // =====================================================================
+  //  PERSONALIDAD DEL MODO CORRUPTO, una por mapa (sustituye a los ojos genéricos).
+  //  back(): detrás del mundo, sobre el fondo normal del mapa.
+  //  front(): por delante de todo (lluvia, ceniza, destellos...). Sin destellos fuertes:
+  //  los flashes van con alfa baja para no molestar a la vista.
+  // =====================================================================
+  const wrapX = (x) => ((x % W) + W) % W;
+  function rays(ctx, x, y, n, r, rot, a, b) {
+    for (let i = 0; i < n; i++) {
+      const a0 = rot + (i / n) * Math.PI * 2, a1 = a0 + Math.PI / n;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, r, a0, a1); ctx.closePath(); ctx.fillStyle = i % 2 ? a : b; ctx.fill();
+    }
+  }
+  function beam(ctx, x, y, ang, len, w, col) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
+    const g = ctx.createLinearGradient(0, 0, 0, -len); g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.beginPath(); ctx.moveTo(-6, 0); ctx.lineTo(-w, -len); ctx.lineTo(w, -len); ctx.lineTo(6, 0); ctx.closePath(); ctx.fillStyle = g; ctx.fill(); ctx.restore();
+  }
+  function veil(ctx, top, bot) { const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, top); g.addColorStop(1, bot); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
+  function clockFace(ctx, x, y, r, a1, a2, col) {
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fillStyle = U.rgba(col, 0.18); ctx.fill(); ctx.strokeStyle = U.rgba(col, 0.7); ctx.lineWidth = 3; ctx.stroke();
+    ctx.strokeStyle = U.rgba(col, 0.9); ctx.lineCap = 'round';
+    [[a1, r * 0.8, 3], [a2, r * 0.55, 5]].forEach(([a, l, w]) => { ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); ctx.stroke(); });
+  }
+  // Ciclo día/noche (Enredados Nublásticos Corrupto): 0 = día, 1 = noche
+  const dayNight = (t) => U.clamp(0.5 - Math.cos(t * (Math.PI * 2 / 24)) * 0.7, 0, 1);
+
+  const CORRUPT = {
+    // Gelatina loca: el fondo tiembla como gelatina, burbujas rosas suben y gotas gigantes botan
+    lake: {
+      pre(ctx, t) { const k = Math.sin(t * 5.2) * 0.018; ctx.translate(0, H); ctx.scale(1 - k * 0.5, 1 + k); ctx.translate(0, -H); },
+      back(ctx, p, cx, t) {
+        veil(ctx, 'rgba(255,60,170,0.05)', 'rgba(120,0,90,0.3)');
+        layer(ctx, cx, 0.25, 260, (x, i, h) => { const by = H - 150 - Math.abs(Math.sin(t * 2.4 + i)) * (60 + h * 80), s = 1 - Math.max(0, Math.cos(t * 2.4 + i)) * 0.25; Sp().globPath(ctx, x, by - 30 * s, 50, 30 * s); Sp().fillStroke(ctx, U.rgba('#ff4fa0', 0.75), 3); });
+        for (let i = 0; i < 24; i++) { const x = wrapX(U.hash(i) * 1600 - cx * 0.2 + Math.sin(t + i) * 10), y = H - ((t * (30 + U.hash(i + 5) * 40) + U.hash(i + 9) * H) % H); ctx.beginPath(); ctx.arc(x, y, 3 + U.hash(i + 3) * 6, 0, 7); ctx.strokeStyle = 'rgba(255,170,220,0.7)'; ctx.lineWidth = 2; ctx.stroke(); }
+      }
+    },
+    // Apagón: focos de búsqueda que barren el cielo y carteles de neón que se funden
+    city: {
+      back(ctx, p, cx, t) {
+        for (let i = 0; i < 3; i++) beam(ctx, wrapX(200 + i * 340 - cx * 0.15), H - 40, Math.sin(t * 0.6 + i * 2) * 0.6, H, 70, 'rgba(255,240,170,0.22)');
+        layer(ctx, cx, 0.3, 330, (x, i, h) => {
+          const on = Math.sin(t * (3 + h * 5) + i * 7) > -0.2 || (t * 10 + i) % 7 < 0.3;
+          if (!on) return; const col = ['#ff2fd6', '#00e5ff', '#ffd000'][i % 3 < 0 ? 0 : Math.abs(i) % 3];
+          ctx.shadowColor = col; ctx.shadowBlur = 16; ctx.strokeStyle = col; ctx.lineWidth = 4; Sp().rr(ctx, x + 20, 190 + h * 80, 70, 26, 8); ctx.stroke();
+          ctx.fillStyle = col; ctx.font = 'bold 14px "Trebuchet MS",sans-serif'; ctx.fillText(['OPEN', 'GLOB', '24h', 'PYCE'][Math.abs(i) % 4], x + 32, 208 + h * 80); ctx.shadowBlur = 0;
+        });
+      }
+    },
+    // Marejada: tormenta en el mar, relámpagos y lluvia (los relámpagos van con destello suave)
+    seaside: {
+      back(ctx, p, cx, t) {
+        veil(ctx, 'rgba(10,20,50,0.35)', 'rgba(20,40,80,0.2)');
+        layer(ctx, cx, 0.1, 240, (x, i, h) => cloud(ctx, x, 50 + h * 60, 1.2 + h * 0.6, '#2b3048', false));
+        const ph = t % 6.5;
+        if (ph < 0.25) { ctx.strokeStyle = 'rgba(230,240,255,0.95)'; ctx.lineWidth = 3; ctx.beginPath(); let bx = 300 + (Math.floor(t / 6.5) * 337) % 500, by = 80; ctx.moveTo(bx, by); while (by < H - 160) { bx += U.rand(-30, 30); by += U.rand(20, 40); ctx.lineTo(bx, by); } ctx.stroke(); }
+        ctx.fillStyle = 'rgba(40,70,120,0.8)'; ctx.beginPath(); ctx.moveTo(0, H);
+        for (let x = 0; x <= W; x += 12) ctx.lineTo(x, H - 160 - Math.max(0, Math.sin((x + cx * 0.3) * 0.012 - t * 2.2)) * 50); ctx.lineTo(W, H); ctx.fill();
+      },
+      front(ctx, cx, t) {
+        ctx.strokeStyle = 'rgba(180,200,255,0.45)'; ctx.lineWidth = 1.5;
+        for (let i = 0; i < 70; i++) { const x = wrapX(U.hash(i) * W * 3 - t * 300 - cx * 0.4), y = (U.hash(i + 50) * H + t * 900) % H; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 7, y + 18); ctx.stroke(); }
+        if (t % 6.5 < 0.25) { ctx.fillStyle = 'rgba(220,230,255,0.12)'; ctx.fillRect(0, 0, W, H); }
+      }
+    },
+    // Aridez Escalofriante: tormenta de arena y fantasmas que cruzan el horizonte
+    ruins: {
+      back(ctx, p, cx, t) {
+        layer(ctx, cx, 0.18, 300, (x, i, h) => {
+          const gx = x + Math.sin(t * 0.8 + i) * 30, gy = 160 + h * 120 + Math.sin(t * 1.6 + i) * 12;
+          ctx.globalAlpha = 0.35 + Math.sin(t + i) * 0.15; ctx.fillStyle = '#e8f0ff';
+          ctx.beginPath(); ctx.arc(gx, gy, 22, Math.PI, 0); for (let k = 0; k <= 4; k++) ctx.lineTo(gx + 22 - k * 11, gy + 30 + (k % 2) * 8); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = '#0a0a0a'; ctx.fillRect(gx - 9, gy - 6, 5, 7); ctx.fillRect(gx + 4, gy - 6, 5, 7); ctx.globalAlpha = 1;
+        });
+      },
+      front(ctx, cx, t) {
+        ctx.fillStyle = 'rgba(230,180,120,0.35)';
+        for (let i = 0; i < 40; i++) { const x = wrapX(U.hash(i) * W * 2 + t * 260 - cx * 0.5), y = U.hash(i + 30) * H; ctx.fillRect(x, y, 14 + U.hash(i + 2) * 20, 1.5); }
+        veil(ctx, 'rgba(160,110,60,0.08)', 'rgba(120,70,30,0.18)');
+      }
+    },
+    // Pesadilla en el Circo: rayos giratorios rojos y morados, focos y confeti
+    circus: {
+      back(ctx, p, cx, t) {
+        ctx.globalAlpha = 0.45; rays(ctx, W / 2 - cx * 0.05 % 200, H * 0.55, 18, W, t * 0.9, '#ff2f4f', '#4a0f6a'); ctx.globalAlpha = 1;
+        [0.2, 0.8].forEach((u, i) => beam(ctx, W * u, H, Math.sin(t * 2.2 + i * 3) * 0.7, H * 1.1, 90, 'rgba(255,230,120,0.25)'));
+      },
+      front(ctx, cx, t) {
+        const cols = ['#ff2f4f', '#ffd000', '#2fd46a', '#3b8bff', '#ff4fd8'];
+        for (let i = 0; i < 40; i++) { const x = wrapX(U.hash(i) * W * 2 + Math.sin(t * 2 + i) * 30 - cx * 0.6), y = (U.hash(i + 9) * H + t * (60 + U.hash(i) * 60)) % H; ctx.save(); ctx.translate(x, y); ctx.rotate(t * 4 + i); ctx.fillStyle = cols[i % 5]; ctx.globalAlpha = 0.8; ctx.fillRect(-3, -1.5, 6, 3); ctx.restore(); }
+      }
+    },
+    // Ventisca: aurora boreal ondulante sobre la noche
+    snow: {
+      back(ctx, p, cx, t) {
+        ['rgba(80,255,180,0.22)', 'rgba(120,160,255,0.2)', 'rgba(220,120,255,0.16)'].forEach((col, k) => {
+          ctx.beginPath(); for (let x = 0; x <= W; x += 16) { const y = 80 + k * 34 + Math.sin(x * 0.008 + t * 0.7 + k) * 30 + Math.sin(x * 0.02 - t * 1.3) * 10; x ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+          for (let x = W; x >= 0; x -= 16) ctx.lineTo(x, 150 + k * 34 + Math.sin(x * 0.008 + t * 0.7 + k) * 30);
+          ctx.closePath(); ctx.fillStyle = col; ctx.fill();
+        });
+      }
+    },
+    // Vórtice del Vacío: un remolino gigante que gira y escombros que suben (gravedad lunar)
+    vortex: {
+      back(ctx, p, cx, t) {
+        const x = W * 0.6 - (cx * 0.04) % 300, y = H * 0.4;
+        for (let k = 0; k < 6; k++) { ctx.save(); ctx.translate(x, y); ctx.rotate(t * (0.4 + k * 0.15)); ctx.strokeStyle = U.rgba(k % 2 ? '#b58cff' : '#ff4df0', 0.35); ctx.lineWidth = 6 - k * 0.6; ctx.beginPath(); for (let a = 0; a < 9; a += 0.15) ctx.lineTo(Math.cos(a + k) * a * (12 + k * 3), Math.sin(a + k) * a * (12 + k * 3) * 0.6); ctx.stroke(); ctx.restore(); }
+        ctx.fillStyle = '#000'; ctx.beginPath(); ctx.ellipse(x, y, 26, 16, 0, 0, 7); ctx.fill();
+        for (let i = 0; i < 16; i++) { const rx = wrapX(U.hash(i) * W * 2 - cx * 0.25), ry = H - ((t * (14 + U.hash(i + 1) * 20) + U.hash(i + 2) * H) % (H + 60)); ctx.save(); ctx.translate(rx, ry); ctx.rotate(t * 0.5 + i); Sp().rr(ctx, -8 - U.hash(i) * 8, -6, 16 + U.hash(i) * 16, 12, 3); Sp().fillStroke(ctx, '#2a0a45', 2.5); ctx.restore(); }
+      }
+    },
+    // Abismo sin Fondo: cuanto más abajo más oscuro; medusas bioluminiscentes y cebos de rape
+    underwater: {
+      back(ctx, p, cx, t) {
+        veil(ctx, 'rgba(0,0,20,0.15)', 'rgba(0,0,10,0.7)');
+        layer(ctx, cx, 0.2, 220, (x, i, h) => {
+          const jx = x + Math.sin(t * 0.5 + i) * 20, jy = 120 + h * 260 - ((t * 12 + i * 40) % 80);
+          const glow = ctx.createRadialGradient(jx, jy, 0, jx, jy, 40); glow.addColorStop(0, 'rgba(120,255,230,0.5)'); glow.addColorStop(1, 'rgba(120,255,230,0)'); ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(jx, jy, 40, 0, 7); ctx.fill();
+          ctx.fillStyle = 'rgba(150,255,235,0.7)'; ctx.beginPath(); ctx.arc(jx, jy, 14, Math.PI, 0); ctx.fill();
+          ctx.strokeStyle = 'rgba(150,255,235,0.5)'; ctx.lineWidth = 2; for (let k = -2; k <= 2; k++) { ctx.beginPath(); ctx.moveTo(jx + k * 5, jy); ctx.quadraticCurveTo(jx + k * 5 + Math.sin(t * 3 + k) * 6, jy + 16, jx + k * 5, jy + 30); ctx.stroke(); }
+        });
+        for (let i = 0; i < 5; i++) { const on = Math.sin(t * 1.3 + i * 2) > 0.3; if (!on) continue; const x = wrapX(U.hash(i + 70) * 2200 - cx * 0.35), y = H - 140 + U.hash(i + 71) * 80; ctx.fillStyle = '#fff6a0'; ctx.shadowColor = '#fff6a0'; ctx.shadowBlur = 20; ctx.beginPath(); ctx.arc(x, y, 4, 0, 7); ctx.fill(); ctx.shadowBlur = 0; }
+      }
+    },
+    // Setas Alucinógenas: anillos de colores que laten, esporas y el color del mundo que cambia
+    jungle: {
+      back(ctx, p, cx, t) {
+        const x = W / 2, y = H * 0.45;
+        for (let r = 520; r > 0; r -= 40) { ctx.beginPath(); ctx.arc(x, y, r + Math.sin(t * 3 - r * 0.02) * 12, 0, 7); ctx.fillStyle = `hsla(${(t * 60 + r) % 360},90%,60%,0.13)`; ctx.fill(); }
+      },
+      front(ctx, cx, t) {
+        for (let i = 0; i < 30; i++) { const x = wrapX(U.hash(i) * W * 2 + Math.sin(t + i) * 40 - cx * 0.5), y = (U.hash(i + 4) * H - t * 25) % H; ctx.fillStyle = `hsla(${(i * 40 + t * 90) % 360},100%,70%,0.6)`; ctx.beginPath(); ctx.arc(x, y < 0 ? y + H : y, 2.5, 0, 7); ctx.fill(); }
+        ctx.save(); ctx.globalCompositeOperation = 'overlay'; ctx.fillStyle = `hsla(${(t * 40) % 360},90%,50%,0.18)`; ctx.fillRect(0, 0, W, H); ctx.restore();
+      }
+    },
+    // Espejo: el cielo pasa del día a la noche y vuelta (ciclo de ~24 s)
+    sky: {
+      back(ctx, p, cx, t) {
+        const n = dayNight(t); if (n <= 0.01) return;
+        ctx.fillStyle = `rgba(8,12,40,${n * 0.75})`; ctx.fillRect(0, 0, W, H);
+        ctx.globalAlpha = n; stars(ctx, cx, t, 70); moon(ctx, W * 0.75, 100 + (1 - n) * 120, 40, t); ctx.globalAlpha = 1;
+      }
+    },
+    // Erupción Total: cielo rojo que late, volcán al fondo escupiendo lava y lluvia de ceniza
+    volcano: {
+      back(ctx, p, cx, t) {
+        const beat = 0.5 + 0.5 * Math.sin(t * 2.2);
+        ctx.fillStyle = `rgba(255,60,0,${0.08 + beat * 0.12})`; ctx.fillRect(0, 0, W, H);
+        const vx = W * 0.5 - (cx * 0.06) % 400;
+        ctx.beginPath(); ctx.moveTo(vx - 260, H - 120); ctx.lineTo(vx - 50, H - 330); ctx.lineTo(vx + 50, H - 330); ctx.lineTo(vx + 260, H - 120); ctx.closePath(); Sp().fillStroke(ctx, '#2a0f0a', 4);
+        for (let i = 0; i < 26; i++) { const k = ((t * 0.7 + U.hash(i)) % 1), ang = -Math.PI / 2 + (U.hash(i + 3) - 0.5) * 1.2, sp = 260 + U.hash(i + 5) * 120; const x = vx + Math.cos(ang) * sp * k, y = H - 330 + Math.sin(ang) * sp * k + 300 * k * k; ctx.fillStyle = k < 0.6 ? '#ffb000' : '#ff4a00'; ctx.beginPath(); ctx.arc(x, y, 5 - k * 3, 0, 7); ctx.fill(); }
+      },
+      front(ctx, cx, t) { ctx.fillStyle = 'rgba(60,50,50,0.55)'; for (let i = 0; i < 50; i++) { const x = wrapX(U.hash(i) * W * 2 - cx * 0.5 + Math.sin(t + i) * 20), y = (U.hash(i + 7) * H + t * 50) % H; ctx.fillRect(x, y, 2.5, 2.5); } }
+    },
+    // Fábrica MadStars: rojo, negro y blanco. Balizas de alarma giratorias, franjas de peligro
+    // y estrellas furiosas en los monitores del fondo.
+    factory: {
+      back(ctx, p, cx, t) {
+        layer(ctx, cx, 0.2, 260, (x, i, h) => { beam(ctx, x + 60, 70, Math.sin(t * 3 + i) * 1.4, 420, 60, 'rgba(255,31,58,0.28)'); ctx.beginPath(); ctx.arc(x + 60, 70, 14, Math.PI, 0); Sp().fillStroke(ctx, '#ff1f3a', 3); });
+        const sy = H - 205; ctx.save(); ctx.beginPath(); ctx.rect(0, sy, W, 26); ctx.clip(); ctx.fillStyle = '#f2f2f2'; ctx.fillRect(0, sy, W, 26);
+        ctx.fillStyle = '#0a0a0a'; const off = (cx * 0.3 + t * 40) % 52; for (let x = -52; x < W + 52; x += 52) { ctx.beginPath(); ctx.moveTo(x - off, sy + 26); ctx.lineTo(x - off + 26, sy); ctx.lineTo(x - off + 52, sy); ctx.lineTo(x - off + 26, sy + 26); ctx.closePath(); ctx.fill(); } ctx.restore();
+        ctx.strokeStyle = '#0a0a0a'; ctx.lineWidth = 4; ctx.strokeRect(-4, sy, W + 8, 26);
+        layer(ctx, cx, 0.35, 300, (x, i, h) => { if (h < 0.4) return; const y = 260 + h * 60; Sp().rr(ctx, x, y, 90, 64, 6); Sp().fillStroke(ctx, '#0a0a0a', 4); ctx.fillStyle = '#ffffff'; ctx.fillRect(x + 8, y + 8, 74, 48); Sp().star(ctx, x + 45, y + 32, 18, 8, 5, -Math.PI / 2 + Math.sin(t * 6 + i) * 0.2); Sp().fillStroke(ctx, '#ff1f3a', 3); ctx.fillStyle = '#0a0a0a'; ctx.fillRect(x + 36, y + 28, 5, 3); ctx.fillRect(x + 49, y + 28, 5, 3); });
+      },
+      front(ctx, cx, t) { const a = Math.max(0, Math.sin(t * 3)) * 0.08; if (a > 0) { ctx.fillStyle = `rgba(255,31,58,${a})`; ctx.fillRect(0, 0, W, H); } }
+    },
+    // Ruleta Loca: ruleta gigante girando al fondo, bombillas de marquesina y cartas/fichas cayendo
+    casino: {
+      back(ctx, p, cx, t) {
+        const x = W * 0.5 - (cx * 0.05) % 300, y = H * 0.42, R = 170;
+        rays(ctx, x, y, 36, R, t * 1.6, '#c0282f', '#141414'); ctx.beginPath(); ctx.arc(x, y, R, 0, 7); ctx.strokeStyle = '#ffd000'; ctx.lineWidth = 10; ctx.stroke();
+        ctx.beginPath(); ctx.arc(x, y, 28, 0, 7); Sp().fillStroke(ctx, '#ffd000', 4);
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x + Math.cos(-t * 3) * (R - 22), y + Math.sin(-t * 3) * (R - 22), 7, 0, 7); ctx.fill();
+        for (let i = 0; i < 26; i++) { const on = (Math.floor(t * 8) + i) % 3 === 0; ctx.fillStyle = on ? '#fff27a' : '#6a4a10'; ctx.beginPath(); ctx.arc(20 + i * 40, 26, 6, 0, 7); ctx.fill(); }
+        for (let i = 0; i < 12; i++) { const fx = wrapX(U.hash(i) * W * 2 - cx * 0.3), fy = (U.hash(i + 3) * H + t * 70) % H; ctx.save(); ctx.translate(fx, fy); ctx.rotate(t * 2 + i); if (i % 2) { Sp().rr(ctx, -9, -13, 18, 26, 3); Sp().fillStroke(ctx, '#fff', 2); ctx.fillStyle = '#e8323f'; ctx.font = 'bold 12px sans-serif'; ctx.fillText('♥', -5, 5); } else { ctx.beginPath(); ctx.arc(0, 0, 9, 0, 7); Sp().fillStroke(ctx, ['#2f7bff', '#2fd46a', '#e8323f'][i % 3], 2); } ctx.restore(); }
+      }
+    },
+    // Paradoja: relojes que corren hacia atrás (unos rápido, otros lento) y ondas temporales
+    clock: {
+      back(ctx, p, cx, t) {
+        layer(ctx, cx, 0.2, 260, (x, i, h) => { const sp = (h > 0.5 ? 3 : 0.4); clockFace(ctx, x + 80, 140 + h * 180, 40 + h * 30, -t * sp * 6, -t * sp * 0.5, '#ffd27a'); });
+        for (let k = 0; k < 3; k++) { const r = ((t * 90 + k * 200) % 600); ctx.beginPath(); ctx.arc(W / 2, H / 2, r, 0, 7); ctx.strokeStyle = `rgba(160,220,255,${0.35 * (1 - r / 600)})`; ctx.lineWidth = 3; ctx.stroke(); }
+      },
+      front(ctx, cx, t) { ctx.save(); ctx.globalCompositeOperation = 'color'; ctx.fillStyle = `rgba(150,110,60,${0.15 + 0.12 * Math.sin(t * 0.8)})`; ctx.fillRect(0, 0, W, H); ctx.restore(); }
+    },
+    // A Todo Volumen: ecualizador gigante al ritmo, láseres y un pulso suave en cada golpe
+    disco: {
+      back(ctx, p, cx, t, theme) {
+        const bps = ((theme && theme.music.tempo) || 140) / 60, beat = 1 - ((t * bps) % 1);
+        for (let i = 0; i < 4; i++) beam(ctx, W * (0.15 + i * 0.23), H, Math.sin(t * 1.4 + i * 1.7) * 0.9, H * 1.2, 8, ['rgba(255,47,214,0.6)', 'rgba(0,229,255,0.6)', 'rgba(255,230,0,0.6)', 'rgba(47,212,106,0.6)'][i]);
+        const n = 32, bw = W / n;
+        for (let i = 0; i < n; i++) { const hh = (0.25 + 0.75 * Math.abs(Math.sin(i * 1.7 + t * 2.3)) * (0.5 + beat * 0.5)) * 220; ctx.fillStyle = `hsla(${(i * 11 + t * 50) % 360},90%,55%,0.55)`; for (let s = 0; s < hh; s += 14) ctx.fillRect(i * bw + 3, H - 90 - s, bw - 6, 10); }
+      },
+      front(ctx, cx, t, theme) { const bps = ((theme && theme.music.tempo) || 140) / 60, beat = 1 - ((t * bps) % 1); ctx.fillStyle = `rgba(255,255,255,${beat * beat * 0.06})`; ctx.fillRect(0, 0, W, H); }
+    },
+    // Dimensión Sellada: grietas dimensionales que brillan, cadenas y portales que fallan
+    hub: {
+      back(ctx, p, cx, t) {
+        layer(ctx, cx, 0.15, 340, (x, i, h) => {
+          const gx = x + 120, gy = 120 + h * 200, glitch = Math.sin(t * 9 + i * 5) > 0.85 ? U.rand(-8, 8) : 0;
+          ctx.strokeStyle = `rgba(63,255,160,${0.5 + Math.sin(t * 3 + i) * 0.3})`; ctx.lineWidth = 4; ctx.shadowColor = '#3fffa0'; ctx.shadowBlur = 14;
+          ctx.beginPath(); ctx.moveTo(gx + glitch, gy - 60); for (let k = 1; k <= 5; k++) ctx.lineTo(gx + glitch + (k % 2 ? 14 : -10) * (1 + h), gy - 60 + k * 24); ctx.stroke(); ctx.shadowBlur = 0;
+        });
+        ctx.strokeStyle = 'rgba(30,40,35,0.9)'; ctx.lineWidth = 5;
+        [[0, 140, W, 220], [0, 320, W, 250]].forEach(([a, b, c2, d], k) => { for (let s = 0; s <= 1.0001; s += 0.04) { const x = a + (c2 - a) * s - (cx * 0.2 % 30), y = b + (d - b) * s + Math.sin(s * Math.PI) * 30; ctx.beginPath(); ctx.ellipse(x, y, 10, 6, (s + k) * 0.6, 0, 7); ctx.stroke(); } });
+      }
+    }
+  };
+
   S.View.BackgroundView = {
     draw(ctx, theme, mode, camX, t) {
       const pal = S.Model.Themes.palette(theme, mode);
-      const c = mode === 'corrupt';
+      const c = mode === 'corrupt', P = c ? CORRUPT[theme.id] : null;
       sky(ctx, pal);
       ctx.save();
+      if (P && P.pre) P.pre(ctx, t);
       (BG[theme.bg] || BG.hills)(ctx, pal, camX, t, c);
       ctx.restore();
       if (c && theme.night) {
         // noche: velo azul marino suave
         const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, 'rgba(5,10,40,0.0)'); g.addColorStop(1, 'rgba(5,10,40,0.3)');
         ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-      } else if (c) {
-        // velo corrupto: neblina violeta + ojos que parpadean en el fondo
-        const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, 'rgba(60,0,90,0.0)'); g.addColorStop(1, 'rgba(60,0,90,0.35)');
-        ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-        for (let i = 0; i < 4; i++) {
-          const blink = Math.sin(t * 0.7 + i * 2) > 0.92;
-          const x = ((U.hash(i + 40) * 3000 - camX * 0.1) % W + W) % W, y = 60 + U.hash(i + 41) * 200;
-          if (!blink) { ctx.fillStyle = 'rgba(255,47,214,0.55)'; ctx.fillRect(x, y, 8, 8); ctx.fillRect(x + 12, y + 5, 9, 9); }
-        }
       }
-    }
+      if (P && P.back) { ctx.save(); try { P.back(ctx, pal, camX, t, theme); } catch (e) { /* un fondo roto no para el juego */ } ctx.restore(); }
+    },
+    // Capa delantera del Corrupto (lluvia, ceniza, confeti, destellos suaves...)
+    front(ctx, theme, mode, camX, t) {
+      if (mode !== 'corrupt') return;
+      const P = CORRUPT[theme.id];
+      if (P && P.front) { ctx.save(); try { P.front(ctx, camX, t, theme); } catch (e) { /* idem */ } ctx.restore(); }
+    },
+    dayNight
   };
 })(window.SGM);

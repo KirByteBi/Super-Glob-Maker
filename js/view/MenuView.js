@@ -5,6 +5,7 @@
   const click = () => S.events.emit('ui:click');
 
   function button(label, cls, fn) { const b = el('button', 'btn ' + (cls || ''), label); b.onclick = () => { click(); fn(); }; return b; }
+  S.View.button = button;
   function globImg(path, cls) { const i = document.createElement('img'); i.src = S.View.Assets.url(path); i.className = cls || 'glob-img'; i.alt = ''; i.draggable = false; return i; }
 
   class MenuView {
@@ -38,6 +39,7 @@
       menu.appendChild(button('▶ Modo Historia', 'big', h.story));
       menu.appendChild(button('✏ Crear nivel', 'big', h.create));
       menu.appendChild(button('📁 Mis niveles', 'big', h.levels));
+      if (h.online) menu.appendChild(button('🌐 Online', 'big', h.online));
       const b3d = button('🌌 Modo 3D (próximamente)', 'big disabled', () => this.toast('El modo 3D estilo SM64 / Galaxy llegará en la próxima versión.'));
       menu.appendChild(b3d);
       const row = el('div', 'row');
@@ -223,13 +225,128 @@
       setTimeout(() => { ta.focus(); if (!onOk) ta.select(); }, 30);
     }
 
-    confirm(msg, onYes) {
+    // Aviso con imagen opcional (p. ej. el Glob Cometa de "ya publicado")
+    notice(title, msg, img) {
+      const b = this.openModal(title);
+      if (img) b.appendChild(globImg(img, 'result-glob'));
+      b.appendChild(el('p', 'result-line', msg));
+      const row = el('div', 'row'); row.appendChild(button('Entendido', 'primary', () => this.closeModal())); b.appendChild(row);
+    }
+
+    confirm(msg, onYes, yesLabel) {
       const b = this.openModal('¿Seguro?');
       b.appendChild(el('p', '', msg));
       const row = el('div', 'row');
-      row.appendChild(button('Sí', 'danger', () => { this.closeModal(); onYes(); }));
+      row.appendChild(button(yesLabel || 'Sí', yesLabel ? 'primary' : 'danger', () => { this.closeModal(); onYes(); }));
       row.appendChild(button('No', '', () => this.closeModal()));
       b.appendChild(row);
+    }
+
+    // ---------- ONLINE (🌐) ----------
+    // st = { tab, user, loading, error, rows, featured, author, search, v2, mine, localLevels }
+    // h  = { back, tab(id), play(row), author(name), search(text), account, publish(local), setPublic(row,on), removeCloud(row) }
+    online(st, h) {
+      const s = this.open('levels online');
+      const head = el('div', 'head');
+      head.appendChild(button('← Volver', '', h.back));
+      head.appendChild(el('h1', '', '🌐 Online'));
+      const acc = button(st.user ? '👤 ' + st.user : '🔑 Iniciar sesión', st.user ? '' : 'primary', h.account);
+      head.appendChild(acc);
+      s.appendChild(head);
+      const TABS = [['home', '⭐ Destacados'], ['top', '🏆 Top 10'], ['new', '🆕 Recientes'], ['plays', '🔥 Más jugados'], ['hard', '💀 Más difíciles'], ['search', '🔍 Buscar'], ['me', '👤 Mi perfil']];
+      const tabs = el('div', 'tabs');
+      TABS.forEach(([id, label]) => { const b = button(label, 'tab' + (st.tab === id || (st.tab === 'author' && id === 'search' && false) ? ' on' : ''), () => h.tab(id)); tabs.appendChild(b); });
+      s.appendChild(tabs);
+      const wrap = el('div', 'level-list');
+      s.appendChild(wrap);
+      if (st.v2 === false) wrap.appendChild(el('p', 'note', '⚠ Falta aplicar kiro/supabase_online_v2.sql en el servidor: los "no me gusta", la puntuación y los autores no se guardarán hasta entonces.'));
+      if (st.tab === 'search') {
+        const f = el('div', 'search-row');
+        const inp = document.createElement('input'); inp.type = 'search'; inp.placeholder = 'Nombre del nivel o @autor'; inp.value = st.search || ''; inp.maxLength = 40; inp.setAttribute('aria-label', 'Buscar niveles');
+        inp.onkeydown = (e) => { if (e.key === 'Enter') h.search(inp.value.trim()); };
+        f.appendChild(inp); f.appendChild(button('Buscar', 'primary', () => h.search(inp.value.trim())));
+        wrap.appendChild(f);
+        setTimeout(() => inp.focus(), 30);
+      }
+      if (st.tab === 'author' && st.author) {
+        const p = el('div', 'profile-card');
+        p.appendChild(el('b', '', '👤 ' + st.author));
+        const tl = st.rows.reduce((a, r) => a + r.likes, 0), td = st.rows.reduce((a, r) => a + r.dislikes, 0), tp = st.rows.reduce((a, r) => a + (r.plays || 0), 0);
+        p.appendChild(el('span', '', st.rows.length + ' niveles · 👍 ' + tl + ' · 👎 ' + td + ' · ▶ ' + tp + ' partidas'));
+        wrap.appendChild(p);
+      }
+      if (st.loading) { wrap.appendChild(el('p', 'empty', 'Cargando…')); return; }
+      if (st.error) { wrap.appendChild(el('p', 'empty', st.error === 'offline' ? 'Sin conexión con Glob Defenders. Lo online necesita internet.' : 'No se pudo cargar: ' + st.error)); return; }
+      if (st.tab === 'me') { this.onlineProfile(wrap, st, h); return; }
+      if (st.tab === 'home' && st.featured) {
+        wrap.appendChild(el('h3', 'sec', '📅 Nivel del día'));
+        wrap.appendChild(this.onlineRow(st.featured, -1, h, true));
+        wrap.appendChild(el('h3', 'sec', '🏆 Lo mejor ahora mismo'));
+      }
+      if (!st.rows.length) wrap.appendChild(el('p', 'empty', st.tab === 'search' ? (st.search ? 'Nada por aquí con "' + st.search + '".' : 'Escribe algo para buscar.') : 'Todavía no hay niveles publicados. ¡Sé el primero!'));
+      st.rows.forEach((r, i) => wrap.appendChild(this.onlineRow(r, st.tab === 'top' ? i : -1, h)));
+    }
+    // Fila de un nivel publicado. rank >= 0 = puesto en el top
+    onlineRow(r, rank, h, big) {
+      const row = el('div', 'level-row online-row' + (big ? ' featured' : '') + (rank >= 0 && rank < 3 ? ' podium p' + rank : ''));
+      if (rank >= 0) row.appendChild(el('span', 'rank', ['🥇', '🥈', '🥉'][rank] || '#' + (rank + 1)));
+      const theme = S.Model.Themes.get(r.theme || 'lake');
+      const cv = document.createElement('canvas'); cv.width = 160; cv.height = 90; this.drawThemeThumb(cv, theme, r.mode || 'peace');
+      row.appendChild(cv);
+      const info = el('div', 'info');
+      info.appendChild(el('b', '', r.name));
+      const by = el('small', 'by');
+      if (r.author) { const a = el('button', 'link', '@' + r.author); a.onclick = () => { click(); h.author(r.author); }; by.appendChild(document.createTextNode('por ')); by.appendChild(a); by.appendChild(document.createTextNode(' · ')); }
+      by.appendChild(document.createTextNode(S.Model.Themes.name(theme, r.mode || 'peace')));
+      info.appendChild(by);
+      const pct = r.plays ? Math.round(r.rate * 100) + '%' : '—';
+      info.appendChild(el('small', 'stats', '👍 ' + r.likes + '   👎 ' + r.dislikes + '   ⭐ ' + (r.score > 0 ? '+' : '') + r.score + '   ▶ ' + (r.plays || 0) + '   🏁 ' + pct + ' superado'));
+      row.appendChild(info);
+      row.appendChild(button('▶ Jugar', 'primary', () => h.play(r)));
+      return row;
+    }
+    onlineProfile(wrap, st, h) {
+      if (!st.user) {
+        wrap.appendChild(el('p', 'empty', 'Inicia sesión con tu cuenta de Glob Defenders para publicar niveles y ver tu perfil.'));
+        const r = el('div', 'row'); r.appendChild(button('🔑 Iniciar sesión', 'primary', h.account)); wrap.appendChild(r); return;
+      }
+      const mine = st.mine || [], pub = mine.filter((m) => m.is_public);
+      const tl = pub.reduce((a, r) => a + r.likes, 0), td = pub.reduce((a, r) => a + r.dislikes, 0), tp = pub.reduce((a, r) => a + (r.plays || 0), 0);
+      const card = el('div', 'profile-card');
+      card.appendChild(el('b', '', '👤 ' + st.user));
+      card.appendChild(el('span', '', pub.length + ' / 120 publicados · 👍 ' + tl + ' · 👎 ' + td + ' · ⭐ ' + (tl - td) + ' · ▶ ' + tp + ' partidas'));
+      wrap.appendChild(card);
+      wrap.appendChild(el('h3', 'sec', '🌐 En la nube'));
+      if (!mine.length) wrap.appendChild(el('p', 'empty', 'Aún no has subido niveles.'));
+      mine.forEach((m) => {
+        const row = this.onlineRow(m, -1, h);
+        row.lastChild.remove(); // el botón Jugar se sustituye por los de gestión
+        row.appendChild(el('span', 'badge ' + (m.is_public ? 'on' : 'off'), m.is_public ? '☄ Público' : 'Oculto'));
+        // un nivel publicado se puede ocultar, pero no volver a publicar
+        if (m.is_public) row.appendChild(button('🙈 Ocultar', '', () => this.confirm('¿Ocultar "' + m.name + '"? Ya no podrás volver a publicarlo.', () => h.setPublic(m, false))));
+        row.appendChild(button('🗑', 'danger', () => this.confirm('¿Borrar "' + m.name + '" de la nube? (tu copia local no se borra)', () => h.removeCloud(m))));
+        wrap.appendChild(row);
+      });
+      const local = (st.localLevels || []).filter((l) => !l.publishedAt && !l.cloudId && !mine.some((m) => m.local === l.id));
+      if (local.length) {
+        wrap.appendChild(el('h3', 'sec', '📁 Niveles de este dispositivo sin publicar'));
+        local.forEach((l) => {
+          const row = el('div', 'level-row');
+          const cv = document.createElement('canvas'); cv.width = 160; cv.height = 90; this.drawThemeThumb(cv, S.Model.Themes.get(l.theme), l.mode); row.appendChild(cv);
+          const info = el('div', 'info'); info.appendChild(el('b', '', l.name)); info.appendChild(el('small', '', S.Model.Themes.name(S.Model.Themes.get(l.theme), l.mode))); row.appendChild(info);
+          row.appendChild(button('🌐 Publicar', 'primary', () => h.publish(l)));
+          wrap.appendChild(row);
+        });
+      }
+    }
+    // Botones de voto en la pantalla de resultado de un nivel online
+    voteBar(box, cur, onVote) {
+      const r = el('div', 'row vote-row');
+      const up = button('👍 Me gusta', cur === 1 ? 'primary' : '', () => onVote(cur === 1 ? 0 : 1));
+      const dn = button('👎 No me gusta', cur === -1 ? 'danger' : '', () => onVote(cur === -1 ? 0 : -1));
+      up.setAttribute('aria-pressed', cur === 1); dn.setAttribute('aria-pressed', cur === -1);
+      r.appendChild(up); r.appendChild(dn); box.appendChild(r);
+      return r;
     }
 
     // ---------- mis niveles ----------
@@ -254,10 +371,19 @@
         info.appendChild(el('b', '', l.name));
         info.appendChild(el('small', '', S.Model.Themes.name(theme, l.mode) + ' · ' + S.Model.Characters.get(l.character).name + ' · ' + new Date(l.updated || Date.now()).toLocaleString()));
         row.appendChild(info);
+        // Publicado: marcado con el Glob Cometa (no se puede volver a publicar)
+        const pub = !!(l.publishedAt || l.cloudId);
+        if (pub) {
+          const tag = el('span', 'pub-tag'); tag.title = 'Publicado: no se puede volver a publicar';
+          tag.appendChild(globImg(S.Model.Characters.get('black').paths[0], 'mini')); tag.appendChild(document.createTextNode('Publicado'));
+          info.insertBefore(tag, info.firstChild);
+        } else if (l.copyOf) info.appendChild(el('small', 'copy-tag', '📄 Copia de "' + (l.copyOf[0].name || 'otro nivel') + '"'));
         row.appendChild(button('▶ Jugar', 'primary', () => h.play(l)));
         row.appendChild(button('✏ Editar', '', () => h.edit(l)));
-        if (h.publish) row.appendChild(button('🌐 Publicar', '', () => h.publish(l)));
-        row.appendChild(button('🗑', 'danger', () => this.confirm('¿Borrar "' + l.name + '"?', () => h.remove(l))));
+        if (h.publish) row.appendChild(button(pub ? '☄ Publicado' : '🌐 Publicar', pub ? 'disabled' : '', () => h.publish(l)));
+        if (h.copy) row.appendChild(button('📄 Copiar', '', () => h.copy(l)));
+        if (h.exportLevel) row.appendChild(button('📤 Exportar', '', () => h.exportLevel(l)));
+        row.appendChild(button('🗑', 'danger', () => this.confirm('¿Borrar "' + l.name + '"?' + (pub ? ' (la versión online no se borra)' : ''), () => h.remove(l))));
         wrap.appendChild(row);
       });
       s.appendChild(wrap);

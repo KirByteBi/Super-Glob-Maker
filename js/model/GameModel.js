@@ -57,6 +57,8 @@
         if (e.locked && this.unlocked && this.unlocked[o.x + ',' + o.y]) e.locked = false;
         // Abismo Corrupto: más de la mitad de los enemigos de tierra nadan en vez de caminar
         if (this.fx.abyss && e.enemy && !e.boss && !C.OBJECTS[o.type].water && U.hash(o.x * 7 + o.y) < 0.6) e.swims = true;
+        // Encima de un raíl: lo sigue
+        if (this.level.get(o.x, o.y) === TT.RAIL && S.Model.Rail.rideable(e)) S.Model.Rail.attach(e, this.level, o.x, o.y, o.dir);
         this.entities.push(e);
       });
       // Enlaces de tuberías y puertas.
@@ -284,12 +286,39 @@
 
     // Tipo de líquido en un punto: 'water' | 'lava' | 'poison' | 'jelly' | null
     liquidAt(px, py) {
-      const t = this.level.get(Math.floor(px / T), Math.floor(py / T));
-      if (t === TT.WATER) return this.fx.poisonWater ? 'poison' : 'water';
+      // Las olas de Sunlight Seaside Corrupto cuentan como el líquido del que salen
+      const t = this.level.get(Math.floor(px / T), Math.floor(py / T)) || this.waveTileAt(px, py);
+      if (t === TT.WATER) return 'water';
       if (t === TT.LIQUID) return this.theme.id === 'volcano' ? 'lava' : this.theme.id === 'lake' ? 'jelly' : 'poison';
       if (py > this.liquidY + 6) return 'lava';
       if (this.theme.swim && py > 0) return 'water';
       return null;
+    }
+
+    // Sunlight Seaside Corrupto (Marejada): el agua y el líquido hacen olas que viajan
+    // hacia la derecha (~2 casillas/s, una cresta cada 7 casillas). Su tamaño va por
+    // series: ratos de olas grandes y ratos de calma. Devuelve la altura (px) en x.
+    waveH(px) {
+      if (!this.fx.waves) return 0;
+      const env = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(this.t * 0.5));
+      const s = Math.sin((px / (T * 7)) * Math.PI * 2 - this.t * 1.8);
+      return s > 0 ? Math.pow(s, 1.6) * env * T * 1.6 : 0;
+    }
+
+    // Tile de líquido (WATER / LIQUID) cuya ola cubre el punto (aire), o 0.
+    // Solo crecen las superficies (líquido con aire encima) y como mucho 2 casillas.
+    waveTileAt(px, py) {
+      if (!this.fx.waves) return 0;
+      const tx = Math.floor(px / T), ty = Math.floor(py / T);
+      if (this.level.get(tx, ty) !== TT.EMPTY) return 0;
+      for (let d = 1; d <= 2; d++) {
+        const t = this.level.get(tx, ty + d);
+        if (t === TT.EMPTY) continue;
+        if (t !== TT.WATER && t !== TT.LIQUID) return 0;
+        const surf = (ty + d) * T + (t === TT.LIQUID ? 8 : 0); // el líquido se dibuja 8 px por debajo
+        return py >= surf - this.waveH(px) ? t : 0;
+      }
+      return 0;
     }
 
     // Cambia a la zona z (0 = base, 1..2 = subzonas). Reconstruye el mundo de esa zona
@@ -312,6 +341,7 @@
         const e = Ents.create(o.type, o.x, o.y, o);
         if (!e) return;
         if (this.fx.abyss && e.enemy && !e.boss && !C.OBJECTS[o.type].water && U.hash(o.x * 7 + o.y) < 0.6) e.swims = true;
+        if (this.level.get(o.x, o.y) === TT.RAIL && S.Model.Rail.rideable(e)) S.Model.Rail.attach(e, this.level, o.x, o.y, o.dir);
         this.entities.push(e);
       });
       ['pipe', 'door'].forEach((family) => {
@@ -561,10 +591,10 @@
       const pts = [[p.x - 1, p.y + p.h / 2], [p.x + p.w + 1, p.y + p.h / 2], [p.x + 3, p.y + p.h + 1], [p.x + p.w - 3, p.y + p.h + 1], [p.x + 3, p.y - 1], [p.x + p.w - 3, p.y - 1]];
       // El Glob de Jabón mientras patina ignora los pinchos
       if (!p.sliding && pts.some(([x, y]) => this.level.get(Math.floor(x / T), Math.floor(y / T)) === TT.SPIKE)) this.hurtPlayer();
-      // Líquido peligroso (bloque, marea, o el agua del puerto envenenada en Sunlight Seaside Corrupto)
-      const footT = this.level.get(Math.floor((p.x + p.w / 2) / T), Math.floor((p.y + p.h - 6) / T));
+      // Líquido peligroso (bloque, marea, o una ola de líquido en Sunlight Seaside Corrupto)
+      const fx0 = p.x + p.w / 2, fy0 = p.y + p.h - 6;
+      const footT = this.level.get(Math.floor(fx0 / T), Math.floor(fy0 / T)) || this.waveTileAt(fx0, fy0);
       if (footT === TT.LIQUID || p.y + p.h - 8 > this.liquidY) { this.die('liquid'); return; }
-      if (this.fx.poisonWater && footT === TT.WATER) { this.die('poison'); return; }
       // Barra Estelar
       for (const e of this.entities) if (e.type === 'firebar' && e.active && e.hits(p)) { this.hurtPlayer(); break; }
     }

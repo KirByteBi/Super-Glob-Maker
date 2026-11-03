@@ -115,6 +115,14 @@ Nivel 3
   [X] Strechy Pyce ....... se estira hacia arriba
   [X] Flower Pyce ........ planta fija que escupe petalos
   [X] Cannon Pycer ....... cañon
+  [X] Builder Pyce ....... Hammer Bro (guiño a Builderman):
+                           va y viene, salta, rafagas de 2-3
+                           martillos en arco que atraviesan
+                           paredes
+Nivel 4 (bros)
+  [X] Miner Pyce ......... Boomerang Bro poseido por cristales:
+                           su pico de cristal va y vuelve a sus
+                           manos (solo uno a la vez)
 Nivel 4
   [X] Ghost Pyce ......... avanza cuando le das la espalda
   [X] HoloPyce ........... a ratos es intangible
@@ -141,6 +149,14 @@ Pyces acuaticos (familia Pysh)
                            burbujas que te persiguen un poco.
                            Fuera del agua camina lento y
                            escupe menos.
+  [X] Squid Pyce ......... (nivel 3) calamar tipo Blooper: se
+                           hunde despacio y da tirones en
+                           diagonal hacia ti (si estas debajo,
+                           baja a por ti). Suelta nubes de tinta
+                           negra brillante que tapan la vista.
+                           Solo se pisa fuera del liquido.
+                           Arte: tools/SquidArt.html -> PNG.
+      [ ] Opcional: Squid Nanny (con crias en fila)
   [X] Shark Pyce ......... (nivel 4) patrulla y te embiste a toda
                            velocidad si te pones en su linea.
                            No se puede pisar (solo disparos,
@@ -251,7 +267,11 @@ Reglas generales
 [~] Gelatin Lake ............ rebote en cadena tras saltar
 [~] Urbanistic Road (N) ..... apagon: solo dan luz tu Glob
                               y los proyectiles
-[ ] Sunlight Seaside (N) .... el agua se vuelve veneno y mata
+[X] Sunlight Seaside (N) .... Marejada: el agua y el liquido
+                              hacen olas (en la ola de agua se
+                              nada y te arrastra; la de liquido
+                              mata). Sustituye al agua venenosa
+                              (el liquido ya hace ese papel).
 [~] Spooktacular Ruins ->
     Aridez Escalofriante (N)  enemigos espectrales, solo se ven
                               de cerca

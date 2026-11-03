@@ -116,6 +116,9 @@
       on(window, 'keydown', (e) => {
         if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
         if (this.app.menu.modal.style.display === 'flex') return;
+        // Mientras se prueba el nivel el editor está suspendido: sus atajos (P = jugar) no deben
+        // seguir activos o cada P en la partida relanzaría la prueba.
+        if (this.suspended) return;
         this.keys[e.code] = true;
         const ctrl = e.ctrlKey || e.metaKey;
         if (ctrl && e.code === 'KeyZ') { e.preventDefault(); e.shiftKey ? m.redo() : m.undo(); }
@@ -167,8 +170,8 @@
     }
     render(t) { this.view.render(this.model, t); }
 
-    suspend() { this.app.editorUI.style.display = 'none'; this.view.hover = null; this.painting = false; this.keys = {}; }
-    resume() { this.app.editorUI.style.display = 'block'; this.view.buildToolbar(this.model, this.handlers()); }
+    suspend() { this.suspended = true; this.app.editorUI.style.display = 'none'; this.view.hover = null; this.painting = false; this.keys = {}; }
+    resume() { this.suspended = false; this.app.editorUI.style.display = 'block'; this.view.buildToolbar(this.model, this.handlers()); }
     destroy() { this.offs.forEach((f) => f()); this.app.editorUI.style.display = 'none'; this.app.editorUI.innerHTML = ''; }
   }
   S.Controller.EditorController = EditorController;

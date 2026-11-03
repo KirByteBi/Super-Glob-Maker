@@ -88,13 +88,18 @@ Objetos y mecanismos (funciona, invisible):
   - Setas moviles, Barra Estelar, carambanos
   - Proyectiles de los Pyces (balas, huesos, regalos,
     petalos, burbujas, ojos, lagrimas, espadazo, onda)
-  - Explosion, niebla del spray de Rebel, meteoritos,
+  - [HECHO] Niebla del spray de Rebel y tinta del Squid Pyce
+    (D.sprayfog, se pinta por encima del jugador)
+  - Explosion, meteoritos,
     rayos de las nubes, rosquilla cayendo, monedas del
     Golden Mimic
   - La llave que llevas encima en el HUD
 
 Efectos visuales del modo Corrupto:
-  - Sunlight Seaside: el agua debe verse venenosa (sin hacer)
+  - [HECHO] Sunlight Seaside Corrupto = Marejada: el agua y el
+    liquido hacen olas (GameModel.waveH / waveTileAt; se dibujan
+    en Sprites). Ya NO hay agua venenosa (efecto poisonWater
+    quitado: el liquido ya es el agua venenosa).
   - Darkness Forest Corrupto: los semisolidos con forma de
     seta alucinogena (sin hacer)
   - Particulas y sonidos de los eventos nuevos (puerta,
@@ -451,8 +456,8 @@ ESTADO REAL (ya implementado, pendiente de AFINAR al gusto):
   - Mecanica de todos los Pyces, puertas, tuberias, llaves,
     Nota, POW, Rosquilla, A/B, P, pendientes, capsulas,
     Barra Estelar, carambanos, explosiones
-  - Efectos Corruptos: rebote en cadena, apagon, agua
-    venenosa, espectros, circo acelerado, ventisca, gravedad
+  - Efectos Corruptos: rebote en cadena, apagon, olas
+    (Marejada), espectros, circo acelerado, ventisca, gravedad
     del vacio, Abismo, setas moviles, espejo, meteoritos,
     nubes con rayos
   - 3 modos de inicio (Campo de Pruebas, Clasico, Aireado)
@@ -464,9 +469,38 @@ ESTADO REAL (ya implementado, pendiente de AFINAR al gusto):
     En Darkness Forest Corrupto (movingShrooms) siguen
     moviendose siempre. Modelo + descripcion del editor.
   - [HECHO] Al PROBAR un nivel, Esc o Ctrl+P vuelven al editor
-    al instante (sin pasar por el menu de pausa). En partida
-    normal, Esc/Enter/P siguen pausando. Ignora autorepeat para
-    que no rebote entre editar y probar. Anotado en Controles.
+    al instante (sin pasar por el menu de pausa) y P pausa. En
+    partida normal, Esc/Enter/P siguen pausando. Arreglado: los
+    atajos del editor seguian activos durante la prueba (cada P
+    relanzaba la prueba) y la P que lanza la prueba podia
+    pausarla nada mas empezar (InputController.swallow).
+  - [HECHO] Arcades del casino: todo tramo de suelo tematico de
+    1-2 de ancho (cualquier alto) es UNA maquina arcade entera
+    (cartel, pantalla con minijuego, mandos, monedero); 3+ de
+    ancho = tablero de ruleta. GroundStyles.pieceArcade.
+  - [HECHO] Builder Pyce (Hammer Bro, guino a Builderman) y
+    Miner Pyce (Boomerang Bro, poseido por cristales). Arte en
+    tools/BroArt.html. Paleta: Pyces.
+  - [HECHO] Railes estilo SMM: tile RAIL (54, Mecanismos). Se pinta
+    bajo plataformas/setas/Barra Estelar/Pyces y lo siguen (rectas,
+    diagonales, bucles; topes rojos donde dan la vuelta).
+    S.Model.Rail en Entity.js.
+  - [HECHO] Personalidad del modo Corrupto por mapa (BackgroundView
+    CORRUPT: tormenta, aurora, ruleta, ecualizador, dia/noche en
+    Espejo...). MadStars = rojo con negro y blanco.
+  - [HECHO] Menu 🌐 Online: Destacados (nivel del dia), Top 10
+    (puntuacion = likes - dislikes), Recientes, Mas jugados, Mas
+    dificiles, Buscar (nombre o @autor), perfiles de autor y Mi
+    perfil (publicados, ocultar, borrar). Votar 👍/👎 al acabar un
+    nivel online.
+    !! Falta aplicar kiro/supabase_online_v2.sql (PRODUCCION).
+  - [HECHO] Publicar una sola vez: el nivel queda marcado con el
+    Glob Cometa y avisa si lo intentas otra vez. Copiar (📄) crea
+    una copia que solo se publica si cambia tema/modo o >=25% del
+    contenido (Level.copyCheck). Exportar (📤) en Mis niveles.
+  - SIGUIENTE: Modo Historia jugable de verdad (niveles hechos a
+    mano por aspecto, mundos con idea y dificultad; en Corrupto
+    rutas alternas: bajo tierra, tubos rotos, puertas bloqueadas).
   - [HECHO] Colores de liquido peligroso coherentes por tema y
     NUNCA verdes (el verde queda para agua/gelatina): UR petroleo
     negro, SS lila, circus rojo, vortex lila oscuro, jungle lila,

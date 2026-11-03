@@ -66,6 +66,46 @@
       }
     }
   }
+  // Squid Pyce (tipo Blooper): en el líquido se hunde despacio y da tirones en diagonal
+  // hacia ti; si estás por debajo, baja a por ti. No sale del líquido al dar el tirón.
+  // Suelta nubes de tinta que tapan la vista. Solo se puede pisar fuera del líquido.
+  class Squid extends Aquatic {
+    constructor(tx, ty) { super('squid', tx, ty); this.pulseT = U.rand(0.6, 1.2); this.inkT = U.rand(3, 5); this.pulse = 0; }
+    think(g, dt) {
+      this.sense(g);
+      const p = g.player, sp = g.enemySpeedMul;
+      this.stompable = this.poundable = !this.element && !this.inLiq;
+      if (!this.inLiq) { this.pulse = 0; this.flop(g, dt); return; }
+      this.gravity = 0;
+      this.pulseT -= dt * sp; this.inkT -= dt * sp;
+      if (this.pulse > 0) {
+        // tirón: frena poco a poco
+        this.pulse -= dt; this.vx = U.approach(this.vx, 0, 220 * dt); this.vy = U.approach(this.vy, 0, 380 * dt);
+      } else {
+        // se hunde despacio con un leve vaivén
+        this.vx = U.approach(this.vx, 0, 160 * dt); this.vy = U.approach(this.vy, 32, 300 * dt);
+      }
+      if (this.pulseT <= 0) {
+        this.pulseT = U.rand(1, 1.5);
+        if (near(this, p, 10 * T)) {
+          this.dir = dirTo(this, p);
+          const below = p.y + p.h / 2 > this.cy() + T;
+          this.vx = this.dir * 165 * sp; this.vy = below ? 130 * sp : -200 * sp; this.pulse = 0.6;
+          g.emit('squidPulse', { x: this.cx(), y: this.y + this.h });
+        }
+      }
+      // no se sale del líquido al subir
+      if (this.vy < 0 && g.liquidAt(this.cx(), this.y - 4) == null) this.vy = 0;
+      if (this.inkT <= 0) {
+        this.inkT = U.rand(4.5, 6);
+        if (near(this, p, 7 * T)) {
+          const f = Ents.create('sprayfog', 0, 0); f.ink = true; f.w = 150; f.h = 110; f.life = f.max = 4;
+          f.x = this.cx() - f.w / 2 - this.dir * 20; f.y = this.cy() - f.h / 2; f.active = true; g.spawn(f);
+          g.emit('squidInk', { x: this.cx(), y: this.cy() });
+        }
+      }
+    }
+  }
   class Shark extends Aquatic {
     constructor(tx, ty) { super('shark', tx, ty); this.stompable = false; this.poundable = false; this.charge = 0; }
     think(g, dt) {
@@ -266,6 +306,17 @@
       this.life -= dt; if (this.life <= 0) { this.remove = true; return; }
       if (this.kind === 'slash' && this.owner) { this.x = this.owner.dir > 0 ? this.owner.x + this.owner.w - 4 : this.owner.x - this.w + 4; this.y = this.owner.y; if (this.owner.dying || this.owner.remove) this.remove = true; }
       if (this.homing) { const p = g.player; this.vy = U.approach(this.vy, Math.sign(p.y + p.h / 2 - this.cy()) * 50, 40 * dt); }
+      // Pico-bumerán del Miner Pyce: sale, frena, vuelve (con un leve arco) y el dueño lo recoge
+      if (this.kind === 'pickaxe' && this.boomer) {
+        this.vx -= this.boomer * 330 * dt;                         // tarda ~1 s en frenar (~5 casillas)
+        const back = Math.sign(this.vx) === -this.boomer;
+        this.vy = (back ? 1 : -1) * 22;                            // sube un poco al ir, baja al volver
+        const o = this.owner;
+        if (back && o && !o.dying && !o.remove) {
+          if (Math.abs(this.cx() - o.cx()) < 14 && Math.abs(this.cy() - o.cy()) < T * 1.2) { this.remove = true; g.emit('pickCatch', { x: o.cx(), y: o.cy() }); }
+        }
+        if (Math.abs(this.cx() - (o ? o.cx() : this.cx())) > 20 * T) this.remove = true;
+      }
       // Ráfaga de aire del Flower Pyce: no daña, pero empuja al jugador que la toca
       if (this.kind === 'gust') { this.harmful = false; this.tiles = false; const p = g.player; if (U.overlap(this, p)) { p.vx += (this.push || Math.sign(this.vx) || 1) * 420 * dt; } }
     }
@@ -284,7 +335,7 @@
     inLiquid() { return false; }
   }
 
-  [['pysh', Pysh], ['clownpysh', ClownPysh], ['axolotl', Axolotl], ['shark', Shark],
+  [['pysh', Pysh], ['clownpysh', ClownPysh], ['axolotl', Axolotl], ['squid', Squid], ['shark', Shark],
     ['mimic', Mimic], ['dirty', Dirty], ['nomic', NOmic], ['goldmimic', GoldMimic],
     ['noeye', NOeye], ['nosense', NOsense], ['noir', NOIRrupt], ['moonstar', MoonStar], ['eshot', EShot]
   ].forEach(([k, K]) => reg(k, K));

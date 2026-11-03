@@ -8,15 +8,16 @@
   // Las imágenes deben resolverse relativas a la raíz del juego
   document.write('<base href="../">');
 </script>
+<!-- mismos scripts que index.html (sin main.js: aquí se arranca a mano) -->
 <script src="js/core/sgm.js"></script>
 <script src="js/model/Characters.js"></script><script src="js/model/Themes.js"></script><script src="js/model/Catalog.js"></script>
-<script src="js/model/Level.js"></script><script src="js/model/LevelStorage.js"></script><script src="js/model/Physics.js"></script>
+<script src="js/model/Level.js"></script><script src="js/model/LevelStorage.js"></script><script src="js/model/GldAccount.js"></script><script src="js/model/Physics.js"></script>
 <script src="js/model/entities/Entity.js"></script><script src="js/model/entities/Enemies.js"></script><script src="js/model/entities/EnemiesSpecial.js"></script><script src="js/model/entities/Objects.js"></script>
-<script src="js/model/Player.js"></script><script src="js/model/GameModel.js"></script><script src="js/model/EditorModel.js"></script><script src="js/model/SampleLevels.js"></script>
-<script src="js/view/PyceArt.js"></script><script src="js/view/Assets.js"></script><script src="js/view/Sprites.js"></script><script src="js/view/BackgroundView.js"></script>
-<script src="js/view/ParticlesView.js"></script><script src="js/view/WorldRenderer.js"></script><script src="js/view/HUDView.js"></script>
+<script src="js/model/Player.js"></script><script src="js/model/GameModel.js"></script><script src="js/model/EditorModel.js"></script><script src="js/model/SampleLevels.js"></script><script src="js/model/StoryMap.js"></script>
+<script src="js/view/PyceArt.js"></script><script src="js/view/Assets.js"></script><script src="js/view/GroundStyles.js"></script><script src="js/view/Sprites.js"></script><script src="js/view/BackgroundView.js"></script>
+<script src="js/view/Decorations.js"></script><script src="js/view/ParticlesView.js"></script><script src="js/view/WorldRenderer.js"></script><script src="js/view/HUDView.js"></script>
 <script src="js/view/SoundView.js"></script><script src="js/view/EditorView.js"></script><script src="js/view/MenuView.js"></script>
-<script src="js/controller/InputController.js"></script><script src="js/controller/GameController.js"></script>
+<script src="js/controller/InputController.js"></script><script src="js/controller/GameController.js"></script><script src="js/controller/MapController.js"></script>
 <script src="js/controller/EditorController.js"></script><script src="js/controller/AppController.js"></script>
 <script>
   const q = new URLSearchParams(location.search);
@@ -36,6 +37,81 @@
           g.t = 3;
           for (let i = 0; i < 120 * (+(q.get('sec') || 2)); i++) g.update(1 / 120, { right: true, run: false, jump: i % 90 < 40, jumpPressed: i % 90 === 0 });
         } else if (what === 'editor') { S.app.openEditor(S.Model.SampleLevels.build(q.get('t') || 'lake', q.get('m') || 'peace')); if (q.get('cat')) { S.app.editor.view.cat = q.get('cat'); S.app.editor.view.buildToolbar(S.app.editor.model, S.app.editor.handlers()); } }
+        else if (what === 'arcade') {
+          // muestra de suelo temático del casino: arcades de 1 y 2 de ancho, altos 1-4, y una masa 3x3
+          const L = S.Model.SampleLevels.build('casino', q.get('m') || 'peace'), TT = S.Model.Catalog.T, gy = L.height - 3;
+          for (let x = 0; x < 40; x++) for (let y = 0; y < gy; y++) L.set(x, y, 0);
+          L.objects = L.objects.filter((o) => o.type === 'start' || o.x > 40);
+          const col = (x, h, w) => { for (let i = 0; i < (w || 1); i++) for (let j = 1; j <= h; j++) L.set(x + i, gy - j, TT.GROUND2); };
+          col(3, 1); col(5, 2); col(7, 3); col(9, 4); col(12, 2, 2); col(15, 3, 2); col(18, 4, 2); col(22, 3, 3);
+          S.app.openEditor(L);
+        }
+        else if (what === 'mylevels') {
+          const St = S.Model.LevelStorage, Lv = S.Model.Level;
+          St.list().forEach((l) => St.remove(l.id));
+          const a = S.Model.SampleLevels.build('city', 'peace'); a.name = 'Pueblo de prueba'; a.id = 'lvA'; St.save(Object.assign(a.toJSON(), { publishedAt: Date.now(), cloudId: 'c1' }));
+          const b = Lv.copy(St.get('lvA')); b.mode = 'corrupt'; St.save(b.toJSON());
+          const c = S.Model.SampleLevels.build('casino', 'peace'); c.name = 'Casino nuevo'; St.save(c.toJSON());
+          S.app.showLevels();
+          if (q.get('pub')) setTimeout(() => S.app.publishLocal(St.get('lvA')), 100);
+          if (q.get('exp')) setTimeout(() => S.app.exportLevel(St.get('lvA')), 100);
+        }
+        else if (what === 'online') {
+          // Gld simulado (NO toca el servidor real): comprueba que la UI pinta todas las pestañas
+          const G = S.Model.Gld, th = ['lake', 'casino', 'vortex', 'factory', 'disco', 'city', 'snow', 'sky'];
+          const rows = th.map((t, i) => ({ id: 'id' + i, name: ['Saltos de gelatina', 'All-in al Pyce', 'Caída al vacío', 'MadStars Rush', 'Ritmo letal', 'Apagón total', 'Trineo loco', 'Espejito'][i], theme: t, mode: i % 2 ? 'corrupt' : 'peace', author: ['glober', 'pycefan', 'glober', 'madmax'][i % 4], likes: 40 - i * 4, dislikes: i * 2, score: 40 - i * 6, plays: 120 - i * 9, clears: 60 - i * 7, rate: (60 - i * 7) / (120 - i * 9), is_public: i % 3 !== 2, local: null }));
+          G.configured = () => true; G.v2 = q.get('v2') === '0' ? false : true;
+          G.username = () => Promise.resolve('glober'); S.Model.LevelStorage.isLinked = () => q.get('guest') ? false : true;
+          G.browse = (o) => Promise.resolve({ ok: true, rows: o.author ? rows.filter((r) => r.author === o.author) : rows.slice(0, o.limit || 30) });
+          G.mine = () => Promise.resolve({ ok: true, rows: rows.filter((r) => r.author === 'glober') });
+          S.app.showOnline(q.get('tab') || 'home', q.get('arg') || undefined);
+          if (q.get('vote')) { setTimeout(() => { G.getLevel = () => Promise.resolve(S.Model.SampleLevels.build('lake', 'peace').toJSON()); G.myVote = () => Promise.resolve(1); G.play = () => Promise.resolve(); S.app.lastPlay = { data: {}, opts: { online: { id: 'id0', name: 'Saltos de gelatina', author: 'glober' } } }; S.app.game = null; S.app.onGameFinished('clear', { score: 1200, coins: 12, stars: 0, starTotal: 0, secretClear: false, player: { formPath: () => S.Model.Characters.list[0].paths[0], formName: () => 'EVO1' } }); }, 200); }
+        }
+        else if (what === 'corrupt') {
+          // hoja de contacto: fondo + capa delantera de los 16 mapas en Corrupto (4x4)
+          document.getElementById('stage').style.display = 'none';
+          const cv = document.createElement('canvas'); cv.width = 1024 * 4 / 2; cv.height = 576 * 4 / 2; document.body.appendChild(cv);
+          const out = cv.getContext('2d'), tmp = document.createElement('canvas'); tmp.width = 1024; tmp.height = 576; const x = tmp.getContext('2d');
+          const tt = +(q.get('time') || 7.3);
+          S.Model.Themes.list.forEach((th, i) => {
+            x.clearRect(0, 0, 1024, 576); x.save(); S.View.BackgroundView.draw(x, th, 'corrupt', 800, tt); S.View.BackgroundView.front(x, th, 'corrupt', 800, tt); x.restore();
+            x.fillStyle = 'rgba(0,0,0,0.6)'; x.fillRect(0, 0, 1024, 52); x.fillStyle = '#fff'; x.font = 'bold 34px sans-serif'; x.fillText(S.Model.Themes.name(th, 'corrupt'), 14, 38);
+            out.drawImage(tmp, (i % 4) * 512, Math.floor(i / 4) * 288, 512, 288);
+          });
+        }
+        else if (what === 'rails') {
+          const L = S.Model.SampleLevels.build('lake', 'peace'), TT = S.Model.Catalog.T, gy = L.height - 3, ry = gy - 6;
+          for (let x = 0; x < 40; x++) for (let y = 0; y < gy; y++) L.set(x, y, 0);
+          L.objects = L.objects.filter((o) => o.type === 'start' || o.x > 40);
+          for (let x = 4; x <= 12; x++) L.set(x, ry, TT.RAIL);
+          for (let x = 15; x <= 20; x++) { L.set(x, ry - 2, TT.RAIL); L.set(x, ry + 2, TT.RAIL); }
+          for (let y = ry - 2; y <= ry + 2; y++) { L.set(15, y, TT.RAIL); L.set(20, y, TT.RAIL); }
+          for (let i = 0; i < 5; i++) L.set(23 + i, ry + 2 - i, TT.RAIL);
+          L.objects.push({ type: 'platform', x: 8, y: ry }, { type: 'stupid', x: 17, y: ry - 2 }, { type: 'firebar', x: 25, y: ry }, { type: 'builder', x: 20, y: ry + 1 });
+          if (q.get('play')) { S.app.playLevel(L.toJSON(), {}); const g = S.app.game.model; g.t = 3; for (let i = 0; i < 120 * 2; i++) g.update(1 / 120, {}); }
+          else S.app.openEditor(L);
+        }
+        else if (what === 'keys') {
+          // Prueba de teclas al probar un nivel: P en el editor = jugar (sin pausar); en partida P = pausa; Esc = editor
+          const app = S.app, out = [];
+          const key = (code, type) => window.dispatchEvent(new KeyboardEvent(type || 'keydown', { code, key: code, bubbles: true }));
+          // en headless no corre requestAnimationFrame: se avanza el bucle de la app a mano
+          const tick = (n) => { for (let i = 0; i < n; i++) { const inp = app.input.poll(); app.t += 1 / 60; if (app.mode === 'game' && app.game) app.game.update(1 / 60, inp); else if (app.mode === 'editor' && app.editor) app.editor.update(1 / 60); } };
+          const tap = (code) => { key(code); tick(3); key(code, 'keyup'); tick(3); };
+          const st = () => app.mode + (app.mode === 'game' && app.game ? (app.game.paused ? '/paused' : '/run') : '') + ' t=' + app.t.toFixed(1);
+          app.openEditor(S.Model.SampleLevels.build('lake', 'peace'));
+          const steps = [
+            () => tap('KeyP'), () => out.push('P en editor -> ' + st()),
+            () => tap('KeyP'), () => out.push('P en partida -> ' + st()),
+            () => tap('KeyP'), () => out.push('P otra vez -> ' + st()),
+            () => tap('Escape'), () => out.push('Esc en partida -> ' + st()),
+            () => tap('KeyP'), () => out.push('P en editor (2) -> ' + st()),
+            () => tap('KeyP'), () => out.push('P pausa -> ' + st()),
+            () => tap('Escape'), () => out.push('Esc en pausa -> ' + st()),
+            () => { document.getElementById('err').textContent += 'KEYS: ' + out.join(' | '); }
+          ];
+          steps.forEach((f, i) => setTimeout(f, 500 + i * 500));
+        }
         else if (what === 'story') S.app.showStory();
         else if (what === 'chars') S.app.menu.characterPicker('green', () => {}, () => {});
       } catch (e) { document.getElementById('err').textContent += e.stack; }

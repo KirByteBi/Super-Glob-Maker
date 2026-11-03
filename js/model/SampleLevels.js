@@ -10,13 +10,13 @@
     lake: ['stupid', 'symbol', 'stupid', 'symbol'], city: ['stupid', 'noob', 'guest', 'rebel'],
     seaside: ['stupid', 'umbrella', 'elf', 'pyce2'], ruins: ['zom', 'skelebone', 'ghost', 'so'],
     circus: ['toybomb', 'motions', 'elf', 'bomb'], snow: ['snowcap', 'elf', 'festive', 'stupid'],
-    vortex: ['hacker', 'holo', 'crystal', 'pyce2'], underwater: ['pysh', 'clownpysh', 'axolotl', 'pysh'],
+    vortex: ['hacker', 'holo', 'crystal', 'pyce2'], underwater: ['pysh', 'clownpysh', 'axolotl', 'squid'],
     jungle: ['stupid', 'flower', 'symbol', 'wingel'], sky: ['wingel', 'umbrella', 'symbol', 'pyce2'],
     volcano: ['crystal', 'bomb', 'knight', 'pyce2'], factory: ['knight', 'noob', 'holo', 'strechy'],
     casino: ['noob', 'motions', 'guest', 'rebel'], clock: ['holo', 'hacker', 'symbol', 'knight'],
     disco: ['elf', 'motions', 'wingel', 'festive'], hub: ['holo', 'ghost', 'crystal', 'noob']
   };
-  const AIR = new Set(['ghost', 'hacker', 'pysh', 'clownpysh', 'axolotl']);
+  const AIR = new Set(['ghost', 'hacker', 'pysh', 'clownpysh', 'axolotl', 'squid']);
   const ORDER = ['lake', 'jungle', 'seaside', 'city', 'ruins', 'underwater', 'snow', 'circus', 'disco', 'casino', 'sky', 'clock', 'volcano', 'vortex', 'hub', 'factory'];
 
   function generate(themeId, index, mode) {

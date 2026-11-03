@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<!-- Arte del Squid Pyce (familia Pysh, tipo Blooper). Genera Enemigos/Pyces/Squid Pyce.png:
+     msedge --headless --disable-gpu --hide-scrollbars --window-size=1080,1080
+            --default-background-color=00000000 --screenshot="<ruta png>" "file:///<ruta>/tools/SquidArt.html"
+     Estilo de los Pyces: monitor con contorno negro grueso y colores planos, mirando a la DERECHA.
+     Manto de calamar arriba, tentaculos = cables con clavija, raton colgando del cable (como el Pysh). -->
+<html><head><meta charset="UTF-8">
+<style>html,body{margin:0;background:transparent;overflow:hidden}canvas{display:block}</style></head>
+<body><canvas id="c" width="1080" height="1080"></canvas>
+<script>
+const c = document.getElementById('c'), x = c.getContext('2d');
+const INK = '#0a0a0a', BODY = '#f7f5ff', SCREEN = '#cfe0ff', ACC = '#c9b8ff', ACC2 = '#a58cff';
+const LW = 28;
+x.lineJoin = 'round'; x.lineCap = 'round';
+
+// Trazo "a mano": polígono suavizado con un pequeño temblor determinista
+function wob(i) { return Math.sin(i * 12.9898) * 43758.5453 % 1; }
+function blob(pts, fill, lw) {
+  x.beginPath();
+  const n = pts.length;
+  const p = pts.map(([px, py], i) => [px + wob(i + px) * 4, py + wob(i * 3 + py) * 4]);
+  x.moveTo((p[0][0] + p[n - 1][0]) / 2, (p[0][1] + p[n - 1][1]) / 2);
+  for (let i = 0; i < n; i++) { const a = p[i], b = p[(i + 1) % n]; x.quadraticCurveTo(a[0], a[1], (a[0] + b[0]) / 2, (a[1] + b[1]) / 2); }
+  x.closePath();
+  if (fill) { x.fillStyle = fill; x.fill(); }
+  x.strokeStyle = INK; x.lineWidth = lw || LW; x.stroke();
+}
+function rrect(px, py, w, h, r, fill, lw) {
+  x.beginPath(); x.roundRect(px, py, w, h, r);
+  if (fill) { x.fillStyle = fill; x.fill(); }
+  x.strokeStyle = INK; x.lineWidth = lw || LW; x.stroke();
+}
+// Cable relleno (contorno negro + interior de color)
+function cable(path, col, wOut, wIn) {
+  x.beginPath(); path(); x.strokeStyle = INK; x.lineWidth = wOut; x.stroke();
+  x.beginPath(); path(); x.strokeStyle = col; x.lineWidth = wIn; x.stroke();
+}
+
+x.save();
+x.translate(540, 560); x.rotate(-0.05); x.translate(-540, -560);
+
+// --- Tentáculos (cables) detrás del monitor, ondulados, acabados en clavija
+const tent = [[380, -1], [480, 1], [600, -1], [705, 1]];
+tent.forEach(([tx, s], i) => {
+  const y0 = 720, y1 = 960 + (i % 2) * 30;
+  const path = () => { x.moveTo(tx, y0); x.bezierCurveTo(tx + s * 60, y0 + 90, tx - s * 60, y1 - 120, tx + s * 20, y1); };
+  cable(path, i % 2 ? BODY : ACC, 70, 38);
+  // clavija
+  x.save(); x.translate(tx + s * 20, y1); x.rotate(s * 0.25);
+  rrect(-26, -6, 52, 46, 10, i % 2 ? ACC : BODY, 20);
+  x.beginPath(); x.moveTo(-10, 40); x.lineTo(-10, 66); x.moveTo(10, 40); x.lineTo(10, 66); x.strokeStyle = INK; x.lineWidth = 14; x.stroke();
+  x.restore();
+});
+
+// --- Raton colgando del cable, a la espalda (izquierda), como el Pysh
+cable(() => { x.moveTo(300, 450); x.bezierCurveTo(220, 440, 170, 480, 165, 578); }, BODY, 44, 18);
+// Ratón como el de los demás Pyces: cuelga del cable por el borde de ARRIBA (plano),
+// cuerpo en "U" redondeado hacia abajo y la rueda: una línea desde arriba hasta un circulito.
+x.save(); x.translate(165, 575); x.rotate(-0.1);
+x.beginPath();
+x.moveTo(-58, 0); x.lineTo(58, -6);                       // borde de arriba (plano, algo inclinado)
+x.bezierCurveTo(66, 60, 64, 120, 30, 150);                // lado derecho
+x.quadraticCurveTo(0, 168, -30, 150);                     // culo redondeado
+x.bezierCurveTo(-66, 120, -66, 60, -58, 0);               // lado izquierdo
+x.closePath(); x.fillStyle = ACC; x.fill(); x.strokeStyle = INK; x.lineWidth = 24; x.stroke();
+// la rueda arriba y el palo baja hasta la curva del culo
+x.beginPath(); x.moveTo(0, 86); x.lineTo(0, 160); x.strokeStyle = INK; x.lineWidth = 14; x.stroke();
+x.beginPath(); x.arc(0, 68, 18, 0, 7); x.fillStyle = BODY; x.fill(); x.strokeStyle = INK; x.lineWidth = 12; x.stroke();
+x.restore();
+
+// --- Aleta lateral (delante, a la derecha)
+blob([[790, 420], [880, 380], [960, 440], [975, 560], [930, 690], [860, 720], [800, 690]], ACC, LW);
+x.beginPath(); x.moveTo(830, 470); x.quadraticCurveTo(900, 520, 880, 650); x.strokeStyle = ACC2; x.lineWidth = 14; x.stroke();
+
+// --- Manto de calamar (punta arriba), por detrás del monitor
+blob([[320, 340], [380, 230], [470, 120], [545, 50], [620, 120], [710, 230], [770, 340]], BODY, LW);
+// rejilla de ventilación del monitor en el manto
+x.strokeStyle = ACC2; x.lineWidth = 14;
+[[470, 230, 520, 170], [540, 250, 545, 150], [620, 230, 575, 170]].forEach(([a, b, cc, d]) => { x.beginPath(); x.moveTo(a, b); x.lineTo(cc, d); x.stroke(); });
+
+// --- Monitor (cuerpo)
+rrect(285, 300, 520, 450, 34, BODY);
+// pantalla
+rrect(355, 365, 380, 310, 26, SCREEN, 24);
+// brillo de la pantalla
+x.fillStyle = 'rgba(255,255,255,0.75)'; x.beginPath(); x.roundRect(380, 388, 120, 30, 15); x.fill();
+
+// --- Cara: ojos alargados estilo Blooper con cejas decididas
+[[480, 520], [610, 510]].forEach(([ex, ey], i) => {
+  x.beginPath(); x.ellipse(ex, ey, 30, 64, i ? 0.08 : -0.08, 0, Math.PI * 2); x.fillStyle = INK; x.fill();
+  x.beginPath(); x.ellipse(ex - 8, ey - 26, 9, 16, 0, 0, Math.PI * 2); x.fillStyle = '#fff'; x.fill();
+});
+x.strokeStyle = INK; x.lineWidth = 18;
+x.beginPath(); x.moveTo(438, 430); x.lineTo(512, 445); x.stroke();
+x.beginPath(); x.moveTo(575, 440); x.lineTo(650, 420); x.stroke();
+// coloretes
+x.fillStyle = 'rgba(255,120,180,0.45)';
+x.beginPath(); x.ellipse(415, 600, 26, 14, 0, 0, 7); x.fill();
+x.beginPath(); x.ellipse(680, 590, 26, 14, 0, 0, 7); x.fill();
+
+// --- Gotitas de tinta (detalle)
+[[860, 820, 22], [905, 770, 14], [835, 760, 10]].forEach(([dx, dy, r]) => {
+  x.beginPath(); x.arc(dx, dy, r, 0, 7); x.fillStyle = '#1a1424'; x.fill();
+  x.beginPath(); x.arc(dx - r * 0.35, dy - r * 0.35, r * 0.3, 0, 7); x.fillStyle = '#8f7fd0'; x.fill();
+});
+
+x.restore();
+</script></body></html>

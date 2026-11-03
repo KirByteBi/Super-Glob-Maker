@@ -63,6 +63,9 @@
       return s;
     }
     clear() { this.keys = {}; }
+    // Las teclas que ya están pulsadas al cambiar de pantalla no cuentan como pulsación nueva
+    // (p. ej. la P que lanza la prueba desde el editor no debe pausar la partida al empezar).
+    swallow() { ACTIONS.forEach((a) => { if (this.keys[a]) this.prev[a] = true; }); this.editExit = false; }
   }
   S.Controller.InputController = InputController;
 })(window.SGM);

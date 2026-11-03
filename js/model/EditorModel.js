@@ -96,6 +96,8 @@
         // Monedas rojas: set de máximo 8. Al poner la 9a desaparece la más vieja (FIFO).
         if (tool.id === C.T.RCOIN) { this.placeRedCoin(x, y); return; }
         const o = L.objectAt(x, y);
+        // El raíl va por detrás: se puede pintar bajo un objeto sin borrarlo (así se monta en él)
+        if (tool.id === C.T.RAIL) { if (C.isSolid(tile)) return; L.set(x, y, tool.id); delete L.contents[key]; this.changed = true; return; }
         if (o && (o.type === 'start' || o.type === 'goal')) return;
         if (o) L.removeObjectAt(x, y);
         L.set(x, y, tool.id);

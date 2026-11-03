@@ -96,13 +96,73 @@
     if (i === left) i = (i + 1) % ARCADE_COLS.length;
     return ARCADE_COLS[i];
   }
-  function pieceArcade(ctx, level, x, y, pal, ed) {
-    const px = x * T, py = y * T, col = arcadeColor(x, y);
-    ctx.fillStyle = '#20232e'; ctx.fillRect(px, py, T, T);
-    if (ed.up) { ctx.fillStyle = col; ctx.fillRect(px + 4, py + 3, T - 8, 10); ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fillRect(px + 6, py + 5, T - 12, 3); }
-    ctx.fillStyle = U.shade(col, -0.3); ctx.fillRect(px + 5, py + 15, T - 10, 4);
-    ctx.fillStyle = col; [8, 14, 20].forEach((bx) => { ctx.beginPath(); ctx.arc(px + bx, py + 24, 1.6, 0, 7); ctx.fill(); });
-    ink(ctx, 3); ctx.strokeRect(px + 1.5, py + 1.5, T - 3, T - 3);
+  // ARCADES: todo tramo de suelo temático de 1 o 2 de ancho (cualquier alto) es UNA máquina
+  // arcade entera (cartel, pantalla, mandos, monedero). 3+ de ancho = masa (tablero de ruleta).
+  // Cada casilla pinta su trozo de la máquina recortando (clip) el dibujo completo.
+  const narrow = (level, cx, j) => isG2(level.get(cx, j)) && runW(level, cx, j) <= 2;
+  function cabinetOf(level, x, y) {
+    let x0 = x; while (x0 - 1 >= 0 && isG2(level.get(x0 - 1, y))) x0--;
+    const top = (cx) => { let j = y; while (j - 1 >= 0 && narrow(level, cx, j - 1)) j--; return j; };
+    const bot = (cx) => { let j = y; while (j + 1 < level.height && narrow(level, cx, j + 1)) j++; return j; };
+    let w = runW(level, x, y);
+    // dos columnas = una máquina ancha solo si ocupan exactamente las mismas filas
+    if (w === 2 && (top(x0) !== top(x0 + 1) || bot(x0) !== bot(x0 + 1))) { w = 1; x0 = x; }
+    if (w === 1) x0 = x;
+    const y0 = top(x0);
+    return { x0, y0, w, h: bot(x0) - y0 + 1 };
+  }
+  function drawCabinet(ctx, X, Y, W, H, col, time, seed) {
+    const tall = H >= 2 * T, k = W / T;
+    const dark = '#1c1f2a', trim = U.shade(col, -0.25);
+    // cuerpo
+    ctx.beginPath(); ctx.roundRect(X + 1.5, Y + 1.5, W - 3, H - 3, 4); ctx.fillStyle = dark; ctx.fill();
+    ctx.fillStyle = trim; ctx.fillRect(X + 3, Y + 4, 3, H - 8); ctx.fillRect(X + W - 6, Y + 4, 3, H - 8);
+    // cartel luminoso
+    const mh = tall ? 12 : 7;
+    ctx.beginPath(); ctx.roundRect(X + 4, Y + 3, W - 8, mh, 3); ctx.fillStyle = col; ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.fillRect(X + 7, Y + 5, W - 14, tall ? 3 : 2);
+    if (tall) { ctx.fillStyle = U.shade(col, -0.45); for (let i = 0; i < 3 * k; i++) ctx.fillRect(X + 9 + i * 6, Y + 9, 4, 3); }
+    // pantalla con un minijuego pixelado (un Glob que bota y estrellitas)
+    const sy = Y + mh + (tall ? 5 : 2);
+    const sh = tall ? Math.min(34, Math.max(20, H * 0.36)) : Math.max(8, H - mh - 13);
+    const sx = X + 7, sw = W - 14;
+    ctx.beginPath(); ctx.roundRect(sx - 2, sy - 2, sw + 4, sh + 4, 3); ctx.fillStyle = '#05060a'; ctx.fill();
+    ctx.fillStyle = '#0b1638'; ctx.fillRect(sx, sy, sw, sh);
+    ctx.save(); ctx.beginPath(); ctx.rect(sx, sy, sw, sh); ctx.clip();
+    const tt = (time || 0) + seed * 7;
+    ctx.fillStyle = '#ffe600';
+    for (let i = 0; i < 3 * k; i++) { const st = (seed * 13 + i * 7) % 1; ctx.fillRect(sx + ((st * sw + tt * 10 * (i + 1)) % sw), sy + 2 + (i * 5) % Math.max(1, sh - 4), 1.5, 1.5); }
+    const gx = sx + sw / 2 + Math.sin(tt * 1.7) * (sw / 2 - 5), gy = sy + sh - 4 - Math.abs(Math.sin(tt * 3.2)) * (sh * 0.5);
+    ctx.fillStyle = ['#00ff66', '#ff3b3b', '#3b8bff'][Math.floor(seed * 3) % 3]; ctx.fillRect(gx - 3, gy - 3, 6, 3); ctx.fillRect(gx - 2, gy - 4, 4, 1);
+    ctx.fillStyle = '#05060a'; ctx.fillRect(gx - 1, gy - 2, 1, 1); ctx.fillRect(gx + 1, gy - 2, 1, 1);
+    ctx.fillStyle = 'rgba(255,255,255,0.07)'; for (let j = sy; j < sy + sh; j += 2) ctx.fillRect(sx, j, sw, 1);
+    ctx.restore();
+    // panel de mandos (sobresale un poco): joystick + botones
+    const py = sy + sh + 3, ph = tall ? 9 : 6;
+    ctx.beginPath(); ctx.moveTo(X + 1, py + ph); ctx.lineTo(X + W - 1, py + ph); ctx.lineTo(X + W - 5, py); ctx.lineTo(X + 5, py); ctx.closePath();
+    ctx.fillStyle = trim; ctx.fill(); ink(ctx, 2); ctx.stroke();
+    const jx = X + 10;
+    ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(jx, py + 3); ctx.lineTo(jx + Math.sin(tt * 2) * 1.5, py - 2); ctx.stroke();
+    ctx.fillStyle = '#ff3b3b'; ctx.beginPath(); ctx.arc(jx + Math.sin(tt * 2) * 1.5, py - 3, 2.6, 0, 7); ctx.fill();
+    ['#ffd000', '#2fd46a', '#3b8bff'].slice(0, W > T ? 3 : 2).forEach((bc, i) => { ctx.fillStyle = bc; ctx.beginPath(); ctx.arc(X + W - 9 - i * 6, py + ph / 2 + 0.5, 2, 0, 7); ctx.fill(); });
+    // monedero y zócalo (si cabe)
+    const rest = Y + H - (py + ph);
+    if (rest >= 16) {
+      const cy = py + ph + Math.min(10, rest * 0.3), cw = 10;
+      ctx.fillStyle = '#2b2f3c'; ctx.fillRect(X + W / 2 - cw, cy, cw * 2, 12);
+      ctx.fillStyle = '#ff9a2f'; ctx.fillRect(X + W / 2 - cw + 3, cy + 3, 4, 6); ctx.fillRect(X + W / 2 + cw - 7, cy + 3, 4, 6);
+      ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 1.5; ctx.strokeRect(X + W / 2 - cw, cy, cw * 2, 12);
+    }
+    if (rest >= 6) { ctx.fillStyle = '#0e1016'; ctx.fillRect(X + 4, Y + H - 7, W - 8, 4); }
+    ink(ctx, 3); ctx.beginPath(); ctx.roundRect(X + 1.5, Y + 1.5, W - 3, H - 3, 4); ctx.stroke();
+  }
+  function pieceArcade(ctx, level, x, y, pal, ed, shape, time) {
+    const cab = cabinetOf(level, x, y);
+    const col = arcadeColor(cab.x0, cab.y0);
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x * T, y * T, T, T); ctx.clip();
+    drawCabinet(ctx, cab.x0 * T, cab.y0 * T, cab.w * T, cab.h * T, col, time, U.hash2(cab.x0, cab.y0));
+    ctx.restore();
   }
 
   // ----- Sound Discotech: pista de baile -----
@@ -319,7 +379,7 @@
     // UR: viga ligera en pieza, columna Y fila; solo la masa grande (3+x3+) pasa a carretera.
     city: { fill: fillRoad, piece: pieceBeam, col: pieceBeam, row: pieceBeam },
     sky: { fill: fillVine },
-    casino: { fill: fillRoulette, piece: pieceArcade },
+    casino: { fill: fillRoulette, arcade: pieceArcade },
     disco: { fill: fillDanceFloor },
     seaside: { fill: fillDock, col: colDockPost },
     clock: { fill: fillClock },
@@ -343,6 +403,8 @@
       if (!style) return false;
       const ed = edgesG2(level, x, y);          // bordes calculados contra GROUND2 (su propio tile)
       const shape = shapeOf(level, x, y);
+      // Casino: cualquier tramo de 1-2 de ancho es una máquina arcade (aunque sea alto)
+      if (style.arcade && runW(level, x, y) <= 2) { style.arcade(ctx, level, x, y, pal, ed, shape, time); return true; }
       const fn = (shape !== 'fill' && style[shape]) || style.fill;
       fn(ctx, level, x, y, pal, ed, shape, time);
       return true;

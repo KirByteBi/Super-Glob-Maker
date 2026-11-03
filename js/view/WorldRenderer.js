@@ -22,9 +22,9 @@
       for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
         const tt = level.get(x, y);
         if (!tt) continue;
-        const back = tt === TT.WATER;
+        const back = tt === TT.WATER || tt === TT.RAIL; // agua y raíles van por detrás
         if ((pass === 0) !== back) continue;
-        Sp.drawTile(ctx, level, x, y, tt, pal, t, { bump: bumps[x + ',' + y] || 0, editor: opt.editor, convDir: opt.convDir, semi: semiStyle, mush: opt.mush, poison: opt.poison, theme: level.theme, liquidCol: opt.liquidCol, liquidTopCol: opt.liquidTopCol });
+        Sp.drawTile(ctx, level, x, y, tt, pal, t, { bump: bumps[x + ',' + y] || 0, editor: opt.editor, convDir: opt.convDir, semi: semiStyle, mush: opt.mush, waveH: opt.waveH, theme: level.theme, liquidCol: opt.liquidCol, liquidTopCol: opt.liquidTopCol });
         if (opt.editor && opt.contents && opt.contents[x + ',' + y]) drawContentBadge(ctx, x, y, opt.contents[x + ',' + y], pal, opt.ch);
       }
     }
@@ -83,7 +83,7 @@
       if (S.View.Decorations) {
         try { g.level.objects.forEach((o) => { if (o.type === 'deco' && o.x + 3 > cam.x / T - 1 && o.x < (cam.x + cam.w) / T + 1) S.View.Decorations.drawObject(ctx, o, t, g.mode); }); } catch (e) { /* los adornos no deben romper el render */ }
       }
-      const tileOpt = { bumps: g.bumps, convDir: g.convDir * g.obstacleMul, mush: !!g.fx.movingShrooms, poison: !!g.fx.poisonWater };
+      const tileOpt = { bumps: g.bumps, convDir: g.convDir * g.obstacleMul, mush: !!g.fx.movingShrooms, waveH: g.fx.waves ? (wx) => g.waveH(wx) : null };
       // Sound Discotech: el líquido cambia de color al ritmo del tempo del tema
       // (rojo → azul → amarillo → rosa). beatT, si existe, aporta un "latido" extra.
       if (g.theme.id === 'disco') {
@@ -100,14 +100,16 @@
       if (g.goal) S.View.Sprites.goal(ctx, g.goal, t, g.player.ch.color);
       if (g.goalHidden) { ctx.save(); ctx.globalAlpha = 0.55; S.View.Sprites.goal(ctx, g.goalHidden, t, '#b44dff'); ctx.restore(); }
       const opt = { pal: g.pal, color: g.player.ch.color };
+      const onCam = (e) => e.x + e.w > cam.x - 64 && e.x < cam.x + cam.w + 64;
       g.entities.forEach((e) => {
-        if (e.x + e.w > cam.x - 64 && e.x < cam.x + cam.w + 64) {
-          if (e.ghost != null && e.enemy) { if (e.ghost <= 0.01) return; ctx.globalAlpha = e.ghost * (0.75 + Math.sin(t * 6 + e.spawnX) * 0.25); }
-          S.View.Sprites.drawEntity(ctx, e, t, opt);
-          ctx.globalAlpha = 1;
-        }
+        if (e.type === 'sprayfog' || !onCam(e)) return;
+        if (e.ghost != null && e.enemy) { if (e.ghost <= 0.01) return; ctx.globalAlpha = e.ghost * (0.75 + Math.sin(t * 6 + e.spawnX) * 0.25); }
+        S.View.Sprites.drawEntity(ctx, e, t, opt);
+        ctx.globalAlpha = 1;
       });
       drawPlayer(ctx, g.player, t, g);
+      // Niebla (Rebel) y tinta (Squid) por ENCIMA de todo: su gracia es tapar la vista
+      g.entities.forEach((e) => { if (e.type === 'sprayfog' && onCam(e)) S.View.Sprites.drawEntity(ctx, e, t, opt); });
       if (g.liquidY < g.baseLiquid) {
         ctx.fillStyle = U.rgba(g.pal.liquid, 0.9); ctx.fillRect(cam.x - 10, g.liquidY + 6, cam.w + 20, g.level.height * T);
         ctx.fillStyle = g.pal.liquidTop; ctx.beginPath(); ctx.moveTo(cam.x - 10, g.liquidY + 12);
@@ -174,6 +176,8 @@
         for (let i = 0; i < 20; i++) { const x = ((U.hash(i) * W + t * 900 * d) % W + W) % W, y = U.hash(i + 3) * H; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - d * 50, y); ctx.stroke(); }
       }
       if (fx.flyEnemies) { ctx.fillStyle = 'rgba(160,80,255,0.08)'; ctx.fillRect(0, 0, W, H); }
+      // Personalidad del mapa en modo Corrupto (capa delantera)
+      S.View.BackgroundView.front(ctx, g.theme, g.mode, cam.x, t);
       if (fx.glitch && g.glitchPulse > 0) {
         for (let i = 0; i < 8; i++) { const y = U.rand(0, H), h = U.rand(4, 24); ctx.drawImage(this.canvas, 0, y, W, h, U.rand(-20, 20), y, W, h); }
         ctx.fillStyle = `rgba(255,47,214,${g.glitchPulse * 0.15})`; ctx.fillRect(0, 0, W, H);

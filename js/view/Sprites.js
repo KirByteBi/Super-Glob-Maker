@@ -19,6 +19,13 @@
   function ink(ctx, w) { ctx.strokeStyle = INK; ctx.lineWidth = w || 3.5; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; }
   function fillStroke(ctx, fill, w) { if (fill) { ctx.fillStyle = fill; ctx.fill(); } ink(ctx, w); ctx.stroke(); }
   function rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+  // Olas de Sunlight Seaside Corrupto: altura (px) de la ola en wx para la superficie (x, y),
+  // limitada igual que en el modelo (no entra en un bloque 2 casillas por encima). null = sin olas.
+  function waveFn(o, level, x, y, base) {
+    if (!o.waveH) return null;
+    const cap = level.get(x, y - 2) === 0 ? Infinity : T + base;
+    return (wx) => Math.min(cap, o.waveH(wx));
+  }
 
   // Silueta de Glob: cúpula central con dos "bultos" laterales (como los dibujos originales)
   function globPath(ctx, x, y, w, h, wob) {
@@ -270,12 +277,41 @@
     star(ctx, e.cx(), e.cy(), 11, 5, 5, t * 10); fillStroke(ctx, '#ffe600', 2.5);
     ctx.globalAlpha = 1;
   };
+  // Nube de niebla (spray de Rebel Pyce) o de tinta (Squid Pyce): se desvanece al final
+  D.sprayfog = (ctx, e, t) => {
+    const a = U.clamp(Math.min(e.t / 0.3, e.life / 1.2), 0, 1);
+    const cx = e.cx(), cy = e.cy(), rw = e.w / 2, rh = e.h / 2;
+    ctx.save();
+    ctx.globalAlpha = a * (e.ink ? 0.92 : 0.8);
+    const puffs = [[0, 0, 0.55], [-0.5, 0.15, 0.42], [0.5, 0.1, 0.45], [-0.2, -0.35, 0.4], [0.28, -0.3, 0.38], [0, 0.4, 0.4]];
+    ctx.fillStyle = e.ink ? '#120c18' : '#e6e9ef';
+    puffs.forEach(([u, v, r], i) => { ctx.beginPath(); ctx.arc(cx + u * rw + Math.sin(t * 1.3 + i) * 3, cy + v * rh + Math.cos(t * 1.1 + i) * 3, r * Math.min(rw, rh) * 1.4, 0, 7); ctx.fill(); });
+    // brillo: la tinta es negra brillante; la niebla tiene vetas claras
+    ctx.fillStyle = e.ink ? 'rgba(143,127,208,0.55)' : 'rgba(255,255,255,0.7)';
+    [[-0.3, -0.3, 0.14], [0.25, -0.2, 0.1], [-0.05, 0.1, 0.08]].forEach(([u, v, r]) => { ctx.beginPath(); ctx.ellipse(cx + u * rw, cy + v * rh, r * rw, r * rh * 0.6, -0.4, 0, 7); ctx.fill(); });
+    ctx.restore();
+  };
   // Proyectiles enemigos (eshot), según su 'kind'
   D.eshot = (ctx, e, t) => {
     const cx = e.cx(), cy = e.cy(), k = e.kind;
     switch (k) {
       case 'bullet': ctx.beginPath(); ctx.arc(cx, cy, 6, 0, 7); fillStroke(ctx, '#3a3f4a', 2.5); ctx.fillStyle = '#ff5a5a'; ctx.beginPath(); ctx.arc(cx, cy, 2.5, 0, 7); ctx.fill(); break;
       case 'bone': ctx.save(); ctx.translate(cx, cy); ctx.rotate(t * 8); ctx.fillStyle = '#f0ece0'; ctx.strokeStyle = INK; ctx.lineWidth = 2; rr(ctx, -2, -7, 4, 14, 2); ctx.fill(); ctx.stroke(); [[-7, 0], [7, 0]].forEach(([u]) => { ctx.beginPath(); ctx.arc(u * 0 + (u < 0 ? -1 : 1) * 0, -7, 3, 0, 7); ctx.fill(); }); ctx.restore(); break;
+      // Martillo del Builder Pyce (gira en el aire)
+      case 'hammer': {
+        ctx.save(); ctx.translate(cx, cy); ctx.rotate(t * 12 * (e.dir || 1));
+        rr(ctx, -2.5, -2, 5, 13, 2); fillStroke(ctx, '#b9793f', 2);
+        rr(ctx, -8, -9, 16, 8, 2); fillStroke(ctx, '#9aa3b2', 2);
+        ctx.restore(); break;
+      }
+      // Pico de cristal del Miner Pyce (bumerán)
+      case 'pickaxe': {
+        ctx.save(); ctx.translate(cx, cy); ctx.rotate(t * 14 * (e.boomer || 1));
+        ctx.fillStyle = 'rgba(255,111,200,0.35)'; ctx.beginPath(); ctx.arc(0, 0, 13, 0, 7); ctx.fill();
+        rr(ctx, -2, -3, 4, 14, 2); fillStroke(ctx, '#7a4a2a', 2);
+        ctx.beginPath(); ctx.moveTo(-11, -3); ctx.quadraticCurveTo(0, -12, 11, -3); ctx.lineTo(8, -1); ctx.quadraticCurveTo(0, -7, -8, -1); ctx.closePath(); fillStroke(ctx, '#ff6fc8', 2);
+        ctx.restore(); break;
+      }
       case 'gift': rr(ctx, cx - 7, cy - 7, 14, 14, 2); fillStroke(ctx, '#e8323f', 2.5); ctx.fillStyle = '#ffd000'; ctx.fillRect(cx - 7, cy - 1.5, 14, 3); ctx.fillRect(cx - 1.5, cy - 7, 3, 14); break;
       case 'petal': drop(ctx, cx, cy, 6, '#ff9de0'); break;
       case 'bubble': ctx.beginPath(); ctx.arc(cx, cy, 7, 0, 7); fillStroke(ctx, 'rgba(140,220,255,0.6)', 2.5); shine(ctx, cx - 3, cy - 3, 3, 2); break;
@@ -611,9 +647,13 @@
         const liqCol = o.liquidCol || pal.liquid, liqTop = o.liquidTopCol || pal.liquidTop;
         ctx.fillStyle = liqCol; ctx.fillRect(px, py + (top ? 8 : 0), T, T - (top ? 8 : 0));
         if (top) {
-          ctx.beginPath(); ctx.moveTo(px, py + 10);
-          for (let i = 0; i <= 8; i++) ctx.lineTo(px + i * 4, py + 8 + Math.sin(time * 3 + (x * 8 + i) * 0.8) * 2.5);
-          ctx.lineTo(px + T, py + 14); ctx.lineTo(px, py + 14); ctx.closePath(); ctx.fillStyle = liqTop; ctx.fill();
+          // Sunlight Seaside Corrupto: la ola de líquido crece por encima de la casilla
+          const wv = waveFn(o, level, x, y, 8), hh = (i) => (wv ? wv(px + i * 4) : 0);
+          if (wv) { ctx.beginPath(); ctx.moveTo(px, py + 12); for (let i = 0; i <= 8; i++) ctx.lineTo(px + i * 4, py + 10 - hh(i)); ctx.lineTo(px + T, py + 12); ctx.closePath(); ctx.fill(); }
+          ctx.beginPath(); ctx.moveTo(px, py + 10 - hh(0));
+          for (let i = 0; i <= 8; i++) ctx.lineTo(px + i * 4, py + 8 - hh(i) + Math.sin(time * 3 + (x * 8 + i) * 0.8) * 2.5);
+          for (let i = 8; i >= 0; i--) ctx.lineTo(px + i * 4, py + 14 - hh(i));
+          ctx.closePath(); ctx.fillStyle = liqTop; ctx.fill();
         }
         ctx.fillStyle = U.rgba(liqTop, 0.6);
         const bx = U.hash2(x, Math.floor(time + x)) * 24; ctx.beginPath(); ctx.arc(px + 4 + bx, py + T - ((time * 20 + x * 9) % T), 2, 0, 7); ctx.fill();
@@ -655,6 +695,22 @@
         }
         break;
       }
+      // Raíl (estilo SMM): medio tramo desde el centro hacia cada casilla de raíl unida.
+      // Usa las mismas uniones que el modelo (S.Model.Rail.links), así lo que ves es por donde va.
+      case TT.RAIL: {
+        const Rail = S.Model.Rail;
+        let ls = level.width ? Rail.links(level, x, y) : [[-1, 0], [1, 0]]; // icono de la paleta: tramo recto
+        const cx = px + T / 2, cy = py + T / 2;
+        const seg = (w, col) => { ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.beginPath(); ls.forEach(([dx, dy]) => { ctx.moveTo(cx, cy); ctx.lineTo(cx + dx * T / 2, cy + dy * T / 2); }); if (!ls.length) { ctx.moveTo(cx - 1, cy); ctx.lineTo(cx + 1, cy); } ctx.stroke(); };
+        seg(10, INK); seg(5, '#9aa3b2'); seg(1.5, '#d8dee8');
+        // traviesas en los tramos rectos
+        ctx.strokeStyle = INK; ctx.lineWidth = 2;
+        ls.forEach(([dx, dy]) => { const mx = cx + dx * T * 0.28, my = cy + dy * T * 0.28, n = Math.hypot(dx, dy); ctx.beginPath(); ctx.moveTo(mx - dy / n * 6, my + dx / n * 6); ctx.lineTo(mx + dy / n * 6, my - dx / n * 6); ctx.stroke(); });
+        // tope en los extremos (donde las cosas dan la vuelta)
+        if (ls.length <= 1) { ctx.beginPath(); ctx.arc(cx, cy, 6, 0, 7); fillStroke(ctx, '#ff5a5a', 2.5); }
+        else { ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(cx, cy, 3, 0, 7); ctx.fill(); }
+        break;
+      }
       // Tubería pequeña decorativa (fondo, no sólida): dos tubitos
       case TT.PIPEDECO:
         ctx.fillStyle = '#3a6a44'; ctx.fillRect(px + 7, py, 8, T); ctx.fillRect(px + 18, py, 8, T);
@@ -689,15 +745,14 @@
         break;
       }
       case TT.WATER: {
-        // En Sunlight Seaside Corrupto el agua se vuelve veneno: se tiñe de morado tóxico
-        const wcol = o.poison ? '#9b2fd6' : (pal.water || '#3c8cff');
-        ctx.fillStyle = U.rgba(wcol, o.poison ? 0.5 : 0.5); ctx.fillRect(px, py, T, T);
+        ctx.fillStyle = U.rgba(pal.water || '#3c8cff', 0.5); ctx.fillRect(px, py, T, T);
         // superficie solo si arriba está el aire (si toca techo no sale superficie)
         if (level.get(x, y - 1) === TT.EMPTY) {
-          ctx.strokeStyle = o.poison ? 'rgba(220,160,255,0.9)' : 'rgba(255,255,255,0.8)'; ctx.lineWidth = 2; ctx.beginPath(); for (let i = 0; i <= 8; i++) ctx.lineTo(px + i * 4, py + 2 + Math.sin(time * 3 + x * 8 + i) * 1.5); ctx.stroke();
+          // Sunlight Seaside Corrupto: la ola crece por encima de la casilla
+          const wv = waveFn(o, level, x, y, 0), hh = (i) => (wv ? wv(px + i * 4) : 0);
+          if (wv) { ctx.beginPath(); ctx.moveTo(px, py); for (let i = 0; i <= 8; i++) ctx.lineTo(px + i * 4, py - hh(i)); ctx.lineTo(px + T, py); ctx.closePath(); ctx.fill(); }
+          ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 2; ctx.beginPath(); for (let i = 0; i <= 8; i++) ctx.lineTo(px + i * 4, py + 2 - hh(i) + Math.sin(time * 3 + x * 8 + i) * 1.5); ctx.stroke();
         }
-        // burbujas tóxicas subiendo
-        if (o.poison) { ctx.fillStyle = 'rgba(180,120,255,0.6)'; const bx = U.hash2(x, Math.floor(time + x)) * 20; ctx.beginPath(); ctx.arc(px + 6 + bx, py + T - ((time * 18 + x * 7) % T), 2, 0, 7); ctx.fill(); }
         break;
       }
       // Tubería

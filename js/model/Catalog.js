@@ -18,7 +18,9 @@
     EX0: 49, EX1: 50, EX2: 51, PIPEDECO: 52,
     // Segundo suelo "tematico": misma colision que GROUND, pero su DIBUJO depende del mapa
     // (vigas, montaña rusa, casas, runas...). Se dibuja en js/view/GroundStyles.js.
-    GROUND2: 53, WALL: 99
+    GROUND2: 53,
+    // Raíl (no sólido): las plataformas y enemigos colocados encima lo siguen (ver Rail en Entity.js)
+    RAIL: 54, WALL: 99
   };
   const EXCLAIM = [{ c: '#ffd000', name: 'amarillo' }, { c: '#2fd46a', name: 'verde' }, { c: '#ff4fd8', name: 'rosa' }];
   const SOLID = new Set([T.GROUND, T.GROUND2, T.BRICK, T.BOX, T.HARD, T.SPIKE, T.BOUNCE, T.ICE, T.USED, T.CONV_L, T.CONV_R, T.DONUT, T.NOTE, T.SW0, T.SW1, T.SW2, T.SWG, T.PSW, T.POW, T.PIPE, T.LIGHT, T.WALL]);
@@ -46,7 +48,8 @@
     46: 'Interruptor G', 47: 'Moneda verde oculta', 48: 'Bloque de luz',
     49: 'Bloque "!" amarillo', 50: 'Bloque "!" verde', 51: 'Bloque "!" rosa',
     52: 'Tubería pequeña (decoración)',
-    53: 'Suelo temático (según el mapa)'
+    53: 'Suelo temático (según el mapa)',
+    54: 'Raíl (pon encima plataformas, setas, Barras Estelares o Pyces y lo seguirán)'
   };
 
   // anchor: bottom = apoyado en el suelo de la casilla, center, top = colgando del techo
@@ -70,6 +73,8 @@
     knight: { name: 'Knight Pyce', w: 30, h: 32, tier: 3, desc: 'Armadura inmune a los proyectiles.' },
     rebel: { name: 'Rebel Pyce', w: 28, h: 30, tier: 3, desc: 'Su spray crea nubes de niebla.' },
     skelebone: { name: 'SkeleBone Pyce', w: 28, h: 30, tier: 3, desc: 'Se desmonta al pisarlo y se vuelve a montar. Lanza huesos.' },
+    builder: { name: 'Builder Pyce', w: 28, h: 30, tier: 3, desc: 'Tipo Hammer Bro: va y viene, salta y te lanza martillos en arco (atraviesan paredes).' },
+    miner: { name: 'Miner Pyce', w: 28, h: 30, tier: 4, desc: 'Tipo Boomerang Bro, poseído por cristales: lanza su pico de cristal, que vuelve a sus manos.' },
     snowcap: { name: 'SnowCapsule Pyce', w: 28, h: 28, tier: 3, desc: 'Al pisarlo se vuelve cápsula: ¡patéala!' },
     festive: { name: 'Festive Pyce', w: 28, h: 30, tier: 3, desc: 'Lanza regalos en parábola.' },
     bomb: { name: 'Bomb Pyce', w: 26, h: 30, tier: 3, desc: 'Al pisarlo se enciende la mecha y explota.' },
@@ -86,6 +91,7 @@
     pysh: { name: 'Pysh', w: 28, h: 24, anchor: 'center', tier: 2, water: true, desc: 'Nada y salta fuera del agua o del líquido. En lava/veneno se vuelve ígneo/venenoso. Sin agua solo brinca.' },
     clownpysh: { name: 'Clown Pysh', w: 28, h: 26, anchor: 'center', tier: 3, water: true, hp: 2, desc: 'Versión fuerte de Pysh: más rápido y salta más alto hacia ti. 2 golpes.' },
     axolotl: { name: 'Axolotl Pyce', w: 30, h: 26, anchor: 'center', tier: 3, water: true, desc: 'Nada y dispara burbujas. Fuera del agua es lento.' },
+    squid: { name: 'Squid Pyce', w: 28, h: 30, anchor: 'center', tier: 3, water: true, desc: 'Calamar tipo Blooper: se hunde despacio y da tirones hacia ti. Suelta nubes de tinta. Solo se pisa fuera del líquido.' },
     shark: { name: 'Shark Pyce', w: 34, h: 26, anchor: 'center', tier: 4, water: true, desc: 'Te embiste en el agua. No se pisa. Fuera del agua se arrastra.' },
     // raros: 10 pisotones y dan vida
     mimic: { name: 'Mimic Pyce', w: 30, h: 34, tier: 5, rare: true, desc: 'RARO: cofre que muerde. 10 pisotones. Da 1UP.' },
@@ -173,10 +179,10 @@
   const PALETTE = [
     { id: 'terrain', name: 'Terreno', items: tiles([1, 53, 5, 17, 11, 29, 30, 31, 32, 33, 34, 37, 52, 8, 6, 9, 16, 14, 15, 48]) },
     { id: 'blocks', name: 'Bloques', items: tiles([2, 3, 13, 4, 7, 19, 18, 36, 12, 38, 39, 41, 40, 47, 46, 20, 21, 22, 23, 24, 25, 26, 27, 28, 49, 50, 51, 35, 42, 43]) },
-    { id: 'pyces', name: 'Pyces', items: objs(['stupid', 'so', 'symbol', 'pyce2', 'guest', 'noob', 'elf', 'umbrella', 'zom', 'crystal', 'knight', 'rebel', 'skelebone', 'snowcap', 'festive', 'bomb', 'toybomb', 'wingel', 'strechy', 'flower', 'cannon']) },
-    { id: 'pyces2', name: 'Pyces raros', items: objs(['ghost', 'holo', 'motions', 'hacker', 'pysh', 'clownpysh', 'axolotl', 'shark', 'mimic', 'dirty', 'nomic', 'goldmimic', 'noeye', 'nosense', 'noir', 'moonstar']) },
+    { id: 'pyces', name: 'Pyces', items: objs(['stupid', 'so', 'symbol', 'pyce2', 'guest', 'noob', 'elf', 'umbrella', 'zom', 'crystal', 'knight', 'rebel', 'skelebone', 'builder', 'miner', 'snowcap', 'festive', 'bomb', 'toybomb', 'wingel', 'strechy', 'flower', 'cannon']) },
+    { id: 'pyces2', name: 'Pyces raros', items: objs(['ghost', 'holo', 'motions', 'hacker', 'pysh', 'clownpysh', 'axolotl', 'squid', 'shark', 'mimic', 'dirty', 'nomic', 'goldmimic', 'noeye', 'nosense', 'noir', 'moonstar']) },
     { id: 'items', name: 'Objetos', items: objs(['evo', 'flor', 'caca', 'vacio', 'brillo', 'miniglob'].concat(S.Model.Characters.list.map((c) => 'cap_' + c.id)).concat(['coin10', 'coin30', 'coin50', 'coin100', 'spring', 'checkpoint', 'starcoin', 'starcoin_giga', 'starcoin_moon', 'starcoin_rg', 'starcoin_magic', 'starcoin_traitor'])) },
-    { id: 'gizmos', name: 'Mecanismos', items: objs(['platform', 'platformV', 'platformD1', 'platformD2', 'shroomH', 'shroomV', 'warp', 'lockwarp', 'door', 'lockdoor', 'key', 'firebar', 'icicle', 'exswitch0', 'exswitch1', 'exswitch2']) },
+    { id: 'gizmos', name: 'Mecanismos', items: tiles([54]).concat(objs(['platform', 'platformV', 'platformD1', 'platformD2', 'shroomH', 'shroomV', 'warp', 'lockwarp', 'door', 'lockdoor', 'key', 'firebar', 'icicle', 'exswitch0', 'exswitch1', 'exswitch2'])) },
     // Decoración: los items se rellenan dinámicamente según el mapa (ver EditorView.refreshItems)
     { id: 'deco', name: 'Decoración', items: [], dynamic: 'deco' },
     { id: 'special', name: 'Especial', items: [{ kind: 'obj', type: 'start' }, { kind: 'obj', type: 'goal' }, { kind: 'obj', type: 'goalhidden' }, { kind: 'link' }, { kind: 'erase' }] }

@@ -127,3 +127,31 @@ textarea.code { width: 640px; height: 260px; font-family: Consolas, monospace; f
 .ed-info b { font-size: 15px; }
 .ed-info .hint { opacity: .7; }
 .ed-info .tool { color: #ffe600; }
+
+/* ---------- online ---------- */
+.screen.online .head { margin-bottom: 6px; }
+.tabs { display: flex; gap: 6px; width: 100%; flex-wrap: wrap; margin-bottom: 8px; }
+.btn.tab { font-size: 13px; padding: 5px 10px; border-radius: 12px; box-shadow: 0 3px 0 #0a0a0a; }
+.btn.tab.on { background: #ffe600; }
+.online-row .stats { font-weight: 900; letter-spacing: .3px; opacity: .9; }
+.online-row .by { opacity: .8; }
+.online-row .rank { font-size: 26px; font-weight: 900; min-width: 44px; text-align: center; -webkit-text-stroke: 1px #000; paint-order: stroke fill; color: #ffe600; }
+.online-row.podium.p0 { background: #fff4b0; }
+.online-row.podium.p1 { background: #eef2f7; }
+.online-row.podium.p2 { background: #ffe1c4; }
+.online-row.featured { background: #d9fff0; border-color: #0a0a0a; box-shadow: 0 4px 0 #000; }
+.link { background: none; border: 0; padding: 0; color: #6a2fd0; font-weight: 900; text-decoration: underline; font-size: inherit; }
+.sec { margin: 6px 4px 0; color: #ffe600; -webkit-text-stroke: 1px #000; paint-order: stroke fill; }
+.note { background: #ffe600; color: #111; border: 3px solid #000; border-radius: 10px; padding: 6px 10px; font-weight: 900; font-size: 13px; margin: 0; }
+.profile-card { display: flex; gap: 14px; align-items: center; background: #2a0a45; border: 4px solid #000; border-radius: 14px; padding: 8px 14px; font-weight: 900; }
+.profile-card b { font-size: 22px; color: #00ff66; }
+.search-row { display: flex; gap: 8px; }
+.search-row input { flex: 1; font: inherit; font-size: 18px; padding: 6px 12px; border: 4px solid #000; border-radius: 12px; }
+.badge { font-weight: 900; font-size: 12px; padding: 3px 8px; border-radius: 8px; border: 2px solid #000; }
+.badge.on { background: #00ff66; }
+.badge.off { background: #ccc; }
+.vote-row .btn[aria-pressed="true"] { outline: 3px solid #000; }
+.pub-tag { display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; background: #2a0a45; color: #ff9cf0; font-weight: 900; font-size: 12px; padding: 1px 8px 1px 2px; border-radius: 10px; border: 2px solid #000; margin-bottom: 2px; }
+.pub-tag .mini { width: 22px; height: 22px; }
+.copy-tag { color: #6a2fd0; font-weight: 900; }
+.level-row .btn { padding: 6px 10px; font-size: 14px; }

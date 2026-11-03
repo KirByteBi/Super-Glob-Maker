@@ -36,7 +36,9 @@
     }
 
     loop(ts) {
-      const dt = Math.min(0.05, (ts - this.last) / 1000); this.last = ts; this.t += dt;
+      let dt = Math.min(0.05, (ts - this.last) / 1000); this.last = ts;
+      if (!(dt >= 0)) dt = 0; // primer fotograma / reloj raro: sin NaN (rompía el fondo del menú)
+      this.t = (this.t || 0) + dt;
       const inp = this.input.poll();
       if (this.mode === 'game' && this.game) { this.game.update(dt, inp); this.game.render(this.t); }
       else if (this.mode === 'editor' && this.editor) { this.editor.update(dt); this.editor.render(this.t); }
@@ -47,9 +49,9 @@
 
     drawMenuBackdrop() {
       const themes = S.Model.Themes.list;
-      const i = Math.floor(this.t / 8) % themes.length;
-      const mode = Math.floor(this.t / 8) % 2 ? 'corrupt' : 'peace';
-      S.View.BackgroundView.draw(this.ctx, themes[i], mode, this.t * 60, this.t);
+      const t = this.t || 0, i = Math.floor(t / 8) % themes.length;
+      const mode = Math.floor(t / 8) % 2 ? 'corrupt' : 'peace';
+      S.View.BackgroundView.draw(this.ctx, themes[i] || themes[0], mode, t * 60, t);
     }
 
     // ---------- navegación ----------
@@ -66,6 +68,7 @@
         story: () => this.showStory(),
         create: () => this.newLevel(),
         levels: () => this.showLevels(),
+        online: () => this.showOnline('home'),
         controls: () => this.menu.controls(),
         account: () => this.accountDialog()
       });
@@ -127,14 +130,113 @@
         play: (l) => this.playLevel(l, {}),
         edit: (l) => this.openEditor(new S.Model.Level(l)),
         remove: (l) => { Storage.remove(l.id); this.showLevels(); },
-        // Publicar en la nube de Glob Defenders (requiere sesión iniciada)
-        publish: (l) => {
-          const Gld = S.Model.Gld;
-          // Si no hay sesión, abrir directamente el login; al vincularse, reintenta publicar
-          if (!Storage.isLinked()) { this.accountDialog(() => { if (Storage.isLinked()) { this.menu.toast('Publicando…', 1200); Gld.cloudSave(l, true).then((r) => this.menu.toast(r.ok ? '✅ Nivel publicado' : r.error === 'offline' ? 'Sin conexión' : 'No se pudo publicar')); } }); return; }
+        // Publicar en la nube de Glob Defenders (una sola vez por nivel; requiere sesión)
+        publish: (l) => this.publishLocal(l, () => this.showLevels()),
+        // Copiar: nivel nuevo editable que recuerda de dónde viene
+        copy: (l) => {
+          const c = S.Model.Level.copy(l), r = Storage.save(c.toJSON());
+          if (r !== 'ok') { this.menu.toast(r === 'full' ? 'Máximo de ' + Storage.limit() + ' niveles alcanzado' : 'No se pudo copiar'); return; }
+          this.showLevels();
+          this.menu.toast('📄 Copia creada. Para publicarla cambia el tema o el modo, o modifícala bastante.', 3800);
+        },
+        // Exportar: el nivel como texto para compartirlo / guardarlo fuera del juego
+        exportLevel: (l) => this.exportLevel(l)
+      });
+    }
+
+    // Texto exportable de un nivel (sin marcas de publicación ni historial de copias)
+    exportLevel(l) {
+      const txt = JSON.stringify(S.Model.Level.content(l));
+      this.menu.textBox('Exportar "' + l.name + '"', txt, null);
+      const box = this.menu.modal.querySelector('.modal-box'), row = box && box.querySelector('.row');
+      if (row) {
+        row.insertBefore(S.View.button('📋 Copiar al portapapeles', 'primary', () => {
+          (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => this.menu.toast('Copiado'), () => this.menu.toast('Selecciona el texto y usa Ctrl+C'));
+        }), row.firstChild);
+        row.insertBefore(S.View.button('💾 Descargar archivo', '', () => {
+          const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'application/json' }));
+          a.download = (String(l.name || 'nivel').replace(/[^\w\- áéíóúñÁÉÍÓÚÑ]/g, '').trim() || 'nivel') + '.sgm.json';
+          document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+        }), row.children[1]);
+      }
+    }
+
+    // Publica un nivel guardado. Avisa si ya estaba publicado (Glob Cometa) o si es una copia
+    // demasiado parecida a su original. done() se llama tras publicar con éxito.
+    publishLocal(l, done) {
+      const Gld = S.Model.Gld;
+      const can = Gld.canPublish(l);
+      if (!can.ok && can.error === 'already') {
+        this.menu.notice('☄ Nivel ya publicado', 'Este nivel ya está publicado y no se puede volver a publicar. Si quieres otra versión, haz una COPIA (📄) y cámbiale el tema, el modo o bastantes cosas.', S.Model.Characters.get('black').paths[0]);
+        return;
+      }
+      if (!can.ok && can.error === 'too-similar') {
+        this.menu.notice('📄 Copia demasiado parecida', 'Esta copia se parece demasiado a "' + (can.origName || 'su original') + '" (solo un ' + Math.round(can.ratio * 100) + '% distinto). Para publicarla cámbiale el tema o el modo (por ejemplo, su versión Corrupta), o modifica al menos un ' + Math.round(S.Model.Level.COPY_MIN_RATIO * 100) + '% del nivel.');
+        return;
+      }
+      const go = () => {
+        this.menu.confirm('¿Publicar "' + l.name + '"? Una vez publicado no podrás volver a publicarlo ni cambiar la versión online.', () => {
           this.menu.toast('Publicando…', 1200);
-          Gld.cloudSave(l, true).then((r) => this.menu.toast(r.ok ? '✅ Nivel publicado' : r.error === 'offline' ? 'Sin conexión' : 'No se pudo publicar'));
+          Gld.publish(l).then((r) => {
+            if (r.ok) {
+              const cur = Storage.get(l.id) || l;
+              Storage.save(Object.assign({}, cur, { publishedAt: Date.now(), cloudId: r.id }));
+              this.menu.toast('☄ ¡Publicado! Míralo en 🌐 Online', 2600);
+              if (done) done();
+            } else this.menu.toast(r.error === 'offline' ? 'Sin conexión' : r.error === 'pub-limit' ? 'Ya tienes 120 niveles publicados' : r.error === 'duplicate' ? 'Ya hay un nivel publicado idéntico a este' : r.error === 'already' ? 'Este nivel ya está publicado' : 'No se pudo publicar');
+          });
+        }, 'Publicar');
+      };
+      if (!Storage.isLinked()) { this.accountDialog(() => { if (Storage.isLinked()) go(); }); return; }
+      go();
+    }
+
+    // ---------- ONLINE ----------
+    // tab: home | top | new | plays | hard | search | me | author. arg = texto buscado o autor
+    showOnline(tab, arg) {
+      const Gld = S.Model.Gld;
+      this.clearAll(); this.mode = 'menu';
+      const tok = this.onlineTok = (this.onlineTok || 0) + 1; // descarta respuestas de pestañas viejas
+      const st = { tab, rows: [], loading: true, user: null, v2: Gld.v2, search: tab === 'search' ? arg || '' : '', author: tab === 'author' ? arg : null, localLevels: Storage.list() };
+      const err = (e) => ({ 'pub-limit': 'Ya tienes 120 niveles publicados (el máximo).', limit: 'Límite de 258 niveles en la nube.', 'no-session': 'Inicia sesión primero.', offline: 'Sin conexión.', own: 'No puedes votar tus propios niveles.', 'no-v2': 'Los "no me gusta" llegarán cuando se aplique el SQL online v2.' }[e] || 'Error: ' + e);
+      const h = {
+        back: () => this.showTitle(),
+        tab: (id) => this.showOnline(id),
+        author: (name) => this.showOnline('author', name),
+        search: (q) => (q && q[0] === '@' ? this.showOnline('author', q.slice(1)) : this.showOnline('search', q)),
+        account: () => this.accountDialog(() => this.showOnline(tab, arg)),
+        play: (row) => this.playOnline(row, () => this.showOnline(tab, arg)),
+        publish: (l) => this.publishLocal(l, () => this.showOnline('me')),
+        setPublic: (m, on) => Gld.setPublic(m.id, on).then((r) => { this.menu.toast(r.ok ? (on ? '🌐 Publicado' : '🙈 Ahora es privado') : err(r.error)); this.showOnline('me'); }),
+        removeCloud: (m) => Gld.removeCloud(m.id).then((r) => { if (r.ok && m.local) Gld.setCloudId(m.local, null); this.menu.toast(r.ok ? 'Borrado de la nube' : err(r.error)); this.showOnline('me'); })
+      };
+      const render = () => { if (tok === this.onlineTok && this.mode === 'menu') this.menu.online(st, h); };
+      render();
+      if (!Gld.configured()) { st.loading = false; st.error = 'offline'; render(); return; }
+      const done = (r) => { st.loading = false; if (r && r.ok === false) st.error = r.error; st.v2 = Gld.v2; render(); };
+      const userP = Storage.isLinked() ? Gld.username().catch(() => null) : Promise.resolve(null);
+      userP.then((u) => {
+        st.user = u;
+        if (tab === 'me') return st.user ? Gld.mine().then((r) => { st.mine = r.rows; done(r); }) : done();
+        if (tab === 'search' && !st.search) return done();
+        if (tab === 'home') {
+          return Gld.browse({ sort: 'top', limit: 50 }).then((r) => {
+            st.rows = r.rows.slice(0, 5);
+            // Nivel del día: uno de los 50 mejores, el mismo para todos durante el día
+            if (r.rows.length) { const d = new Date(), seed = d.getUTCFullYear() * 400 + d.getUTCMonth() * 31 + d.getUTCDate(); st.featured = r.rows[Math.floor(S.util.hash(seed) * r.rows.length)]; }
+            done(r);
+          });
         }
+        const q = tab === 'author' ? { sort: 'top', author: st.author, limit: 60 } : tab === 'search' ? { sort: 'top', search: st.search, limit: 40 } : { sort: tab, limit: tab === 'top' ? 10 : 30 };
+        return Gld.browse(q).then((r) => { st.rows = r.rows; done(r); });
+      }).catch((e) => done({ ok: false, error: String(e && e.message || e) }));
+    }
+    // Descarga y juega un nivel publicado; al acabar cuenta la partida y deja votar
+    playOnline(row, back) {
+      this.menu.toast('Cargando "' + row.name + '"…', 1500);
+      S.Model.Gld.getLevel(row.id).then((data) => {
+        if (!data) { this.menu.toast('No se pudo cargar el nivel'); return; }
+        this.playLevel(data, { online: { id: row.id, name: row.name, author: row.author, back } });
       });
     }
 
@@ -180,7 +282,8 @@
       this.lastPlay = { data, opts: { testMode: true, character: data.character } };
       this.game = new S.Controller.GameController(this, data, this.lastPlay.opts);
       this.mode = 'game';
-      this.menu.toast('Probando nivel · Esc para pausar / volver al editor');
+      this.input.swallow();
+      this.menu.toast('Probando nivel · Esc: volver al editor · P: pausa');
     }
 
     backToEditor() {
@@ -189,6 +292,7 @@
       this.editor = this.suspendedEditor; this.suspendedEditor = null;
       if (!this.editor) { this.showTitle(); return; }
       this.editor.resume(); this.mode = 'editor';
+      this.input.swallow();
     }
 
     restartGame() {
@@ -202,6 +306,8 @@
 
     exitGame() {
       if (this.suspendedEditor) { this.backToEditor(); return; }
+      const online = this.lastPlay && this.lastPlay.opts.online;
+      if (online && online.back) { online.back(); return; }
       const story = this.lastPlay && this.lastPlay.opts.story;
       if (story && story.world) this.showStoryMap(story.world); // vuelve al mapamundi
       else if (story) this.showStory();
@@ -253,10 +359,23 @@
         lines = ['Te has quedado sin vidas…', 'Puntos: ' + g.score];
       }
       if (kind === 'gameover') S.events.emit('game:gameover_sfx');
+      const online = lp.opts.online;
+      if (online) {
+        lines.unshift('🌐 ' + online.name + (online.author ? ' · por @' + online.author : ''));
+        S.Model.Gld.play(online.id, kind === 'clear').catch(() => {}); // cuenta la partida (y si lo superaste)
+      }
       const btns = [['Reintentar', () => { this.menu.closeModal(); this.restartGame(); }, kind === 'clear' ? '' : 'primary']];
       if (testing) btns.push(['Volver al editor', () => this.backToEditor(), 'primary']);
       else btns.push(['Continuar', () => this.exitGame(), kind === 'clear' ? 'primary' : '']);
       this.menu.result({ title: kind === 'clear' ? '¡Nivel superado!' : 'Fin de la partida', img, lines }, btns);
+      // Nivel online: votar me gusta / no me gusta (afecta a su puntuación)
+      if (online) {
+        const box = this.menu.modal.querySelector('.modal-box'), Gld = S.Model.Gld;
+        if (!Storage.isLinked()) { box.appendChild(S.View.el('p', 'small', 'Inicia sesión en 🌐 Online para votar este nivel.')); return; }
+        let bar = null;
+        const draw = (cur) => { if (bar) bar.remove(); bar = this.menu.voteBar(box, cur, (v) => Gld.vote(online.id, v).then((r) => { if (r.ok) { draw(v); this.menu.toast(v === 1 ? '👍 ¡Te gusta!' : v === -1 ? '👎 Anotado' : 'Voto quitado', 1200); } else this.menu.toast(r.error === 'own' ? 'No puedes votar tus propios niveles' : r.error === 'no-v2' ? 'Los 👎 llegarán con el SQL online v2' : 'No se pudo votar'); })); };
+        Gld.myVote(online.id).then(draw).catch(() => draw(0));
+      }
     }
   }
   S.Controller.AppController = AppController;

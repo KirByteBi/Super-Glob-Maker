@@ -25,7 +25,7 @@ $map = [ordered]@{
   axolotl='Enemigos/Pyces/Axolotl Pyce.png'; bomb='Enemigos/Pyces/Bomb Pyce.png'; cannon='Enemigos/Pyces/Cannon Pycer.png'
   clownpysh='Enemigos/Pyces/Clown Pysh.png'; elf='Enemigos/Pyces/Elf Pyce.png'; festive='Enemigos/Pyces/Festive Pyce.png'
   ghost='Enemigos/Pyces/Ghost Pyce.png'; holo='Enemigos/Pyces/HoloPyce.png'; knight='Enemigos/Pyces/Knight Pyce.png'
-  pysh='Enemigos/Pyces/Pysh.png'; rebel='Enemigos/Pyces/Rebel Pyce.png'; shark='Enemigos/Pyces/Shark Pyce.png'
+  pysh='Enemigos/Pyces/Pysh.png'; rebel='Enemigos/Pyces/Rebel Pyce.png'; shark='Enemigos/Pyces/Shark Pyce.png'; squid='Enemigos/Pyces/Squid Pyce.png'; builder='Enemigos/Pyces/Builder Pyce.png'; miner='Enemigos/Pyces/Miner Pyce.png'
   skelebone='Enemigos/Pyces/SkeleBone Pyce (RW).png'; snowcap='Enemigos/Pyces/SnowCapaule Pyce.png'; strechy='Enemigos/Pyces/Strechy Pyce.png'
   toybomb='Enemigos/Pyces/ToyBomb Pyce.png'; umbrella='Enemigos/Pyces/Umbrella Pyce.png'; wingel='Enemigos/Pyces/Wingel Pyce.png'
   zom='Enemigos/Pyces/ZomPyce.png'

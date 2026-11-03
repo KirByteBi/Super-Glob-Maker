@@ -183,6 +183,55 @@
       this.walk(g, 32);
     }
   }
+  // Hermanos (tipo Hammer Bro / Boomerang Bro): van y vienen en un tramo corto alrededor
+  // de donde los pones, siempre mirándote, y de vez en cuando dan un salto en el sitio.
+  class Bro extends Enemy {
+    constructor(type, tx, ty) { super(type, tx, ty); this.paceDir = 1; this.jumpT = U.rand(2.5, 4); this.throwT = U.rand(0.8, 1.6); this.keepFace = true; }
+    pace(g, dt) {
+      const p = g.player;
+      if (near(this, p, 14 * T)) this.dir = dirTo(this, p);
+      if (this.swims) this.swim(g);
+      // tramo de ±1.5 casillas; se da la vuelta en los bordes del tramo y en las paredes
+      if (this.x > this.spawnX + T * 1.5) this.paceDir = -1;
+      else if (this.x < this.spawnX - T * 1.5) this.paceDir = 1;
+      this.vx = this.paceDir * 45 * g.enemySpeedMul;
+      this.jumpT -= dt * g.enemySpeedMul;
+      if (this.onGround && this.jumpT <= 0 && !this.swims) { this.jumpT = U.rand(3, 5); this.vy = -620; g.emit('enemyHop', { x: this.cx(), y: this.y }); }
+    }
+    onWall(w) { this.paceDir = -w; }
+  }
+  // Builder Pyce (guiño a Builderman): lanza martillos en arco, en ráfagas de 2-3.
+  // Los martillos atraviesan las paredes, como los de los Hammer Bros.
+  class Builder extends Bro {
+    constructor(tx, ty) { super('builder', tx, ty); this.burst = 0; }
+    think(g, dt) {
+      this.pace(g, dt);
+      this.throwT -= dt * g.enemySpeedMul;
+      if (this.throwT > 0 || !near(this, g.player, 11 * T)) return;
+      if (this.burst <= 0) this.burst = Math.random() < 0.5 ? 2 : 3;
+      this.burst--;
+      this.throwT = this.burst > 0 ? 0.35 : U.rand(1.4, 2.2);
+      this.shoot(g, 'hammer', this.dir * U.rand(95, 175), -U.rand(430, 520), { gravity: 1000, tiles: false, w: 18, h: 18, life: 3 });
+    }
+  }
+  // Miner Pyce (poseído por cristales): lanza su pico de cristal como un bumerán. Va lejos,
+  // frena, vuelve por el mismo carril y lo recoge. Solo tiene un pico: no lanza otro hasta recogerlo.
+  class Miner extends Bro {
+    constructor(tx, ty) { super('miner', tx, ty); this.pick = null; }
+    think(g, dt) {
+      this.pace(g, dt);
+      if (this.pick && (this.pick.remove || this.pick.dying)) this.pick = null;
+      if (this.pick) return;
+      this.throwT -= dt * g.enemySpeedMul;
+      if (this.throwT > 0 || !near(this, g.player, 11 * T)) return;
+      this.throwT = U.rand(1.2, 2);
+      const b = this.shoot(g, 'pickaxe', this.dir * 330, 0, { tiles: false, w: 22, h: 22, life: 5, owner: this, boomer: this.dir, homeY: this.y + this.h * 0.35 });
+      this.pick = b;
+    }
+    died(g) { if (this.pick) { this.pick.owner = null; } super.died(g); }
+  }
+  reg('builder', Builder); reg('miner', Miner);
+
   // SkeleBone: pisado se desmonta y se recompone; muerto de verdad se desmonta del todo
   class SkeleBone extends Enemy {
     constructor(tx, ty) { super('skelebone', tx, ty); this.turnAtLedge = true; this.pile = 0; this.throwT = 2.5; }

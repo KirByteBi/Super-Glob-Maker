@@ -45,7 +45,86 @@
       // Subzonas: zona base (este Level) + hasta 2 subzonas. 'subs' = array de datos de subzona.
       // Cada subzona es un objeto de nivel ligero: { tiles, objects, contents, theme, mode, width, height, win }.
       this.subs = Array.isArray(d.subs) ? d.subs.slice(0, 2).map((s) => Level.normSub(s)) : [];
+      // Publicación (online): un nivel publicado queda marcado para siempre (Glob Cometa) y ya
+      // no se puede volver a publicar. Para otra versión se hace una COPIA (copyOf = instantáneas
+      // de los niveles de los que viene, para comprobar que la copia es lo bastante distinta).
+      this.publishedAt = d.publishedAt || null;
+      this.cloudId = d.cloudId || null;
+      this.copyOf = Array.isArray(d.copyOf) && d.copyOf.length ? d.copyOf.slice(0, 3) : null;
     }
+
+    // ---------- copias y comparación de contenido (para publicar) ----------
+    // Contenido "jugable" del nivel, sin datos de publicación ni de copia
+    static content(j) {
+      const c = Object.assign({}, j instanceof Level ? j.toJSON() : j);
+      delete c.publishedAt; delete c.cloudId; delete c.copyOf; delete c.updated;
+      return c;
+    }
+    // Copia de un nivel: id nuevo, sin marca de publicado y recordando de dónde viene
+    static copy(j, name) {
+      const src = j instanceof Level ? j.toJSON() : j;
+      const L = new Level(Object.assign({}, src, { id: U.uid(), name: name || (String(src.name || 'Nivel') + ' (copia)').slice(0, 40), publishedAt: null, cloudId: null, copyOf: null }));
+      L.copyOf = [Level.content(src)].concat(src.copyOf || []).slice(0, 3);
+      return L;
+    }
+    // Firma exacta del contenido (la usa el servidor para no admitir duplicados exactos)
+    static signature(j) {
+      const c = Level.content(j); delete c.id; delete c.name; delete c.character; delete c.v;
+      const s = JSON.stringify(c); let h = 0x811c9dc5, h2 = 0x01000193;
+      for (let i = 0; i < s.length; i++) { const k = s.charCodeAt(i); h = Math.imul(h ^ k, 16777619) >>> 0; h2 = Math.imul(h2 + k, 2246822519) >>> 0; }
+      return h.toString(16).padStart(8, '0') + h2.toString(16).padStart(8, '0') + s.length.toString(16);
+    }
+    // ¿Cuánto se parecen dos niveles? Compara bloques, objetos y contenido de cajas de cada zona,
+    // probando pequeños desplazamientos (así mover todo 1 casilla no cuenta como "cambio").
+    // Devuelve { diff, total, ratio, styleChanged }
+    static compare(a, b) {
+      const zones = (j) => [j].concat(j.subs || []).map((z) => {
+        const w = U.clamp(z.width | 0 || 120, 32, 400), h = U.clamp(z.height | 0 || 24, 18, 40);
+        const t = Array.isArray(z.tiles) ? z.tiles : Level.decode(z.tiles || '0:' + w * h, w * h);
+        return { w, h, t, o: (z.objects || []).map((o) => [o.type, o.x | 0, o.y | 0]), c: z.contents || {}, theme: z.theme, mode: z.mode };
+      });
+      const za = zones(a), zb = zones(b);
+      const styleChanged = za.some((z, i) => zb[i] && (z.theme !== zb[i].theme || z.mode !== zb[i].mode));
+      const weight = (z) => z.t.reduce((n, v) => n + (v ? 1 : 0), 0) + z.o.length + Object.keys(z.c).length;
+      let diff = 0, total = 0;
+      for (let i = 0; i < Math.max(za.length, zb.length); i++) {
+        const A = za[i], B = zb[i];
+        if (!A || !B) { const z = A || B; diff += weight(z); total += weight(z); continue; }
+        total += Math.max(weight(A), weight(B));
+        const getA = (x, y) => (x >= 0 && y >= 0 && x < A.w && y < A.h ? A.t[y * A.w + x] : 0);
+        const getB = (x, y) => (x >= 0 && y >= 0 && x < B.w && y < B.h ? B.t[y * B.w + x] : 0);
+        // alineados por abajo (como al cambiar el alto del nivel) + pequeños desplazamientos
+        const baseDy = B.h - A.h;
+        let best = Infinity;
+        for (let dy = baseDy - 2; dy <= baseDy + 2; dy++) for (let dx = -4; dx <= 4; dx++) {
+          let d = 0;
+          const x0 = Math.min(0, dx), x1 = Math.max(A.w, B.w + dx), y0 = Math.min(0, dy), y1 = Math.max(A.h, B.h + dy);
+          for (let y = y0; y < y1 && d < best; y++) for (let x = x0; x < x1; x++) if (getA(x, y) !== getB(x - dx, y - dy)) d++;
+          if (d >= best) continue;
+          const ka = new Set(A.o.map(([t, x, y]) => t + '@' + x + ',' + y)), kb = new Set(B.o.map(([t, x, y]) => t + '@' + (x + dx) + ',' + (y + dy)));
+          ka.forEach((k) => { if (!kb.has(k)) d++; }); kb.forEach((k) => { if (!ka.has(k)) d++; });
+          const ca = A.c, cb = {}; Object.keys(B.c).forEach((k) => { const [x, y] = k.split(',').map(Number); cb[(x + dx) + ',' + (y + dy)] = B.c[k]; });
+          new Set(Object.keys(ca).concat(Object.keys(cb))).forEach((k) => { if (ca[k] !== cb[k]) d++; });
+          best = Math.min(best, d);
+        }
+        diff += best;
+      }
+      return { diff, total, ratio: total ? diff / total : 0, styleChanged };
+    }
+    // ¿Se puede publicar esta copia? Basta con cambiar el tema o el modo (p. ej. versión Corrupta
+    // del mismo pueblo); si no, al menos un 25 % del contenido (y 24 casillas/objetos) distinto.
+    static copyCheck(j) {
+      const src = j instanceof Level ? j.toJSON() : j;
+      let worst = null;
+      for (const orig of src.copyOf || []) {
+        const r = Level.compare(src, orig);
+        if (r.styleChanged) continue;
+        if (r.ratio < Level.COPY_MIN_RATIO || r.diff < Level.COPY_MIN_DIFF) { if (!worst || r.ratio < worst.ratio) worst = Object.assign(r, { origName: orig.name }); }
+      }
+      return worst ? { ok: false, ratio: worst.ratio, diff: worst.diff, origName: worst.origName } : { ok: true };
+    }
+    static get COPY_MIN_RATIO() { return 0.25; }
+    static get COPY_MIN_DIFF() { return 24; }
 
     // Normaliza los datos de una subzona (misma forma que un nivel, sin id/name/character)
     static normSub(s) {
@@ -147,7 +226,8 @@
           return j;
         }), contents: Object.assign({}, this.contents),
         win: { type: this.win.type, n: this.win.n },
-        subs: this.subs && this.subs.length ? this.subs.map((s) => ({ theme: s.theme, mode: s.mode, width: s.width, height: s.height, tiles: s.tiles, objects: s.objects, contents: s.contents, win: s.win })) : undefined };
+        subs: this.subs && this.subs.length ? this.subs.map((s) => ({ theme: s.theme, mode: s.mode, width: s.width, height: s.height, tiles: s.tiles, objects: s.objects, contents: s.contents, win: s.win })) : undefined,
+        publishedAt: this.publishedAt || undefined, cloudId: this.cloudId || undefined, copyOf: this.copyOf || undefined };
     }
     clone() { return new Level(this.toJSON()); }
   }

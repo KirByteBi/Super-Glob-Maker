@@ -30,6 +30,16 @@
         if (this.dying <= 0) this.remove = true;
         return;
       }
+      // Montado en un raíl: el raíl manda en la posición. Los enemigos siguen "pensando"
+      // (disparan, lanzan...) pero no andan, no saltan ni caen; las plataformas solo se desplazan.
+      if (this.rail) {
+        const ox = this.x, oy = this.y;
+        if (!this.platform) this.think(g, dt);
+        if (this.rail) Rail.step(this, g, dt); // think() puede soltarlo (p. ej. al morir)
+        this.dx = this.x - ox; this.dy = this.y - oy;
+        if (!this.keepFace && Math.abs(this.dx) > 0.01) this.dir = Math.sign(this.dx);
+        return;
+      }
       this.think(g, dt);
       this.physics(g, dt);
       if (this.y > g.level.height * T + 96) this.remove = true;
@@ -63,6 +73,66 @@
     cx() { return this.x + this.w / 2; }
     cy() { return this.y + this.h / 2; }
   }
+
+  // ---------------------------------------------------------------- Raíles (estilo SMM)
+  // Tile RAIL que se pinta en el editor. Las casillas de raíl se unen con sus vecinas:
+  // ortogonales siempre; en diagonal solo si no hay raíl en ninguna de las dos casillas
+  // ortogonales que comparten (así las esquinas en "L" no hacen atajos). Las plataformas,
+  // setas, Barras Estelares y enemigos que pongas encima de un raíl lo siguen a velocidad
+  // constante: en los cruces siguen recto, en los extremos dan la vuelta y en los bucles giran.
+  const Rail = {
+    SPEED: 2.2 * T, // px/s
+    is(level, x, y) { return level.get(x, y) === C.T.RAIL; },
+    // Conexiones [dx, dy] de la casilla de raíl (x, y)
+    links(level, x, y) {
+      const out = [];
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (Rail.is(level, x + dx, y + dy)) out.push([dx, dy]);
+      for (const [dx, dy] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+        if (Rail.is(level, x + dx, y + dy) && !Rail.is(level, x + dx, y) && !Rail.is(level, x, y + dy)) out.push([dx, dy]);
+      }
+      return out;
+    },
+    // Siguiente casilla al llegar a (x, y) viniendo con dirección (mx, my). null = fin del raíl
+    next(level, x, y, mx, my) {
+      const opts = Rail.links(level, x, y).filter(([dx, dy]) => !(dx === -mx && dy === -my));
+      if (!opts.length) return null;
+      return opts.find(([dx, dy]) => dx === mx && dy === my)            // recto
+        || opts.find(([dx, dy]) => dx * mx + dy * my > 0)                 // lo más parecido
+        || opts.find(([dx, dy]) => dx === 0 || dy === 0)                  // giro ortogonal
+        || opts[0];
+    },
+    // Engancha la entidad e al raíl de la casilla (tx, ty). dir0 = hacia dónde arranca (-1/1)
+    attach(e, level, tx, ty, dir0) {
+      const ls = Rail.links(level, tx, ty);
+      const pref = dir0 || e.dir || -1;
+      const first = ls.find(([dx, dy]) => dx === pref && dy === 0) || ls.find(([dx]) => dx === pref) || ls[0] || null;
+      e.rail = { x: tx, y: ty, mx: first ? first[0] : 0, my: first ? first[1] : 0, k: 0 };
+      e.gravity = 0; e.vx = 0; e.vy = 0;
+      Rail.place(e);
+    },
+    place(e) {
+      const r = e.rail, k = r.k;
+      const cx = (r.x + 0.5 + r.mx * k) * T, cy = (r.y + 0.5 + r.my * k) * T;
+      e.x = cx - e.w / 2; e.y = cy - e.h / 2;
+    },
+    step(e, g, dt) {
+      const r = e.rail;
+      if (!r.mx && !r.my) { Rail.place(e); return; } // raíl de una sola casilla: quieto
+      const len = r.mx && r.my ? Math.SQRT2 : 1;
+      r.k += (Rail.SPEED * (g.obstacleMul || 1) * dt) / (len * T);
+      let guard = 8;
+      while (r.k >= 1 && guard--) {
+        r.k -= 1; r.x += r.mx; r.y += r.my;
+        const n = Rail.next(g.level, r.x, r.y, r.mx, r.my);
+        if (n) { r.mx = n[0]; r.my = n[1]; }
+        else { r.mx = -r.mx; r.my = -r.my; g.emit('railBump', { x: (r.x + 0.5) * T, y: (r.y + 0.5) * T }); } // tope: da la vuelta
+      }
+      Rail.place(e);
+    },
+    // ¿Este tipo de objeto se puede montar en un raíl?
+    rideable(e) { return !!(e && (e.enemy || e.platform || e.type === 'firebar' || e.type === 'spring')); }
+  };
+  S.Model.Rail = Rail;
 
   const registry = {};
   S.Model.Entity = Entity;

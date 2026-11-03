@@ -6,7 +6,7 @@
   const EFFECTS = {
     bouncy: 'Gelatina loca: tras saltar sigues rebotando',
     darkness: 'Apagón nocturno: solo tu Glob y los proyectiles dan luz',
-    poisonWater: 'Marea venenosa: el agua del puerto mata al tocarla',
+    waves: 'Marejada: el agua y el líquido hacen olas que barren la orilla',
     ghosts: 'Noche espectral: los enemigos solo se ven de cerca',
     speedUp: 'Función acelerada: enemigos y obstáculos van más rápido',
     slippery: 'Ventisca: todo resbala',
@@ -30,7 +30,7 @@
     { id: 'city', name: 'Urbanistic Road', corruptName: 'Urbanistic Road: Apagón', group: 'Ciudad', bg: 'city', effect: 'darkness', night: true, liquidName: 'Petróleo',
       music: { root: 57, scale: 'dorian', tempo: 120, wave: 'square', prog: [0, 3, 4, 3] },
       pal: { skyTop: '#ff9f6b', skyBot: '#ffe2b0', ground: '#4b4f5c', groundDark: '#363944', top: '#6c7285', topDark: '#ffd000', brick: '#c9643f', liquid: '#141418', liquidTop: '#3a3a44', far: '#f0a17c', mid: '#a5677a', near: '#5d4560', accent: '#ffd000' } },
-    { id: 'seaside', name: 'Sunlight Seaside', corruptName: 'Sunlight Seaside: Marea Venenosa', group: 'Playa / Puerto', bg: 'sea', effect: 'poisonWater', night: true, liquidName: 'Tinta de calamar',
+    { id: 'seaside', name: 'Sunlight Seaside', corruptName: 'Sunlight Seaside: Marejada', group: 'Playa / Puerto', bg: 'sea', effect: 'waves', night: true, liquidName: 'Agua venenosa',
       music: { root: 62, scale: 'major', tempo: 126, wave: 'triangle', prog: [0, 4, 5, 3] },
       pal: { skyTop: '#2fbfff', skyBot: '#c4f2ff', ground: '#f2c879', groundDark: '#d6a552', top: '#fff3c4', topDark: '#e3cd8a', brick: '#ff8a5c', liquid: '#7a2fd0', liquidTop: '#c38bff', far: '#8adfff', mid: '#1fa3dd', near: '#167bb8', accent: '#ff5f5f' } },
     { id: 'ruins', name: 'Spooktacular Ruins', corruptName: 'Aridez Escalofriante', group: 'Desierto / Ruinas', bg: 'ruins', effect: 'ghosts', night: true, liquidName: 'Arenas movedizas',
@@ -64,7 +64,8 @@
     { id: 'factory', name: 'Fábrica PixelStar', corruptName: 'Fábrica MadStars', group: 'Castillo (Fábrica)', bg: 'factory', effect: 'stormClouds', liquidName: 'Píxeles fundidos',
       music: { root: 53, scale: 'harmonic', tempo: 144, wave: 'square', prog: [0, 1, 4, 0] },
       pal: { skyTop: '#1f2633', skyBot: '#3d4a5c', ground: '#7a8494', groundDark: '#565f6e', top: '#ffd000', topDark: '#1a1a1a', brick: '#5f6b7d', liquid: '#00c8e5', liquidTop: '#8df2ff', far: '#283142', mid: '#384357', near: '#131820', accent: '#00e5ff' },
-      corruptOver: { top: '#ff2f4f', accent: '#ff2fd6' } },
+      // Fábrica MadStars (Corrupto): rojo con negro y blanco
+      corruptOver: { skyTop: '#050505', skyBot: '#3a0008', ground: '#1c1c1f', groundDark: '#000000', top: '#ff1f3a', topDark: '#f2f2f2', brick: '#e8e8e8', liquid: '#ff1f3a', liquidTop: '#ffffff', far: '#24060a', mid: '#4a0a12', near: '#0a0a0a', accent: '#ffffff' } },
     // ----- MAPAS NUEVOS -----
     { id: 'casino', name: 'Gambling Gaming', corruptName: 'Gambling Gaming: Ruleta Loca', group: 'Casino', bg: 'casino', effect: 'roulette', liquidName: 'Ponche con premio',
       music: { root: 59, scale: 'major', tempo: 128, wave: 'square', prog: [0, 3, 4, 5] },

@@ -66,7 +66,9 @@
 
       // Agua: tema acuático o bloque de agua
       const midT = g.level.get(Math.floor((this.x + this.w / 2) / T), Math.floor((this.y + this.h / 2) / T));
-      this.swimming = !!g.theme.swim || midT === C.T.WATER;
+      // Sunlight Seaside Corrupto: dentro de una ola de agua también se nada (y te arrastra)
+      const inWave = !midT && g.waveTileAt && g.waveTileAt(this.x + this.w / 2, this.y + this.h / 2) === C.T.WATER;
+      this.swimming = !!g.theme.swim || midT === C.T.WATER || inWave;
 
       let dir = (inp.right ? 1 : 0) - (inp.left ? 1 : 0);
       const run = inp.run;
@@ -142,6 +144,7 @@
       let pushX = 0, pushY = 0;
       if (g.wind) pushX += g.wind * dt * (this.onGround ? 0.5 : 1);
       if (g.currentX) pushX += g.currentX * dt;
+      if (inWave) pushX += 90 * dt; // la ola te lleva en su sentido (hacia la derecha)
       if (!this.sliding && this.onGround && this.groundTile === C.T.CONV_L) pushX -= 75 * dt * g.convDir * g.obstacleMul;
       if (!this.sliding && this.onGround && this.groundTile === C.T.CONV_R) pushX += 75 * dt * g.convDir * g.obstacleMul;
       if (this.ridePlat) { pushX += this.ridePlat.dx; pushY += this.ridePlat.dy > 0 ? this.ridePlat.dy : 0; if (this.ridePlat.dy < 0) this.y += this.ridePlat.dy; }
