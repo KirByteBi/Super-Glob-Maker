@@ -261,7 +261,12 @@
       const userP = Storage.isLinked() ? Gld.username().catch(() => null) : Promise.resolve(null);
       userP.then(async (u) => {
         st.user = u;
-        if (u) { Gld.touch(); st.admin = await Gld.isAdmin().catch(() => false); }
+        if (u) {
+          Gld.touch(); st.admin = await Gld.isAdmin().catch(() => false);
+          // kirbytebi sin permisos: el servidor no lo tiene como admin todavía
+          if (!st.admin && String(u).toLowerCase() === 'kirbytebi' && !this._adminWarned) { this._adminWarned = true; this.menu.toast('🛡 El servidor aún no te reconoce como admin: ejecuta kiro/supabase_admin_fix.sql en Supabase', 6000); }
+        }
+        if (tab === 'mod' && !st.admin) { st.error = 'Solo para admin'; return done(); }
         if (tab === 'friends') return u ? Gld.friends().then((r) => { st.friends = r.rows; done(r.ok ? r : { ok: false, error: r.error === 'no-v3' ? 'Falta aplicar kiro/supabase_online_v3.sql (amigos)' : r.error }); }) : done();
         if (tab === 'author' && st.author) st.favs = await Gld.favorites(st.author).catch(() => []);
         if (tab === 'home') st.gods = await Gld.gods().catch(() => []);
@@ -275,7 +280,8 @@
             done(r);
           });
         }
-        const q = tab === 'author' ? { sort: 'top', author: st.author, limit: 60 } : tab === 'search' ? { sort: 'top', search: st.search, limit: 40 } : { sort: tab, limit: tab === 'top' ? 10 : 30 };
+        // Moderar (admin): los últimos niveles de TODOS, para marcar GOD o borrar
+        const q = tab === 'mod' ? { sort: 'new', limit: 100 } : tab === 'author' ? { sort: 'top', author: st.author, limit: 60 } : tab === 'search' ? { sort: 'top', search: st.search, limit: 40 } : { sort: tab, limit: tab === 'top' ? 10 : 30 };
         return Gld.browse(q).then((r) => { st.rows = r.rows; done(r); });
       }).catch((e) => done({ ok: false, error: String(e && e.message || e) }));
     }

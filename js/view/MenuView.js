@@ -278,7 +278,7 @@
       if (st.user) head.appendChild(button('⚙', '', h.account)); // cuenta (cerrar sesión)
       s.appendChild(head);
       const TABS = [['home', '⭐ Destacados'], ['top', '🏆 Top 10'], ['new', '🆕 Recientes'], ['plays', '🔥 Más jugados'], ['hard', '💀 Más difíciles'], ['search', '🔍 Buscar'], ['friends', '👥 Amigos'], ['me', '👤 Mi perfil']];
-      if (st.admin) head.insertBefore(el('span', 'badge admin', '🛡 ADMIN'), acc);
+      if (st.admin) { head.insertBefore(el('span', 'badge admin', '🛡 ADMIN'), acc); TABS.push(['mod', '🛡 Moderar']); }
       const tabs = el('div', 'tabs');
       TABS.forEach(([id, label]) => { const b = button(label, 'tab' + (st.tab === id || (st.tab === 'author' && id === 'search' && false) ? ' on' : ''), () => h.tab(id)); tabs.appendChild(b); });
       s.appendChild(tabs);
@@ -319,6 +319,7 @@
         wrap.appendChild(this.onlineRow(st.featured, -1, h, true));
         wrap.appendChild(el('h3', 'sec', '🏆 Lo mejor ahora mismo'));
       }
+      if (st.tab === 'mod') wrap.appendChild(el('p', 'note', '🛡 Moderación: los 100 niveles más recientes de todos los jugadores. 👑 GOD los destaca arriba en ⭐ Destacados; 🛡🗑 los borra para todos.'));
       if (!st.rows.length) wrap.appendChild(el('p', 'empty', st.tab === 'search' ? (st.search ? 'Nada por aquí con "' + st.search + '".' : 'Escribe algo para buscar.') : 'Todavía no hay niveles publicados. ¡Sé el primero!'));
       st.rows.forEach((r, i) => wrap.appendChild(this.onlineRow(r, st.tab === 'top' ? i : -1, h)));
     }
