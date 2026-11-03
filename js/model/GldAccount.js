@@ -13,6 +13,32 @@
   const EMAIL_DOMAIN = '@accounts.glob-defenders.invalid';
   const CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
 
+  // Mismas reglas que el registro de Glob Defenders (Controlador/game.js: getSupabaseAuthEmail,
+  // isOffensiveUsername), para que una cuenta creada aquí sea idéntica a una creada en GlD.
+  const USER_RE = /^[a-z0-9_.-]{3,24}$/;
+  const OFFENSIVE = [
+    'dick', 'dig', 'fuck', 'shit', 'bitch', 'asshole', 'cunt', 'bastard',
+    'slut', 'whore', 'motherfucker', 'idiot', 'crap', 'damn', 'piss',
+    'prick', 'wanker', 'twat', 'dumbass', 'jackass', 'douche', 'douchebag',
+    'fuckface', 'fuckwit', 'shithead', 'dipshit', 'bullshit', 'horseshit',
+    'arsehole', 'arse', 'tosser', 'bollocks', 'scumbag', 'fucker', 'jerkoff',
+    'loser', 'moron', 'stupid', 'cretin', 'imbecile',
+    'puta', 'puto', 'mierda', 'cabron', 'joder', 'gilipollas', 'pendejo',
+    'maricon', 'imbecil', 'estupido', 'zorra', 'cono', 'jilipollas',
+    'cagada', 'cagar', 'cagon', 'culero', 'mamon', 'mamona', 'pinche',
+    'chingado', 'chingada', 'chingar', 'carajo', 'mierdero', 'mierdoso',
+    'jodido', 'jodete', 'cabrona', 'cabronazo', 'pendeja', 'pendejazo',
+    'putisima', 'putazo', 'putero', 'perra', 'marica', 'maricona',
+    'capullo', 'retrasado', 'subnormal', 'baboso', 'babosa', 'estupida',
+    String.fromCharCode(110, 105, 103, 103, 101, 114)
+  ];
+  function isOffensive(name) {
+    const n = String(name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+      .replace(/[013457@$]/g, (c) => ({ 0: 'o', 1: 'i', 3: 'e', 4: 'a', 5: 's', 7: 't', '@': 'a', $: 's' })[c] || c);
+    const tokens = n.split(/[^a-z0-9]+/).filter(Boolean), compact = n.replace(/[^a-z0-9]/g, '');
+    return tokens.some((tk) => OFFENSIVE.some((w) => (w === 'dig' ? tk === w : tk.includes(w)))) || OFFENSIVE.some((w) => w !== 'dig' && compact.includes(w));
+  }
+
   let client = null, loading = null;
   const emit = (n, d) => S.events.emit('gld:' + n, d || {});
 
@@ -54,12 +80,34 @@
     async login(username, password) {
       const c = await getClient();
       if (!c) { return { ok: false, error: 'offline' }; }
+      if (!USER_RE.test(String(username).trim().toLowerCase())) return { ok: false, error: 'bad-name' };
       const email = String(username).trim().toLowerCase() + EMAIL_DOMAIN;
       const { error } = await c.auth.signInWithPassword({ email, password });
       if (error) return { ok: false, error: error.message };
       await c.rpc('link_super_glob_maker_account', { p_username: username });
       S.Model.LevelStorage.setLinked(true);
       emit('login', { username }); return { ok: true, username };
+    },
+    // ¿Nombre válido para una cuenta? null = sí; si no, código de error
+    checkUsername(username) {
+      const u = String(username || '').trim().toLowerCase();
+      if (!USER_RE.test(u)) return 'bad-name';
+      if (isOffensive(u)) return 'offensive';
+      return null;
+    },
+    // Crear una cuenta de Glob Defenders desde Super Glob Maker (igual que el registro de GlD:
+    // auth.signUp con el correo interno y player_name). Luego se vincula como en login().
+    async signup(username, password) {
+      const bad = Gld.checkUsername(username); if (bad) return { ok: false, error: bad };
+      if (String(password || '').length < 6) return { ok: false, error: 'short-pass' };
+      const c = await getClient(); if (!c) return { ok: false, error: 'offline' };
+      const name = String(username).trim();
+      const { data, error } = await c.auth.signUp({ email: name.toLowerCase() + EMAIL_DOMAIN, password, options: { data: { player_name: name } } });
+      if (error) return { ok: false, error: /already|registered|exists/i.test(error.message) ? 'exists' : /rate limit/i.test(error.message) ? 'rate' : error.message };
+      if (!data || !data.session || !data.user) return { ok: false, error: 'confirm' }; // el proyecto pide confirmar correo
+      await c.rpc('link_super_glob_maker_account', { p_username: name });
+      S.Model.LevelStorage.setLinked(true);
+      emit('login', { username: name, created: true }); return { ok: true, username: name, created: true };
     },
     async logout() {
       const c = await getClient(); if (c) await c.auth.signOut();

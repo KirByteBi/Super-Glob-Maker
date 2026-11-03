@@ -79,6 +79,7 @@
       const open = (username) => this.menu.accountDialog({
         linked: Storage.isLinked(), username,
         login: (u, p, cb) => { Gld.login(u, p).then((r) => { cb(r); if (r.ok && onDone) onDone(); }); },
+        signup: (u, p, cb) => { Gld.signup(u, p).then((r) => { cb(r); if (r.ok && onDone) onDone(); }).catch((e) => cb({ ok: false, error: String(e && e.message || e) })); },
         logout: (cb) => { Gld.logout().then(() => { cb(); this.showTitle(); }); }
       });
       // si hay sesión, intenta leer el nombre de usuario antes de abrir

@@ -243,3 +243,9 @@ const dlj = Object.assign(base().toJSON(), { downloaded: { author: 'otro', cloud
 ok('descargado: se guarda quién lo hizo', new S.Model.Level(dlj).toJSON().downloaded.author === 'otro');
 ok('descargado: no se puede publicar', S.Model.Gld.canPublish(dlj).error === 'downloaded');
 ok('descargado: no va en el contenido exportable', !S.Model.Level.content(dlj).downloaded);
+
+// Crear cuenta: mismas reglas de nombre que Glob Defenders
+const Gd = S.Model.Gld;
+ok('cuenta: KiroDEV es un nombre válido', Gd.checkUsername('KiroDEV') === null);
+ok('cuenta: nombres demasiado cortos o con espacios no valen', Gd.checkUsername('ab') === 'bad-name' && Gd.checkUsername('kiro dev') === 'bad-name');
+ok('cuenta: filtra nombres ofensivos (también con números)', Gd.checkUsername('sh1thead') === 'offensive' && Gd.checkUsername('digger') === null);

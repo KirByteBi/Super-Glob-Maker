@@ -206,14 +206,29 @@
       const inp = (type, attrs) => { const i = document.createElement('input'); i.type = type; Object.assign(i, attrs || {}); return i; };
       const user = field('Usuario de Glob Defenders', inp('text', { maxLength: 40 }));
       const pass = field('Contraseña', inp('password', {}));
-      b.appendChild(el('p', 'small', 'Usa tu MISMA cuenta de Glob Defenders. Super Glob Maker no tiene cuentas propias.'));
+      b.appendChild(el('p', 'small', 'Usa tu MISMA cuenta de Glob Defenders. ¿No tienes? Créala aquí: sirve para los dos juegos.'));
       b.appendChild(form);
+      const msg = el('p', 'small'); msg.setAttribute('role', 'status'); msg.style.color = '#c0282f'; b.appendChild(msg);
+      const ERR = {
+        offline: 'Sin conexión con Glob Defenders.', 'bad-name': 'El usuario debe tener 3-24 caracteres: letras, números, puntos, guiones o guiones bajos.',
+        offensive: 'Ese nombre de usuario no está permitido.', 'short-pass': 'La contraseña debe tener al menos 6 caracteres.',
+        exists: 'Ese usuario ya existe. Si es tuyo, inicia sesión.', rate: 'Demasiados registros seguidos. Espera un poco y vuelve a probar.',
+        confirm: 'La cuenta se creó, pero el servidor pide confirmar un correo (desactiva "Confirm email" en Supabase).'
+      };
+      const say = (e) => { msg.textContent = ERR[e] || 'No se pudo: ' + e; };
       const row = el('div', 'row');
       row.appendChild(button('Iniciar sesión', 'primary', () => {
-        const u = user.value.trim(); if (!u || !pass.value) { this.toast('Escribe usuario y contraseña'); return; }
+        const u = user.value.trim(); if (!u || !pass.value) { say('bad-name'); return; }
         h.login(u, pass.value, (r) => {
           if (r.ok) { this.closeModal(); this.toast('¡Vinculado como ' + r.username + '!'); }
-          else this.toast(r.error === 'offline' ? 'Sin conexión con Glob Defenders' : 'No se pudo iniciar sesión');
+          else say(r.error === 'offline' || r.error === 'bad-name' ? r.error : 'Usuario o contraseña incorrectos.');
+        });
+      }));
+      if (h.signup) row.appendChild(button('✨ Crear cuenta', '', () => {
+        const u = user.value.trim(); if (!u || !pass.value) { say(u ? 'short-pass' : 'bad-name'); return; }
+        h.signup(u, pass.value, (r) => {
+          if (r.ok) { this.closeModal(); this.toast('✨ ¡Cuenta ' + r.username + ' creada! También vale en Glob Defenders', 3200); }
+          else say(r.error);
         });
       }));
       row.appendChild(button('Cancelar', '', () => this.closeModal()));
