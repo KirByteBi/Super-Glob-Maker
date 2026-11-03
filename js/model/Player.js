@@ -73,7 +73,8 @@
       let dir = (inp.right ? 1 : 0) - (inp.left ? 1 : 0);
       const run = inp.run;
       let traction = st.traction;
-      if (this.groundTile === C.T.ICE || fx.slippery) traction *= 0.22;
+      // hielo: en Corrupto (hielo negro) resbala todavía más
+      if (this.groundTile === C.T.ICE || fx.slippery) traction *= (g.mode === 'corrupt' && this.groundTile === C.T.ICE) ? 0.13 : 0.22;
       // Glob de Jabón: resbala al caminar. Mientras patina (va rápido sin frenar) ignora cintas y pinchos.
       this.sliding = false;
       if (this.ch.slippery) {

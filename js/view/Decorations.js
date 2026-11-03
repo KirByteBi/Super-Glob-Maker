@@ -59,6 +59,7 @@
   // helper breve para figuras
   const rect = (ctx, x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
   const circle = (ctx, x, y, r, c) => { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); };
+  const rr2 = (ctx, x, y, w, h, r, c) => { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fillStyle = c; ctx.fill(); ink(ctx, 2); ctx.stroke(); };
 
   // -------- Sunlight Seaside --------
   add('ss_palm', { name: 'Palmera', map: 'seaside', w: 1, h: 3, draw(ctx, px, py, W, H) {
@@ -232,6 +233,28 @@
   // Índice por mapa para el editor/paleta
   function forMap(mapId) { return list.filter((d) => d.map === mapId); }
   const byId = {}; list.forEach((d) => { byId[d.id] = d; });
+
+  // -------- tamaños que faltaban (2x1, 3x1, 1x3) en varios mapas --------
+  const fence = (ctx, px, py, W, wood, top) => { for (let i = 0; i <= W * 2; i++) rect(ctx, px + i * T * 0.5 - 2, py + T * 0.3, 4, T * 0.7, wood); rect(ctx, px, py + T * 0.42, W * T, 4, top || wood); rect(ctx, px, py + T * 0.72, W * T, 4, top || wood); ink(ctx, 1.5); ctx.strokeRect(px, py + T * 0.42, W * T, 4); };
+  add('gl_fence', { name: 'Valla', map: 'lake', w: 3, h: 1, draw(ctx, px, py, W) { fence(ctx, px, py, W, '#c9a26a', '#e0bc84'); } });
+  add('gl_tree', { name: 'Árbol gelatina', map: 'lake', w: 1, h: 3, draw(ctx, px, py, W, H) { rect(ctx, px + T * 0.42, py + T, 6, H * T - T, '#9a6440'); ctx.fillStyle = '#ff7ac8'; ctx.beginPath(); ctx.arc(px + T * 0.5, py + T * 0.7, T * 0.48, 0, 7); ctx.fill(); ink(ctx, 2.5); ctx.stroke(); circle(ctx, px + T * 0.35, py + T * 0.55, 3, '#fff'); } });
+  add('ur_bench', { name: 'Banco', map: 'city', w: 2, h: 1, draw(ctx, px, py, W) { rect(ctx, px + 4, py + T * 0.45, W * T - 8, 5, '#8a5a2b'); rect(ctx, px + 4, py + T * 0.25, W * T - 8, 4, '#8a5a2b'); rect(ctx, px + 8, py + T * 0.5, 4, T * 0.5, '#3a3f4a'); rect(ctx, px + W * T - 12, py + T * 0.5, 4, T * 0.5, '#3a3f4a'); ink(ctx, 2); ctx.strokeRect(px + 4, py + T * 0.45, W * T - 8, 5); } });
+  add('ur_hydrant', { name: 'Boca de riego', map: 'city', w: 1, h: 1, draw(ctx, px, py) { rr2(ctx, px + T * 0.3, py + T * 0.3, T * 0.4, T * 0.7, 4, '#e8323f'); rect(ctx, px + T * 0.2, py + T * 0.5, T * 0.6, 5, '#c0282f'); } });
+  add('ss_dockpost', { name: 'Noray', map: 'seaside', w: 1, h: 1, draw(ctx, px, py) { rr2(ctx, px + T * 0.3, py + T * 0.4, T * 0.4, T * 0.6, 4, '#3a3f4a'); rect(ctx, px + T * 0.2, py + T * 0.35, T * 0.6, 6, '#2a2d34'); } });
+  add('ss_net', { name: 'Red de pesca', map: 'seaside', w: 3, h: 1, draw(ctx, px, py, W) { ctx.strokeStyle = '#c9a26a'; ctx.lineWidth = 1.5; for (let i = 0; i <= W * 4; i++) { ctx.beginPath(); ctx.moveTo(px + i * T / 4, py + 4); ctx.lineTo(px + i * T / 4 + 8, py + T); ctx.moveTo(px + i * T / 4 + 8, py + 4); ctx.lineTo(px + i * T / 4, py + T); ctx.stroke(); } rect(ctx, px, py + 2, W * T, 4, '#8a5a2b'); } });
+  add('ru_wall', { name: 'Muro en ruinas', map: 'ruins', w: 3, h: 1, draw(ctx, px, py, W) { for (let i = 0; i < W * 2; i++) { const h = T * (0.4 + U.hash2(i, 3) * 0.6); rr2(ctx, px + i * T * 0.5 + 1, py + T - h, T * 0.5 - 2, h, 2, '#c69257'); } } });
+  add('ci_ticket', { name: 'Taquilla', map: 'circus', w: 1, h: 3, draw(ctx, px, py, W, H) { rr2(ctx, px + 3, py + T, T - 6, H * T - T, 4, '#9a4dff'); ctx.fillStyle = '#e8323f'; ctx.beginPath(); ctx.moveTo(px, py + T); ctx.lineTo(px + T / 2, py + 6); ctx.lineTo(px + T, py + T); ctx.closePath(); ctx.fill(); ink(ctx, 2); ctx.stroke(); rect(ctx, px + 8, py + T * 1.4, T - 16, 10, '#ffd000'); } });
+  add('sn_fence', { name: 'Valla nevada', map: 'snow', w: 3, h: 1, draw(ctx, px, py, W) { fence(ctx, px, py, W, '#8a5a2b'); rect(ctx, px, py + T * 0.25, W * T, 5, '#ffffff'); } });
+  add('vo_chain', { name: 'Cadena rota', map: 'vortex', w: 1, h: 3, draw(ctx, px, py, W, H) { ctx.strokeStyle = '#6a2fbf'; ctx.lineWidth = 3; for (let i = 0; i < H * 3; i++) { ctx.beginPath(); ctx.ellipse(px + T / 2, py + 6 + i * T / 3, 4, 6, 0, 0, 7); ctx.stroke(); } } });
+  add('uw_coralfan', { name: 'Coral abanico', map: 'underwater', w: 2, h: 1, draw(ctx, px, py, W) { ctx.strokeStyle = '#ff7ab8'; ctx.lineWidth = 3; ctx.lineCap = 'round'; for (let a = -1.2; a <= 1.2; a += 0.4) { ctx.beginPath(); ctx.moveTo(px + T, py + T); ctx.lineTo(px + T + Math.sin(a) * T * 0.9, py + T - Math.cos(a) * T * 0.9); ctx.stroke(); } } });
+  add('ju_vine', { name: 'Liana', map: 'jungle', w: 1, h: 3, draw(ctx, px, py, W, H, t) { ctx.strokeStyle = '#2f8f5b'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(px + T / 2, py); for (let i = 1; i <= 6; i++) ctx.lineTo(px + T / 2 + Math.sin(i + (t || 0)) * 4, py + i * H * T / 6); ctx.stroke(); circle(ctx, px + T / 2 + 4, py + H * T * 0.5, 4, '#6fd47a'); } });
+  add('sk_balloon', { name: 'Globo aerostático', map: 'sky', w: 1, h: 3, draw(ctx, px, py, W, H, t) { const b = Math.sin((t || 0) * 1.5) * 3; ctx.fillStyle = '#ff5f5f'; ctx.beginPath(); ctx.arc(px + T / 2, py + T * 0.8 + b, T * 0.5, 0, 7); ctx.fill(); ink(ctx, 2); ctx.stroke(); rect(ctx, px + T * 0.3, py + T * 2.3 + b, T * 0.4, T * 0.4, '#9a6440'); } });
+  add('vl_vent', { name: 'Fumarola', map: 'volcano', w: 2, h: 1, draw(ctx, px, py, W, H, t) { rr2(ctx, px + 4, py + T * 0.5, W * T - 8, T * 0.5, 4, '#3d2c2c'); for (let i = 0; i < 3; i++) { ctx.globalAlpha = 0.4; circle(ctx, px + T + Math.sin((t || 0) * 2 + i) * 4, py + T * 0.4 - (((t || 0) * 20 + i * 10) % 24), 5 + i, '#9a9a9a'); } ctx.globalAlpha = 1; } });
+  add('fa_crate', { name: 'Cajas apiladas', map: 'factory', w: 2, h: 1, draw(ctx, px, py, W) { rr2(ctx, px + 2, py + 6, T - 4, T - 6, 2, '#c99a4a'); rr2(ctx, px + T + 2, py + 10, T - 6, T - 10, 2, '#b07a2a'); } });
+  add('ca_chips', { name: 'Pila de fichas', map: 'casino', w: 1, h: 1, draw(ctx, px, py) { ['#e8323f', '#2f7bff', '#2fd46a', '#ffd000'].forEach((c, i) => { ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(px + T / 2, py + T - 6 - i * 5, 10, 4, 0, 0, 7); ctx.fill(); ink(ctx, 1.5); ctx.stroke(); }); } });
+  add('tk_gears', { name: 'Engranajes', map: 'clock', w: 3, h: 1, draw(ctx, px, py, W, H, t) { [[0.6, 9, 1], [1.6, 12, -1], [2.5, 8, 1]].forEach(([u, r, s]) => { ctx.save(); ctx.translate(px + u * T, py + T * 0.55); ctx.rotate((t || 0) * s); ctx.fillStyle = '#c99a4a'; for (let k = 0; k < 8; k++) { ctx.rotate(Math.PI / 4); ctx.fillRect(-2, -r - 3, 4, 5); } ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.fill(); ink(ctx, 1.5); ctx.stroke(); ctx.restore(); }); } });
+  add('di_ball', { name: 'Bola de discoteca', map: 'disco', w: 1, h: 3, draw(ctx, px, py, W, H, t) { rect(ctx, px + T / 2 - 1, py, 2, T * 1.6, '#888'); circle(ctx, px + T / 2, py + T * 2.1, T * 0.4, '#c0c6d0'); ctx.fillStyle = `hsla(${((t || 0) * 120) % 360},90%,70%,0.8)`; for (let k = 0; k < 6; k++) ctx.fillRect(px + T * 0.3 + (k % 3) * 6, py + T * 1.9 + Math.floor(k / 3) * 7, 4, 4); } });
+  add('hu_sign', { name: 'Cartel dimensional', map: 'hub', w: 2, h: 1, draw(ctx, px, py, W, H, t) { rr2(ctx, px + 2, py + 4, W * T - 4, T - 10, 4, '#0a3d22'); ctx.fillStyle = Math.sin((t || 0) * 4) > 0 ? '#3fffa0' : '#1f7a44'; ctx.font = 'bold 12px sans-serif'; ctx.fillText('HUB', px + 18, py + 20); } });
 
   S.View.Decorations = {
     list, forMap,

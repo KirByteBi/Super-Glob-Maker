@@ -23,6 +23,8 @@
       this.medals = 0;
       this.fx = {};
       if (this.mode === 'corrupt') this.fx[this.theme.effect] = true;
+      // Interruptores "!" ya activados antes (p. ej. el palacio del mundo en el Modo Historia)
+      if (Array.isArray(opts.exState)) this.exState = opts.exState.slice(0, 3).map((v) => (v ? 1 : 0));
       this.reset(true);
     }
 
@@ -410,7 +412,9 @@
             // tubería VERTICAL: de pie encima y pulsando abajo
             if (!inp.down || !p.onGround) continue;
             const cx = p.x + p.w / 2;
-            if (cx < e.x + 4 || cx > e.x + e.w - 4 || Math.abs(p.y + p.h - (e.y + e.h)) > 6 && Math.abs(p.y + p.h - e.y) > 6) continue;
+            // de pie en cualquier punto de la boca: encima de la entrada o sobre los tiles de tubería que la alargan
+            const feet = p.y + p.h;
+            if (cx < e.x + 4 || cx > e.x + e.w - 4 || feet < e.y - 6 || feet > e.y + e.h + 6) continue;
           }
         } else {
           // delante de la puerta y pulsando arriba

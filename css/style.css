@@ -157,3 +157,7 @@ textarea.code { width: 640px; height: 260px; font-family: Consolas, monospace; f
 .level-row .btn { padding: 6px 10px; font-size: 14px; }
 .pub-tag.dl-tag { background: #0a3d5c; color: #9fe8ff; padding: 2px 8px; }
 .empty.compact { margin-top: 10px; font-size: 16px; }
+.slots { display: flex; gap: 4px; margin-top: 2px; }
+.slot { display: inline-block; width: 24px; height: 24px; line-height: 20px; text-align: center; border: 2px solid #000; border-radius: 50%; background: #ccc; filter: grayscale(1); opacity: .55; font-size: 13px; }
+.slot.on { background: #ffe600; filter: none; opacity: 1; }
+.slot.secret.on { background: #c48bff; }

@@ -114,8 +114,12 @@
     // Lanzar el nivel de un nodo del mapamundi
     playStoryNode(worldId, nodeId, mode) {
       const node = S.Model.StoryMap.world(worldId).map[nodeId];
-      const L = S.Model.SampleLevels.build(node.theme, mode);
-      this.playLevel(L.toJSON(), { character: this.prefs.character, story: { theme: node.theme, mode, world: worldId, node: nodeId } });
+      // Nivel propio del nodo (lección del mundo); si el módulo falla, el genérico de su mapa
+      let L = null;
+      try { L = S.Model.StoryLevels && S.Model.StoryLevels.build(worldId, nodeId, mode); } catch (e) { console.warn('StoryLevels', e); }
+      if (!L) L = S.Model.SampleLevels.build(node.theme, mode);
+      // Los interruptores "!" del mundo (palacio) se conservan entre niveles
+      this.playLevel(L.toJSON(), { character: this.prefs.character, exState: S.Model.StoryMap.exState(worldId).slice(), story: { theme: node.theme, mode, world: worldId, node: nodeId } });
     }
 
     showLevels() {
@@ -359,6 +363,10 @@
 
     onGameFinished(kind, g) {
       const lp = this.lastPlay, testing = !!this.suspendedEditor;
+      // Mis niveles: recuerda con qué meta(s) has pasado cada nivel tuyo (los dos huecos)
+      if (kind === 'clear' && !testing && !lp.opts.story && !lp.opts.online && lp.data && lp.data.id) {
+        try { const m = JSON.parse(localStorage.getItem('sgm.myclears') || '{}'); const e = m[lp.data.id] || {}; if (g.secretClear) e.s = 1; else e.n = 1; m[lp.data.id] = e; localStorage.setItem('sgm.myclears', JSON.stringify(m)); } catch (e) { /* nada */ }
+      }
       if (kind === 'clear' && lp.opts.story) {
         const p = this.progress(); p[lp.opts.story.theme + ':' + lp.opts.story.mode] = Math.max(p[lp.opts.story.theme + ':' + lp.opts.story.mode] || 0, g.score);
         try { localStorage.setItem(PROG, JSON.stringify(p)); } catch (e) { /* nada */ }

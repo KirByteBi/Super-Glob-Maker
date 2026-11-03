@@ -104,7 +104,8 @@
     // Marca un nodo como completado (normal o por meta oculta/palacio).
     markCleared(worldId, nodeId, secret) {
       const p = read(); const key = worldId + '/' + nodeId;
-      const s = p[key] || {}; s.cleared = true; if (secret) s.secret = true;
+      // normal / secret = qué meta se ha usado alguna vez (los dos huecos del mapa)
+      const s = p[key] || {}; s.cleared = true; if (secret) s.secret = true; else s.normal = true;
       p[key] = s;
       // interruptor "!" persistente del mundo: un palacio activa su color
       const node = this.world(worldId).map[nodeId];

@@ -23,11 +23,15 @@
     RAIL: 54,
     // Moneda púrpura: si el nivel tiene, la Medalla normal NO aparece hasta juntar 100
     // (o todas las que haya, si son menos de 100)
-    VCOIN: 55, WALL: 99
+    VCOIN: 55,
+    // Semisólido DE FONDO (estilo SMM): SEMIBG = borde de arriba (semisólido, se pisa);
+    // BGFILL = su cuerpo de relleno (sin colisión, se pinta detrás). El editor solo ofrece SEMIBG
+    // y convierte solo las casillas de debajo en cuerpo. CAVEBG = pared de cueva de fondo.
+    SEMIBG: 56, BGFILL: 57, CAVEBG: 58, WALL: 99
   };
   const EXCLAIM = [{ c: '#ffd000', name: 'amarillo' }, { c: '#2fd46a', name: 'verde' }, { c: '#ff4fd8', name: 'rosa' }];
   const SOLID = new Set([T.GROUND, T.GROUND2, T.BRICK, T.BOX, T.HARD, T.SPIKE, T.BOUNCE, T.ICE, T.USED, T.CONV_L, T.CONV_R, T.DONUT, T.NOTE, T.SW0, T.SW1, T.SW2, T.SWG, T.PSW, T.POW, T.PIPE, T.LIGHT, T.WALL]);
-  const SEMI = new Set([T.SEMI, T.SEMI2, T.CLOUD]);
+  const SEMI = new Set([T.SEMI, T.SEMI2, T.CLOUD, T.SEMIBG]);
   const CONTAINERS = new Set([T.BOX, T.BRICK, T.HIDDEN, T.NOTE]);
   const SLOPES = new Set([T.S45U, T.S45D, T.G1U, T.G2U, T.G1D, T.G2D]);
   // Monedas de valor (se recogen al tocarlas). RCOIN se cuenta aparte (8 = 1UP).
@@ -54,7 +58,10 @@
     52: 'Tubería pequeña (decoración)',
     53: 'Suelo temático (según el mapa)',
     54: 'Raíl (pon encima plataformas, setas, Barras Estelares o Pyces y lo seguirán; las plataformas arrancan al subirte)',
-    55: 'Moneda púrpura (junta 100 y aparece la Medalla)'
+    55: 'Moneda púrpura (junta 100 y aparece la Medalla)',
+    56: 'Semisólido de fondo (pinta un bloque: arriba se pisa, el resto es fondo del mapa)',
+    57: 'Relleno de semisólido de fondo',
+    58: 'Fondo de cueva (sin colisión: para cuevas y túneles)'
   };
 
   // anchor: bottom = apoyado en el suelo de la casilla, center, top = colgando del techo
@@ -182,7 +189,7 @@
   const tiles = (ids) => ids.map((id) => ({ kind: 'tile', id }));
   const objs = (ids) => ids.map((type) => ({ kind: 'obj', type }));
   const PALETTE = [
-    { id: 'terrain', name: 'Terreno', items: tiles([1, 53, 5, 17, 11, 29, 30, 31, 32, 33, 34, 37, 52, 8, 6, 9, 16, 14, 15, 48]) },
+    { id: 'terrain', name: 'Terreno', items: tiles([1, 53, 5, 17, 56, 58, 11, 29, 30, 31, 32, 33, 34, 37, 52, 8, 6, 9, 16, 14, 15, 48]) },
     { id: 'blocks', name: 'Bloques', items: tiles([2, 3, 13, 4, 7, 19, 18, 36, 12, 38, 55, 39, 41, 40, 47, 46, 20, 21, 22, 23, 24, 25, 26, 27, 28, 49, 50, 51, 35, 42, 43]) },
     { id: 'pyces', name: 'Pyces', items: objs(['stupid', 'so', 'symbol', 'pyce2', 'guest', 'noob', 'elf', 'umbrella', 'zom', 'crystal', 'knight', 'rebel', 'skelebone', 'builder', 'miner', 'snowcap', 'festive', 'bomb', 'toybomb', 'wingel', 'strechy', 'flower', 'cannon']) },
     { id: 'pyces2', name: 'Pyces raros', items: objs(['ghost', 'holo', 'motions', 'hacker', 'pysh', 'clownpysh', 'axolotl', 'squid', 'shark', 'mimic', 'dirty', 'nomic', 'goldmimic', 'noeye', 'nosense', 'noir', 'moonstar']) },

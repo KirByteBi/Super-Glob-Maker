@@ -637,8 +637,15 @@
         break;
       }
       case TT.ICE:
-        rr(ctx, px + 1, py + 1, T - 2, T - 2, 5); fillStroke(ctx, '#bfeaff', 3.5);
-        ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(px + 7, py + T - 9); ctx.lineTo(px + T - 9, py + 7); ctx.moveTo(px + 13, py + T - 7); ctx.lineTo(px + T - 7, py + 13); ctx.stroke();
+        // Corrupto: hielo negro agrietado (resbala todavía más). Paz: hielo azul con brillos
+        if (o.mode === 'corrupt') {
+          rr(ctx, px + 1, py + 1, T - 2, T - 2, 5); fillStroke(ctx, '#3a3f6a', 3.5);
+          ctx.strokeStyle = 'rgba(190,170,255,0.85)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(px + 5, py + 9); ctx.lineTo(px + 14, py + 15); ctx.lineTo(px + 11, py + 24); ctx.moveTo(px + 14, py + 15); ctx.lineTo(px + 26, py + 12); ctx.stroke();
+          ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fillRect(px + 6, py + 5, 8, 2);
+        } else {
+          rr(ctx, px + 1, py + 1, T - 2, T - 2, 5); fillStroke(ctx, '#bfeaff', 3.5);
+          ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(px + 7, py + T - 9); ctx.lineTo(px + T - 9, py + 7); ctx.moveTo(px + 13, py + T - 7); ctx.lineTo(px + T - 7, py + 13); ctx.stroke();
+        }
         break;
       case TT.LIQUID: {
         // solo hay superficie si arriba está el aire (si toca techo/bloque, no sale superficie)
@@ -696,6 +703,21 @@
         }
         break;
       }
+      // Semisólido de fondo: borde de arriba (se pisa) + cuerpo, con el estilo del mapa
+      case TT.SEMIBG: case TT.BGFILL: drawSemiBg(ctx, level, x, y, t === TT.SEMIBG, pal, o.theme, time); break;
+      // Pared de cueva de fondo (sin colisión)
+      case TT.CAVEBG: {
+        const base = U.shade(pal.groundDark || pal.ground || '#444', -0.35);
+        ctx.fillStyle = base; ctx.fillRect(px, py, T, T);
+        ctx.fillStyle = U.shade(base, -0.25);
+        const h1 = U.hash2(x, y), h2 = U.hash2(y + 3, x);
+        ctx.beginPath(); ctx.ellipse(px + 6 + h1 * 18, py + 8 + h2 * 14, 6 + h2 * 4, 3 + h1 * 3, h1 * 3, 0, 7); ctx.fill();
+        if (h2 > 0.55) { ctx.fillStyle = U.shade(base, 0.12); ctx.fillRect(px + h1 * 22, py + 20, 6, 3); }
+        // bordes con la roca de alrededor
+        ctx.fillStyle = 'rgba(0,0,0,0.25)';
+        if (level.get(x, y - 1) !== TT.CAVEBG) ctx.fillRect(px, py, T, 4);
+        break;
+      }
       // Raíl (estilo SMM): medio tramo desde el centro hacia cada casilla de raíl unida.
       // Usa las mismas uniones que el modelo (S.Model.Rail.links), así lo que ves es por donde va.
       case TT.RAIL: {
@@ -731,9 +753,12 @@
         break;
       }
       case TT.LIGHT: {
-        rr(ctx, px + 1, py + 1, T - 2, T - 2, 6); fillStroke(ctx, '#3a3f4a', 3.5);
+        // Paz: farol cálido. Corrupto: luz fría violeta que parpadea (y alumbra más en el Apagón)
+        const cor = o.mode === 'corrupt', flick = cor && Math.sin(time * 9 + x * 3) > 0.92;
+        rr(ctx, px + 1, py + 1, T - 2, T - 2, 6); fillStroke(ctx, cor ? '#2a1f40' : '#3a3f4a', 3.5);
         const gl = ctx.createRadialGradient(px + T / 2, py + T / 2, 2, px + T / 2, py + T / 2, T * 0.55);
-        gl.addColorStop(0, 'rgba(255,240,170,0.95)'); gl.addColorStop(1, 'rgba(255,240,170,0.1)');
+        const lc = cor ? '200,170,255' : '255,240,170';
+        gl.addColorStop(0, 'rgba(' + lc + ',' + (flick ? 0.3 : 0.95) + ')'); gl.addColorStop(1, 'rgba(' + lc + ',0.1)');
         ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(px + T / 2, py + T / 2, T * 0.42 + Math.sin(time * 3 + x) * 1.5, 0, 7); ctx.fill();
         ctx.fillStyle = '#fffbe0'; ctx.beginPath(); ctx.arc(px + T / 2, py + T / 2, 5, 0, 7); fillStroke(ctx, '#fffbe0', 2);
         break;
@@ -921,6 +946,78 @@
     ctx.restore();
   }
 
+  // ---------- Semisólidos de fondo: estilo por mapa ----------
+  //  edificio (ventanas), carpa (franjas), caseta (tablas), roca (piedras), nube, coral
+  const SEMIBG_STYLE = {
+    city: 'building', casino: 'building', hub: 'building', factory: 'building', disco: 'building', clock: 'building',
+    circus: 'tent', seaside: 'hut', lake: 'hill', jungle: 'hill', snow: 'hill',
+    ruins: 'rock', volcano: 'rock', vortex: 'rock', sky: 'cloud', underwater: 'coral'
+  };
+  function drawSemiBg(ctx, level, x, y, isTop, pal, themeId, time) {
+    const px = x * T, py = y * T, style = SEMIBG_STYLE[themeId] || 'hill';
+    const SB = TT.SEMIBG, BF = TT.BGFILL, isBg = (q) => q === SB || q === BF;
+    const l = isBg(level.get(x - 1, y)), r = isBg(level.get(x + 1, y));
+    // columna izquierda del bloque (para dibujos que van por bloques: ventanas, franjas)
+    let x0 = x; while (x0 > 0 && isBg(level.get(x0 - 1, y))) x0--;
+    const body = U.shade(pal.mid || pal.ground, style === 'building' ? -0.15 : 0.05);
+    ctx.save(); ctx.globalAlpha = 0.92;
+    if (style === 'building') {
+      ctx.fillStyle = body; ctx.fillRect(px, py, T, T);
+      const lit = U.hash2(x, y) > 0.45, flick = themeId === 'city' && Math.sin(time * 3 + x * 7 + y) > 0.97;
+      ctx.fillStyle = lit && !flick ? U.rgba(pal.accent || '#ffd000', 0.85) : 'rgba(0,0,0,0.35)';
+      if (!isTop) { ctx.fillRect(px + 6, py + 7, 8, 10); ctx.fillRect(px + 18, py + 7, 8, 10); }
+    } else if (style === 'tent') {
+      ctx.fillStyle = ((x - x0) % 2) ? '#f2f2f2' : (pal.top || '#e8323f'); ctx.fillRect(px, py, T, T);
+    } else if (style === 'hut') {
+      ctx.fillStyle = '#d9a86a'; ctx.fillRect(px, py, T, T); ctx.fillStyle = 'rgba(90,50,20,0.35)'; ctx.fillRect(px + 15, py, 2, T);
+      if ((x - x0) % 3 === 1 && !isTop) { ctx.fillStyle = '#3b8bff'; ctx.fillRect(px + 6, py + 8, 20, 12); }
+    } else if (style === 'rock') {
+      ctx.fillStyle = U.shade(pal.ground, -0.2); ctx.fillRect(px, py, T, T);
+      ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.fillRect(px + (y % 2 ? 0 : 16), py + 15, 2, 17); ctx.fillRect(px, py + 15, T, 2);
+    } else if (style === 'cloud') {
+      ctx.fillStyle = '#eef6ff'; ctx.fillRect(px, py, T, T); ctx.fillStyle = 'rgba(160,190,230,0.5)'; ctx.beginPath(); ctx.arc(px + 16, py + 22, 9, 0, 7); ctx.fill();
+    } else if (style === 'coral') {
+      ctx.fillStyle = U.shade(pal.near || '#ff7ab8', -0.1); ctx.fillRect(px, py, T, T); ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.beginPath(); ctx.arc(px + 8 + U.hash2(x, y) * 16, py + 16, 4, 0, 7); ctx.fill();
+    } else {
+      ctx.fillStyle = U.shade(pal.ground, -0.1); ctx.fillRect(px, py, T, T); ctx.fillStyle = 'rgba(0,0,0,0.12)'; ctx.beginPath(); ctx.arc(px + 8 + U.hash2(x, y) * 16, py + 10 + U.hash2(y, x) * 14, 2.5, 0, 7); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    // contorno de los lados exteriores
+    ink(ctx, 3); ctx.beginPath();
+    if (!l) { ctx.moveTo(px + 1.5, py); ctx.lineTo(px + 1.5, py + T); }
+    if (!r) { ctx.moveTo(px + T - 1.5, py); ctx.lineTo(px + T - 1.5, py + T); }
+    ctx.stroke();
+    // borde de arriba: la parte que se pisa
+    if (isTop) {
+      const capCol = style === 'tent' ? (pal.accent || '#ffd000') : style === 'building' ? U.shade(body, -0.35) : style === 'cloud' ? '#ffffff' : (pal.top || '#5fd47a');
+      rr(ctx, px - (l ? 0 : 2), py, T + (l ? 0 : 2) + (r ? 0 : 2), 9, l && r ? 0 : 4); fillStroke(ctx, capCol, 3);
+    }
+    ctx.restore();
+  }
+
+  // SkeleBone desmontado: montón de huesos que tiembla antes de recomponerse
+  function bonePile(ctx, e, t) {
+    const cx = e.cx(), by = e.y + e.h, shake = e.pile < 1 ? Math.sin(t * 40) * 1.5 : 0;
+    [[-10, -4, 0.3], [6, -3, -0.5], [-2, -9, 1.2], [10, -8, 0.1], [-8, -12, -0.9]].forEach(([dx, dy, a]) => {
+      ctx.save(); ctx.translate(cx + dx + shake, by + dy); ctx.rotate(a);
+      rr(ctx, -7, -2, 14, 4, 2); fillStroke(ctx, '#f0ece0', 2);
+      ctx.fillStyle = '#f0ece0'; [[-7, -2], [-7, 2], [7, -2], [7, 2]].forEach(([u, v]) => { ctx.beginPath(); ctx.arc(u, v, 2.6, 0, 7); ctx.fill(); });
+      ctx.restore();
+    });
+    // la pantalla (cabeza) encima del montón
+    rr(ctx, cx - 7 + shake, by - 18, 14, 10, 2); fillStroke(ctx, '#2a2a33', 2); ctx.fillStyle = '#3fffa0'; ctx.fillRect(cx - 4 + shake, by - 15, 2, 2); ctx.fillRect(cx + 2 + shake, by - 15, 2, 2);
+  }
+  // SnowCapsule convertido en cápsula de nieve (se patea como un caparazón)
+  function snowCapsule(ctx, e, t) {
+    const cx = e.cx(), cy = e.y + e.h / 2, spin = e.kick ? t * 16 : 0;
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(spin);
+    ctx.beginPath(); ctx.ellipse(0, 0, e.w * 0.55, e.h * 0.55, 0, 0, 7); fillStroke(ctx, '#eaf6ff', 3);
+    ctx.fillStyle = '#9fd0ff'; ctx.beginPath(); ctx.ellipse(0, 0, e.w * 0.55, e.h * 0.18, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(-e.w * 0.2, -e.h * 0.2, 3, 0, 7); ctx.fill();
+    ctx.restore();
+    if (!e.kick && e.wakeT < 1.5 && Math.floor(t * 10) % 2) { ctx.fillStyle = '#0a0a0a'; ctx.fillRect(cx - 5, cy - 2, 3, 3); ctx.fillRect(cx + 2, cy - 2, 3, 3); } // a punto de salir
+  }
+
   function drawEntity(ctx, e, t, opt) {
     const f = D[e.type];
     const img = !f && S.View.Assets ? S.View.Assets.pyce(e.type) : null;
@@ -928,7 +1025,36 @@
     ctx.save();
     // Volteo vertical: al morir (flipDie) o por orientación elegida en el editor (flipV)
     if (e.flipDie || e.flipV) { ctx.translate(e.cx(), e.cy()); ctx.scale(1, -1); ctx.translate(-e.cx(), -e.cy()); }
-    if (img) { drawPyce(ctx, e, e.t || t, img); ctx.restore(); return; }
+    if (img) {
+      const tt = e.t || t;
+      // ---- poses especiales (sobre el PNG) ----
+      if (e.type === 'skelebone' && e.pile > 0) { bonePile(ctx, e, tt); ctx.restore(); return; }        // desmontado
+      if (e.type === 'snowcap' && e.shell) { snowCapsule(ctx, e, tt); ctx.restore(); return; }        // cápsula
+      // Pysh y familia en lava/veneno: brillo de color detrás
+      if (e.element) { const col = e.element === 'lava' ? 'rgba(255,90,0,0.55)' : 'rgba(170,60,255,0.55)'; ctx.fillStyle = col; ctx.beginPath(); ctx.arc(e.cx(), e.cy(), Math.max(e.w, e.h) * 0.75 + Math.sin(tt * 8) * 2, 0, 7); ctx.fill(); }
+      // Bomb con la mecha encendida: parpadea en rojo cuanto menos le queda
+      if ((e.type === 'bomb' || e.type === 'toybomb') && e.lit > 0) {
+        const blink = Math.floor(tt * (e.lit < 0.8 ? 18 : 8)) % 2;
+        if (blink) { ctx.save(); ctx.filter = 'brightness(1.4) saturate(2) hue-rotate(-20deg)'; drawPyce(ctx, e, tt, img); ctx.restore(); } else drawPyce(ctx, e, tt, img);
+        const fx = e.cx() + Math.sin(tt * 30) * 2, fy = e.y - 4;
+        ctx.fillStyle = '#ffd000'; ctx.beginPath(); ctx.arc(fx, fy, 4 + Math.random() * 2, 0, 7); ctx.fill();
+        ctx.fillStyle = '#ff5a00'; ctx.beginPath(); ctx.arc(fx, fy, 2, 0, 7); ctx.fill();
+        ctx.restore(); return;
+      }
+      // Wingel sin alas: se recorta la franja de arriba (las alas) y se ve "desplumado"
+      if (e.type === 'wingel' && e.wings === false) {
+        ctx.save(); ctx.beginPath(); ctx.rect(e.x - e.w, e.y + e.h * 0.28, e.w * 3, e.h * 2); ctx.clip(); drawPyce(ctx, e, tt, img); ctx.restore();
+        ctx.fillStyle = '#ffffff'; for (let i = 0; i < 2; i++) { ctx.beginPath(); ctx.ellipse(e.cx() + (i ? 8 : -8), e.y + e.h * 0.25, 3, 2, 0, 0, 7); ctx.fill(); }
+        ctx.restore(); return;
+      }
+      // Jefes fantasma mareados: estrellas girando encima y se balancean
+      if ((e.type === 'nosense' || e.type === 'noir' || e.type === 'noeye') && e.state === 'dizzy') {
+        ctx.save(); ctx.translate(e.cx(), e.y + e.h); ctx.rotate(Math.sin(tt * 6) * 0.12); ctx.translate(-e.cx(), -(e.y + e.h)); drawPyce(ctx, e, tt, img); ctx.restore();
+        for (let i = 0; i < 3; i++) { const a = tt * 4 + i * 2.1; star(ctx, e.cx() + Math.cos(a) * e.w * 0.45, e.y - 6 + Math.sin(a) * 6, 6, 2.6, 5, a); fillStroke(ctx, '#ffe600', 1.5); }
+        ctx.restore(); return;
+      }
+      drawPyce(ctx, e, tt, img); ctx.restore(); return;
+    }
     const facing = e.dir > 0 && ['gloopy', 'pinchoglob', 'saltagel', 'tornibot', 'medusa'].includes(e.type);
     if (facing) { ctx.translate(e.cx(), 0); ctx.scale(-1, 1); ctx.translate(-e.cx(), 0); }
     f(ctx, e, e.t || t, opt);

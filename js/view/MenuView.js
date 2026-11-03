@@ -407,6 +407,13 @@
           tag.appendChild(globImg(S.Model.Characters.get('black').paths[0], 'mini')); tag.appendChild(document.createTextNode('Publicado'));
           info.insertBefore(tag, info.firstChild);
         } else if (l.copyOf) info.appendChild(el('small', 'copy-tag', '📄 Copia de "' + (l.copyOf[0].name || 'otro nivel') + '"'));
+        // dos huecos: superado por la Medalla y (si tiene) por la meta oculta / interruptor "!"
+        const sec = S.app && S.app.levelSecrets ? S.app.levelSecrets(l) : { hidden: false, exSwitch: false };
+        let clears = {}; try { clears = (JSON.parse(localStorage.getItem('sgm.myclears') || '{}'))[l.id] || {}; } catch (e) { /* nada */ }
+        const slots = el('small', 'slots');
+        slots.appendChild(el('span', 'slot' + (clears.n ? ' on' : ''), '🏅')).title = clears.n ? 'Superado por la Medalla' : 'Aún no superado por la Medalla';
+        if (sec.hidden || sec.exSwitch) slots.appendChild(el('span', 'slot secret' + (clears.s ? ' on' : ''), '🔍')).title = clears.s ? 'Superado por la meta oculta' : 'Tiene meta oculta: aún sin encontrar';
+        info.appendChild(slots);
         row.appendChild(button('▶ Jugar', 'primary', () => h.play(l)));
         row.appendChild(button('✏ Editar', '', () => h.edit(l)));
         if (h.publish) row.appendChild(button(pub ? '☄ Publicado' : '🌐 Publicar', pub ? 'disabled' : '', () => h.publish(l)));

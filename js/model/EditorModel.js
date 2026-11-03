@@ -86,7 +86,7 @@
       if (tool.kind === 'erase') {
         const o = L.objectAt(x, y);
         if (o && o.type !== 'start' && o.type !== 'goal') { L.removeObjectAt(x, y); this.changed = true; return; }
-        if (!o && tile) { L.set(x, y, 0); delete L.contents[key]; this.changed = true; }
+        if (!o && tile) { L.set(x, y, 0); delete L.contents[key]; if (tile === C.T.SEMIBG || tile === C.T.BGFILL) EditorModel.fixSemiBg(L, x, y + 1); this.changed = true; }
         return;
       }
       if (tool.kind === 'tile') {
@@ -96,8 +96,13 @@
         // Monedas rojas: set de máximo 8. Al poner la 9a desaparece la más vieja (FIFO).
         if (tool.id === C.T.RCOIN) { this.placeRedCoin(x, y); return; }
         const o = L.objectAt(x, y);
-        // El raíl va por detrás: se puede pintar bajo un objeto sin borrarlo (así se monta en él)
-        if (tool.id === C.T.RAIL) { if (C.isSolid(tile)) return; L.set(x, y, tool.id); delete L.contents[key]; this.changed = true; return; }
+        // El raíl y los fondos van por detrás: se pintan bajo un objeto sin borrarlo
+        if (tool.id === C.T.RAIL || tool.id === C.T.CAVEBG) { if (C.isSolid(tile)) return; L.set(x, y, tool.id); delete L.contents[key]; this.changed = true; return; }
+        if (tool.id === C.T.SEMIBG) {
+          if (tile === C.T.BGFILL) return;
+          if (o && (o.type === 'start' || o.type === 'goal')) return;
+          L.set(x, y, tool.id); delete L.contents[key]; EditorModel.fixSemiBg(L, x, y); this.changed = true; return;
+        }
         if (o && (o.type === 'start' || o.type === 'goal')) return;
         if (o) L.removeObjectAt(x, y);
         L.set(x, y, tool.id);
@@ -253,5 +258,12 @@
     }
   }
 
+  // Semisólido de fondo: en cada columna, la casilla de ARRIBA es el borde pisable (SEMIBG) y las
+  // de debajo, relleno (BGFILL). Se recalcula la columna desde (x, y) hacia abajo.
+  EditorModel.fixSemiBg = (L, x, y) => {
+    const SB = C.T.SEMIBG, BF = C.T.BGFILL, isBg = (t) => t === SB || t === BF;
+    let top = y; while (top > 0 && isBg(L.get(x, top - 1))) top--;
+    for (let yy = top; yy < L.height && isBg(L.get(x, yy)); yy++) L.set(x, yy, yy === top ? SB : BF);
+  };
   S.Model.EditorModel = EditorModel;
 })(window.SGM);

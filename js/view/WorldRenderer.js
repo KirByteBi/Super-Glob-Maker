@@ -22,9 +22,10 @@
       for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
         const tt = level.get(x, y);
         if (!tt) continue;
-        const back = tt === TT.WATER || tt === TT.RAIL; // agua y raíles van por detrás
+        // agua, raíles y fondos (cueva, cuerpo de semisólido de fondo) van por detrás
+        const back = tt === TT.WATER || tt === TT.RAIL || tt === TT.BGFILL || tt === TT.CAVEBG || tt === TT.SEMIBG;
         if ((pass === 0) !== back) continue;
-        Sp.drawTile(ctx, level, x, y, tt, pal, t, { bump: bumps[x + ',' + y] || 0, editor: opt.editor, convDir: opt.convDir, semi: semiStyle, mush: opt.mush, waveH: opt.waveH, theme: level.theme, liquidCol: opt.liquidCol, liquidTopCol: opt.liquidTopCol });
+        Sp.drawTile(ctx, level, x, y, tt, pal, t, { bump: bumps[x + ',' + y] || 0, editor: opt.editor, convDir: opt.convDir, semi: semiStyle, mush: opt.mush, waveH: opt.waveH, theme: level.theme, mode: level.mode, liquidCol: opt.liquidCol, liquidTopCol: opt.liquidTopCol });
         if (opt.editor && opt.contents && opt.contents[x + ',' + y]) drawContentBadge(ctx, x, y, opt.contents[x + ',' + y], pal, opt.ch);
       }
     }
@@ -147,7 +148,7 @@
       // Bloques de luz: iluminan su zona en el Apagón
       const L = g.level, x0 = Math.max(0, Math.floor(cam.x / T)), x1 = Math.min(L.width - 1, Math.ceil((cam.x + cam.w) / T));
       const y0 = Math.max(0, Math.floor(cam.y / T)), y1 = Math.min(L.height - 1, Math.ceil((cam.y + cam.h) / T));
-      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (L.get(x, y) === TT.LIGHT) light(x * T + T / 2, y * T + T / 2, 90 + Math.sin(t * 3 + x) * 6);
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (L.get(x, y) === TT.LIGHT) light(x * T + T / 2, y * T + T / 2, (Math.sin(t * 9 + x * 3) > 0.92 ? 60 : 125) + Math.sin(t * 3 + x) * 6); // en el Apagón alumbran más (y parpadean)
       g.entities.forEach((e) => {
         if (e.remove) return;
         if (e.type === 'shot') light(e.cx(), e.cy(), 85);

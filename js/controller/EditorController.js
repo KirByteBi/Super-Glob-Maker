@@ -49,7 +49,24 @@
       };
     }
 
-    save() {
+    // Antes de guardar se comprueba (a grandes rasgos) que se puede llegar a la Medalla.
+    // Si no, avisa y deja guardar igualmente (puede haber trucos que la comprobación no ve).
+    save(force) {
+      if (!force && S.Model.LevelCheck) {
+        let chk = null;
+        try { chk = S.Model.LevelCheck.check(this.model.full()); } catch (e) { chk = null; }
+        if (chk && !chk.ok) {
+          const b = this.app.menu.openModal('¿Se puede superar?');
+          b.appendChild(S.View.el('p', 'result-line', chk.problems.join(' ')));
+          b.appendChild(S.View.el('p', 'small', 'La comprobación mira si se puede ir saltando desde la salida (sin contar enemigos). Pruébalo con ▶ Jugar antes de publicarlo.'));
+          const row = S.View.el('div', 'row');
+          row.appendChild(S.View.button('Guardar igualmente', 'primary', () => { this.app.menu.closeModal(); this.save(true); }));
+          row.appendChild(S.View.button('▶ Probarlo', '', () => { this.app.menu.closeModal(); this.play(); }));
+          row.appendChild(S.View.button('Cancelar', '', () => this.app.menu.closeModal()));
+          b.appendChild(row);
+          return;
+        }
+      }
       const r = Storage.save(this.model.full().toJSON());
       if (r === 'ok') { this.model.dirty = false; this.view.refreshInfo(this.model); }
       this.app.menu.toast(r === 'ok' ? '💾 Nivel guardado (' + Storage.count() + '/' + Storage.limit() + ')'

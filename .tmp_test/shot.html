@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8"><link rel="stylesheet" href="../css/style.css"></head>
 <body>
 <div id="stage"><canvas id="game" width="1024" height="576"></canvas><div id="editor-ui"></div><div id="screen" class="screen"></div><div id="modal"></div><div id="toast"></div></div>
@@ -13,7 +13,7 @@
 <script src="js/model/Characters.js"></script><script src="js/model/Themes.js"></script><script src="js/model/Catalog.js"></script>
 <script src="js/model/Level.js"></script><script src="js/model/LevelStorage.js"></script><script src="js/model/GldAccount.js"></script><script src="js/model/Physics.js"></script>
 <script src="js/model/entities/Entity.js"></script><script src="js/model/entities/Enemies.js"></script><script src="js/model/entities/EnemiesSpecial.js"></script><script src="js/model/entities/Objects.js"></script>
-<script src="js/model/Player.js"></script><script src="js/model/GameModel.js"></script><script src="js/model/EditorModel.js"></script><script src="js/model/SampleLevels.js"></script><script src="js/model/StoryMap.js"></script>
+<script src="js/model/Player.js"></script><script src="js/model/GameModel.js"></script><script src="js/model/EditorModel.js"></script><script src="js/model/SampleLevels.js"></script><script src="js/model/StoryMap.js"></script><script src="js/model/StoryLevels.js"></script><script src="js/model/LevelCheck.js"></script>
 <script src="js/view/PyceArt.js"></script><script src="js/view/Assets.js"></script><script src="js/view/GroundStyles.js"></script><script src="js/view/Sprites.js"></script><script src="js/view/BackgroundView.js"></script>
 <script src="js/view/Decorations.js"></script><script src="js/view/ParticlesView.js"></script><script src="js/view/WorldRenderer.js"></script><script src="js/view/HUDView.js"></script>
 <script src="js/view/SoundView.js"></script><script src="js/view/EditorView.js"></script><script src="js/view/MenuView.js"></script>
@@ -45,6 +45,18 @@
           const col = (x, h, w) => { for (let i = 0; i < (w || 1); i++) for (let j = 1; j <= h; j++) L.set(x + i, gy - j, TT.GROUND2); };
           col(3, 1); col(5, 2); col(7, 3); col(9, 4); col(12, 2, 2); col(15, 3, 2); col(18, 4, 2); col(22, 3, 3);
           S.app.openEditor(L);
+        }
+        else if (what === 'semibg') {
+          const L = S.Model.Level.createDefault(), TT = S.Model.Catalog.T, gy = L.height - 3; L.theme = q.get('t') || 'city';
+          const E = new S.Model.EditorModel(L); E.tool = { kind: 'tile', id: TT.SEMIBG };
+          [[4, 4, 5], [11, 3, 8], [16, 5, 3], [22, 2, 6]].forEach(([x0, w, h]) => { for (let x = x0; x < x0 + w; x++) for (let y = gy - h; y < gy; y++) E.apply(x, y); });
+          E.tool = { kind: 'tile', id: TT.CAVEBG }; for (let x = 26; x < 31; x++) for (let y = gy - 3; y < gy; y++) E.apply(x, y);
+          S.app.openEditor(L);
+        }
+        else if (what === 'storylv') {
+          const L = S.Model.StoryLevels.build(q.get('w') || 'w1', q.get('n') || 'n3', q.get('m') || 'corrupt');
+          if (q.get('ed')) { S.app.openEditor(L); S.app.editor.model.camX = +(q.get('cx') || 0) * 32; }
+          else { S.app.playLevel(L.toJSON(), {}); const g = S.app.game.model; g.t = 3; g.player.x = +(q.get('cx') || 0) * 32; for (let i = 0; i < 60; i++) g.update(1 / 120, {}); }
         }
         else if (what === 'purple') {
           const L = S.Model.Level.createDefault(), TT = S.Model.Catalog.T, gy = L.height - 3;

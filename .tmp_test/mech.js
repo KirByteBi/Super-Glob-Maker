@@ -1,11 +1,11 @@
-// Prueba temporal: mecánicas concretas
+﻿// Prueba temporal: mecánicas concretas
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const store = {};
 const ctx = { console, Math, JSON, Date, localStorage: { getItem: (k) => store[k] || null, setItem: (k, v) => { store[k] = String(v); } } };
 ctx.window = ctx; vm.createContext(ctx);
 ['core/sgm.js', 'model/Characters.js', 'model/Themes.js', 'model/Catalog.js', 'model/Level.js', 'model/LevelStorage.js', 'model/GldAccount.js', 'model/Physics.js',
-  'model/entities/Entity.js', 'model/entities/Enemies.js', 'model/entities/EnemiesSpecial.js', 'model/entities/Objects.js', 'model/Player.js', 'model/GameModel.js']
+  'model/entities/Entity.js', 'model/entities/Enemies.js', 'model/entities/EnemiesSpecial.js', 'model/entities/Objects.js', 'model/Player.js', 'model/GameModel.js', 'model/EditorModel.js']
   .forEach((f) => vm.runInContext(fs.readFileSync(path.join(root, 'js', f), 'utf8'), ctx, { filename: f }));
 const S = ctx.SGM, C = S.Model.Catalog, TT = C.T, T = S.TILE;
 const ev = {}; S.events.on('*', (e) => { ev[e] = (ev[e] || 0) + 1; });
@@ -252,3 +252,13 @@ const Gd = S.Model.Gld;
 ok('cuenta: KiroDEV es un nombre válido', Gd.checkUsername('KiroDEV') === null);
 ok('cuenta: nombres demasiado cortos o con espacios no valen', Gd.checkUsername('ab') === 'bad-name' && Gd.checkUsername('kiro dev') === 'bad-name');
 ok('cuenta: filtra nombres ofensivos (también con números)', Gd.checkUsername('sh1thead') === 'offensive' && Gd.checkUsername('digger') === null);
+
+// Semisólidos de fondo
+L = base(); const Ed = new S.Model.EditorModel(L); Ed.tool = { kind: 'tile', id: TT.SEMIBG };
+for (let x = 10; x < 14; x++) for (let y = gy - 5; y < gy; y++) Ed.apply(x, y);
+ok('semisólido de fondo: arriba borde, debajo relleno', L.get(11, gy - 5) === TT.SEMIBG && L.get(11, gy - 2) === TT.BGFILL);
+ok('semisólido de fondo: el borde se pisa y el relleno no choca', C.isSemi(TT.SEMIBG) && !C.isSolid(TT.BGFILL) && !C.isSemi(TT.BGFILL));
+Ed.apply(11, gy - 5, true);
+ok('semisólido de fondo: al borrar el borde, el de debajo pasa a ser el borde', L.get(11, gy - 4) === TT.SEMIBG);
+g = game(L); g.player.x = 12 * T; g.player.y = (gy - 8) * T; step(g, {}, 120);
+ok('semisólido de fondo: te quedas encima', g.player.onGround && Math.abs(g.player.y + g.player.h - (gy - 5) * T) < 3);

@@ -168,6 +168,14 @@
           ctx.restore();
         }
         ctx.restore();
+        // DOS HUECOS bajo el nodo: meta normal (oro) y, si el nivel la tiene, meta oculta (violeta).
+        // Hueco vacío = aún no; relleno = conseguida.
+        if (n.type === 'level' || n.type === 'castle') {
+          const st = SM.nodeState(this.worldId, n.id) || {}, two = !!n.secretNext;
+          const slot = (sx, col, on) => { ctx.beginPath(); ctx.arc(sx, r + 7, 4.5, 0, 7); ctx.fillStyle = on ? col : 'rgba(0,0,0,0.5)'; ctx.fill(); ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke(); };
+          slot(two ? -6 : 0, '#ffd000', !!st.normal || (!!st.cleared && !st.secret));
+          if (two) slot(6, '#c48bff', !!st.secret);
+        }
         // insignia de completado
         if (cleared) { ctx.fillStyle = '#2fd46a'; ctx.beginPath(); ctx.arc(r - 4, -r + 4, 7, 0, 7); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = '#000'; ctx.stroke(); ctx.fillStyle = '#fff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('✓', r - 4, -r + 5); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; }
         ctx.restore();
