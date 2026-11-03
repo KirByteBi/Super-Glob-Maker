@@ -94,7 +94,9 @@
   class Warp extends Entity {
     // hdir: 0 = vertical (boca arriba, se entra con ↓), 1 = horizontal (boca al lado, se entra
     // caminando). Lo aplica Entities.create desde o.hdir (como o.dir/o.col), no el constructor.
-    constructor(tx, ty, o, type) { super(type || 'warp', tx, ty); this.gravity = 0; this.tiles = false; this.gizmo = true; this.family = 'pipe'; this.locked = false; this.hdir = 0; }
+    // Ocupa EXACTAMENTE las casillas tx..tx+1 (antes se centraba en tx y quedaba media casilla
+    // desplazada de los tiles de tubería que lleva debajo). Es sólida: te puedes subir encima.
+    constructor(tx, ty, o, type) { super(type || 'warp', tx, ty); this.x = tx * T + (2 * T - this.w) / 2; this.spawnX = this.x; this.gravity = 0; this.tiles = false; this.gizmo = true; this.solid = true; this.family = 'pipe'; this.locked = false; this.hdir = 0; }
     physics() {}
   }
   class LockWarp extends Warp { constructor(tx, ty, o) { super(tx, ty, o, 'lockwarp'); this.locked = true; } }

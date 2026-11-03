@@ -185,6 +185,9 @@ const st2 = g.entities.find((e) => e.type === 'stupid');
 const pd = g.entities.find((e) => e.type === 'platform' && e.rail && e.rail.x >= 40);
 ok('rail: plataforma y Pyce se enganchan', !!pl && !!st2 && !!st2.rail && !!pd);
 [pl, st2, pd].forEach((e) => { e.active = true; e.always = true; }); // fuera de cámara no se actualizan
+step(g, {}, 120);
+ok('rail: la plataforma espera hasta que te subes', Math.abs(pl.cx() - 15.5 * T) < 1 && st2.rail.k + Math.abs(st2.rail.x - 32) > 0);
+pl.rail.go = true; pd.rail.go = true; // como si ya te hubieras subido
 const xs = [], ys = [], dys = [];
 for (let i = 0; i < 120 * 16; i++) { g.update(1 / 120, idle); g.player.inv = 99; xs.push(pl.cx()); ys.push(st2.cy()); dys.push(pd.cy()); }
 const minX = Math.min(...xs), maxX = Math.max(...xs);

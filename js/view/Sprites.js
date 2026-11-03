@@ -758,11 +758,29 @@
       }
       // Tubería
       case TT.PIPE: {
-        const topPipe = level.get(x, y - 1) !== TT.PIPE;
-        ctx.fillStyle = '#2fa84a'; ctx.fillRect(px + 2, py, T - 4, T);
-        ctx.fillStyle = '#1e7a33'; ctx.fillRect(px + T - 8, py, 6, T);
-        ctx.fillStyle = '#5fd47a'; ctx.fillRect(px + 5, py, 4, T);
-        if (topPipe) { rr(ctx, px - 2, py, T + 4, 12, 4); fillStroke(ctx, '#2fa84a', 3.5); } else { ink(ctx, 3.5); ctx.strokeStyle = INK; ctx.strokeRect(px + 2, py, T - 4, T); }
+        // Las tuberías pegadas en horizontal se dibujan como UNA tubería ancha (antes salían
+        // dos tubos finos con dos bocas). l/r = hay tubería a la izquierda/derecha.
+        const P = TT.PIPE, topPipe = level.get(x, y - 1) !== P;
+        const l = level.get(x - 1, y) === P, r = level.get(x + 1, y) === P;
+        const x0 = px + (l ? 0 : 2), x1 = px + T - (r ? 0 : 2);
+        ctx.fillStyle = '#2fa84a'; ctx.fillRect(x0, py, x1 - x0, T);
+        if (!r) { ctx.fillStyle = '#1e7a33'; ctx.fillRect(px + T - 8, py, 6, T); }
+        if (!l) { ctx.fillStyle = '#5fd47a'; ctx.fillRect(px + 5, py, 4, T); }
+        ink(ctx, 3.5); ctx.strokeStyle = INK; ctx.beginPath();
+        if (!l) { ctx.moveTo(x0, py); ctx.lineTo(x0, py + T); }
+        if (!r) { ctx.moveTo(x1, py); ctx.lineTo(x1, py + T); }
+        if (level.get(x, y + 1) !== P) { ctx.moveTo(x0, py + T); ctx.lineTo(x1, py + T); }
+        ctx.stroke();
+        if (topPipe) {
+          // boca: un solo borde que cubre todo el ancho de la tubería
+          const cx0 = px - (l ? 0 : 2), cx1 = px + T + (r ? 0 : 2);
+          ctx.fillStyle = '#2fa84a'; ctx.fillRect(cx0, py, cx1 - cx0, 12);
+          ctx.beginPath(); ctx.moveTo(cx0, py + 12); ctx.lineTo(cx1, py + 12); ctx.moveTo(cx0, py); ctx.lineTo(cx1, py);
+          if (!l) { ctx.moveTo(cx0, py); ctx.lineTo(cx0, py + 12); }
+          if (!r) { ctx.moveTo(cx1, py); ctx.lineTo(cx1, py + 12); }
+          ctx.stroke();
+          if (!l) { ctx.fillStyle = '#5fd47a'; ctx.fillRect(cx0 + 3, py + 3, 4, 6); }
+        }
         break;
       }
       // Rosquilla (cae si te quedas encima)

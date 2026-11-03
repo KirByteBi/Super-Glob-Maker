@@ -97,6 +97,9 @@ function check(B, opt) {
   const count = (t) => L.tiles.filter((v) => v === t).length;
   if (opt.red != null && count(TT.RCOIN) !== opt.red) errs.push('monedas rojas: ' + count(TT.RCOIN));
   if (opt.purpleMin != null && count(TT.VCOIN) < opt.purpleMin) errs.push('monedas púrpura: ' + count(TT.VCOIN));
+  // ningún enemigo a menos de 5 casillas de la salida o de un punto de control (reaparecer seguro)
+  const spawns = L.objects.filter((o) => o.type === 'start' || o.type === 'checkpoint');
+  L.objects.forEach((o) => { const d = C.OBJECTS[o.type] || {}; if (!d.tier && !d.boss) return; spawns.forEach((s) => { if (Math.abs(o.x - s.x) < 5 && Math.abs(o.y - s.y) < 5) errs.push(o.type + ' demasiado cerca de ' + s.type + ' (' + o.x + ',' + o.y + ')'); }); });
   const stars = L.objects.filter((o) => (C.OBJECTS[o.type] || {}).collect).length;
   if (stars > 3) errs.push('demasiadas Monedas Estrella: ' + stars);
   // (las entradas de tubería van encima de su tile de tubería, es lo normal)
@@ -314,11 +317,13 @@ function vortex() {
   // 1) raíl en zigzag sobre el vacío con una Barra Estelar en otro raíl cruzándolo
   B.railLine(37, 18, 43, 12).railLine(44, 12, 50, 18).obj('platform', 37, 18);
   B.railLine(40, 15, 48, 15).obj('firebar', 44, 15, { r: 2 });
-  B.fill(53, 17, 58, 22, G2).foe('crystal', 55, 17).foe('hacker', 57, 17);
+  // isla del punto de control: segura (los Pyces van en la isla siguiente, no encima de la bandera)
+  B.fill(53, 17, 58, 22, G2);
   B.obj('checkpoint', 54, 16);
   // 2) escalera de islas de 1 casilla (arcade de runas) con Wingel
   [[62, 15], [66, 13], [70, 15], [74, 12]].forEach(([x, y]) => B.fill(x, y, x, 22, G2));
   B.foe('wingel', 68, 10); B.obj('starcoin', 74, 9);
+  B.foe('crystal', 66, 13).foe('hacker', 70, 15);
   // 3) desvío: abajo del todo, sobre el vacío, la meta oculta (raíl vertical que baja)
   B.railLine(78, 12, 78, 19).obj('platformV', 78, 12);
   B.row(80, 86, 20, TT.SEMI).hidden(85, 20).coins(80, 84, 19);
@@ -369,8 +374,9 @@ function tidal() {
   B.row(118, 120, 18, G2).col(119, 19, 20, G2).foe('shark', 119, 22);
   B.coins(100, 110, 14, V); // 11
   B.obj('starcoin', 121, 10);
-  // entrada secreta: tubería en el pilote del medio que baja a la cueva (subzona simulada: misma zona)
-  B.fill(131, 15, 134, 20, G2).fill(132, 13, 133, 14, TT.PIPE);
+  // entrada secreta: tubería en el pilote del medio que baja a la cueva. La entrada de tubería
+  // (warp) YA es una tubería 2x2: no lleva tiles de tubería debajo (salía doble y desalineada).
+  B.fill(131, 15, 134, 20, G2);
   // 4) recta final del puerto con Pyces y bros
   B.ground(141, 209);
   B.foe('builder', 150).foe('rebel', 158).foe('miner', 166).foe('umbrella', 172, 15);
@@ -379,9 +385,8 @@ function tidal() {
   B.goal(196);
   // cueva cerrada bajo el muelle (agua) con la meta oculta: SOLO se entra por la tubería del pilote
   B.row(135, 140, 16, G2).col(141, 16, 20, G2).fill(135, 17, 140, 20, WA).ground(135, 140, 21).hidden(139, 21);
-  B.fill(136, 19, 136, 20, TT.PIPE);
-  // las tuberías llevan de una a otra (enlace manual en la misma zona)
-  B.obj('warp', 132, 13, { to: { z: 0, i: 1 } }).obj('warp', 136, 19, { to: { z: 0, i: 0 } });
+  // las dos entradas se llevan de una a otra (enlace manual en la misma zona); apoyadas en suelo
+  B.obj('warp', 132, 14, { to: { z: 0, i: 1 } }).obj('warp', 137, 20, { to: { z: 0, i: 0 } });
   return [B, { purpleMin: 60, secretViaPipe: true, mustReach: [[33, 12, 'la Moneda Estrella 1'], [121, 10, 'la Moneda Estrella 2'], [178, 14, 'la Moneda Estrella 3']] }];
 }
 

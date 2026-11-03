@@ -105,6 +105,8 @@
       this.secretClear = false;
       const sp = this.checkpoint || start;
       this.player = new S.Model.Player(this.charId, sp.x, sp.y);
+      // Al reaparecer tras morir: 2 s de invulnerabilidad para que nada te mate en bucle
+      if (!first) this.player.inv = 2;
       this.time = this.level.time; this.state = 'play'; this.stateT = 0; this.t = 0;
       // Vórtice y Abismo Corruptos: gravedad baja
       this.gravMul = this.fx.lowGravity ? 0.55 : this.fx.abyss ? 0.5 : 1;

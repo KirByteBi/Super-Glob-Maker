@@ -34,6 +34,11 @@
       // (disparan, lanzan...) pero no andan, no saltan ni caen; las plataformas solo se desplazan.
       if (this.rail) {
         const ox = this.x, oy = this.y;
+        // Las plataformas en raíl esperan en su sitio hasta que te subes (luego ya no paran)
+        if (this.platform && !this.rail.go) {
+          if (g.player && g.player.ridePlat === this) this.rail.go = true;
+          else { this.dx = 0; this.dy = 0; return; }
+        }
         if (!this.platform) this.think(g, dt);
         if (this.rail) Rail.step(this, g, dt); // think() puede soltarlo (p. ej. al morir)
         this.dx = this.x - ox; this.dy = this.y - oy;

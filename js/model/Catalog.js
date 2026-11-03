@@ -53,7 +53,7 @@
     49: 'Bloque "!" amarillo', 50: 'Bloque "!" verde', 51: 'Bloque "!" rosa',
     52: 'Tubería pequeña (decoración)',
     53: 'Suelo temático (según el mapa)',
-    54: 'Raíl (pon encima plataformas, setas, Barras Estelares o Pyces y lo seguirán)',
+    54: 'Raíl (pon encima plataformas, setas, Barras Estelares o Pyces y lo seguirán; las plataformas arrancan al subirte)',
     55: 'Moneda púrpura (junta 100 y aparece la Medalla)'
   };
 
