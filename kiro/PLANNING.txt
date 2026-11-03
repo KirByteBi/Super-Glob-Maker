@@ -6,27 +6,27 @@ Leyenda: [X] hecho   [~] a medias   [ ] pendiente
 
 
 --------------------------------------------------------------
- 0a. META OCULTA E INTERRUPTORES "!"   (PRIORIDAD, pendiente)
+ 0a. META OCULTA E INTERRUPTORES "!"   (mecanica HECHA)
 --------------------------------------------------------------
 Dos formas nuevas de pasar un nivel. Las dos cuentan como
 "completado en META OCULTA" (no como completado normal), al
 estilo de las salidas secretas de SMW / SMM.
 
-[ ] META OCULTA: una 2a Medalla escondida (aparte de la normal).
-    Maximo 1 por zona. El nivel se marca con dos huecos
-    (normal + oculta) en Mis niveles y Modo Historia.
-[ ] INTERRUPTOR "!" + BLOQUES "!":
-    - Interruptor "!" de color que, al activarse, vuelve solidos
-      los bloques "!" de ese color.
-    - A diferencia del A/B, el estado es PERSISTENTE: se recuerda
-      entre zonas y entre niveles del Modo Historia (no alterna).
-    - Activarlo cuenta como pasar el nivel por meta oculta.
-    - ENLACE: se elige que mapa/zona hace de interruptor y a que
-      mapa/zona activa los bloques. Solo se puede enlazar si YA
-      hay un interruptor (de ahi "a partir del 2o nivel, o antes
-      si ya tenias uno"). Da mucha libertad en Modo Historia.
-    - Reusa el selector de SUBZONAS / ENLACES (seccion 5).
-    - Colores: reutilizar los 3 de los A/B (rojo, verde, rosa).
+[X] META OCULTA: una 2a Medalla escondida (aparte de la normal).
+    Objeto 'goalhidden', max 1 por zona. Tocarla da clear por
+    meta oculta (secretClear). Mecanica verificada.
+    [ ] Falta UI: los dos huecos (normal + oculta) en Mis
+        niveles y Modo Historia.
+[X] INTERRUPTOR "!" + BLOQUES "!" (mecanica):
+    - Interruptor "!" (exswitch0/1/2) que, al activarse, vuelve
+      solidos los bloques "!" (EX0/EX1/EX2) de ese color.
+    - Estado PERSISTENTE en la partida (exState, se conserva al
+      cambiar de zona). Activarlo cuenta como meta oculta.
+    - Colores: los 3 de los A/B (reutilizados).
+    [ ] Falta: persistencia ENTRE niveles del Modo Historia y el
+        ENLACE interruptor->bloques de otro mapa/zona (lo
+        conectara el Modo Historia mejorado; reusa el sistema de
+        subzonas / enlaces de la seccion 5).
 
 
 --------------------------------------------------------------
@@ -55,7 +55,10 @@ estilo de las salidas secretas de SMW / SMM.
             los Globs). Faltaba incluir PyceArt.js en index.html
             y que Sprites.drawEntity cayera al PNG cuando no hay
             dibujo procedural. Tambien en la paleta del editor.
-        [ ] Bloques y mecanismos nuevos: siguen invisibles.
+        [~] Bloques y mecanismos: ya se dibujan monedas, bloques
+            "!", interruptores G y P, y los bloques P. Quedan por
+            pulir iconos y algun semisolido tematico.
+            (el detalle fino esta en kiro/FALTANTES.txt)
 [-] Descartado por ahora: redibujar los Pyces de perfil.
     Con voltearlos horizontalmente ya vale para la mayoria;
     el perfil estilo ordenador queda para los que lo necesiten.
@@ -80,39 +83,44 @@ Se redibujan de lado, no se deforma el dibujo original.
 
 
 --------------------------------------------------------------
- 2. ENEMIGOS PYCE (mas basico el dibujo = enemigo mas sencillo)
+ 2. ENEMIGOS PYCE (mecanica HECHA; se dibujan con su PNG)
 --------------------------------------------------------------
+La MECANICA de todos los Pyces esta implementada y probada
+(Enemies.js + EnemiesSpecial.js). Se dibujan con su PNG frontal
+volteado segun direccion. Lo que queda es el redibujo de PERFIL
+(seccion 1) y poses especiales, que son de VISTA, no de mecanica.
+
 Nivel 1
-  [ ] Stupid Pyce ........ como un Goomba
-  [ ] SO Pyce ............ casi transparente, gira en los bordes
-  [ ] Symbol Pyce ........ va a saltitos
-  [ ] Pyce Glob .......... deja un charco al morir
+  [X] Stupid Pyce ........ como un Goomba
+  [X] SO Pyce ............ casi transparente, gira en los bordes
+  [X] Symbol Pyce ........ va a saltitos
+  [X] Pyce Glob .......... deja un charco al morir
 Nivel 2
-  [ ] Pyce 2.0 ........... 2 golpes; al primero se enfada y acelera
-  [ ] Guest Pyce ......... ataque de espada sencillo
-  [ ] Noob Pyce .......... dispara
-  [ ] Elf Pyce ........... brinca hacia ti
-  [ ] Umbrella Pyce ...... baja flotando
-  [ ] ZomPyce ............ se levanta una vez
+  [X] Pyce 2.0 ........... 2 golpes; al primero se enfada y acelera
+  [X] Guest Pyce ......... ataque de espada sencillo
+  [X] Noob Pyce .......... dispara
+  [X] Elf Pyce ........... brinca hacia ti
+  [X] Umbrella Pyce ...... baja flotando
+  [X] ZomPyce ............ se levanta una vez
 Nivel 3
-  [ ] Knight Pyce ........ inmune a proyectiles
-  [ ] Rebel Pyce ......... su spray crea niebla
-  [ ] SkeleBone Pyce ..... se desmonta al morir, se recompone,
+  [X] Knight Pyce ........ inmune a proyectiles
+  [X] Rebel Pyce ......... su spray crea niebla
+  [X] SkeleBone Pyce ..... se desmonta al morir, se recompone,
                            lanza huesos
-  [ ] Crystal Pyce ....... no se puede pisar
-  [ ] SnowCapsule Pyce ... se vuelve capsula que se patea
-  [ ] Festive Pyce ....... lanza regalos
-  [ ] Bomb / ToyBomb ..... explotan
-  [ ] Wingel Pyce ........ vuela; al pisarlo pierde las alas
-  [ ] Strechy Pyce ....... se estira hacia arriba
-  [ ] Flower Pyce ........ planta fija que escupe petalos
-  [ ] Cannon Pycer ....... cañon
+  [X] Crystal Pyce ....... no se puede pisar
+  [X] SnowCapsule Pyce ... se vuelve capsula que se patea
+  [X] Festive Pyce ....... lanza regalos
+  [X] Bomb / ToyBomb ..... explotan
+  [X] Wingel Pyce ........ vuela; al pisarlo pierde las alas
+  [X] Strechy Pyce ....... se estira hacia arriba
+  [X] Flower Pyce ........ planta fija que escupe petalos
+  [X] Cannon Pycer ....... cañon
 Nivel 4
-  [ ] Ghost Pyce ......... avanza cuando le das la espalda
-  [ ] HoloPyce ........... a ratos es intangible
-  [ ] 4motions Pyce ...... cambia de emocion y de ataque
+  [X] Ghost Pyce ......... avanza cuando le das la espalda
+  [X] HoloPyce ........... a ratos es intangible
+  [X] 4motions Pyce ...... cambia de emocion y de ataque
 Nivel 5
-  [ ] 1x1x1x1 Pyce ....... atraviesa paredes
+  [X] 1x1x1x1 Pyce ....... atraviesa paredes
 
 Pyces acuaticos (familia Pysh)
   Viven en el agua, pero pueden ponerse fuera; ahi son peores.
@@ -123,17 +131,17 @@ Pyces acuaticos (familia Pysh)
     Transformados no se pueden pisar (quema / envenena);
     solo disparos, Brillo Estelar o caparazon.
   - Sin agua ni liquido cerca solo dan brincos pequenos.
-  [ ] Pysh ............... (nivel 2) el basico: nada de lado
+  [X] Pysh ............... (nivel 2) el basico: nada de lado
                            a lado, gira en las paredes y salta
                            fuera del agua/liquido. 1 golpe.
-  [ ] Clown Pysh ......... (nivel 3) version fuerte de Pysh:
+  [X] Clown Pysh ......... (nivel 3) version fuerte de Pysh:
                            mas rapido y salta mas alto haciendo
                            arcos hacia ti. 2 golpes.
-  [ ] Axolotl Pyce ....... (nivel 3) nada despacio y dispara
+  [X] Axolotl Pyce ....... (nivel 3) nada despacio y dispara
                            burbujas que te persiguen un poco.
                            Fuera del agua camina lento y
                            escupe menos.
-  [ ] Shark Pyce ......... (nivel 4) patrulla y te embiste a toda
+  [X] Shark Pyce ......... (nivel 4) patrulla y te embiste a toda
                            velocidad si te pones en su linea.
                            No se puede pisar (solo disparos,
                            Brillo Estelar o caparazon).
@@ -141,27 +149,27 @@ Pyces acuaticos (familia Pysh)
                            embiste en distancias cortas.
 
 Raros (10 pisotones, dan 1UP al morir)
-  [ ] Mimic Pyce, Dirty Pyce, NOmic Pyce
-  [ ] Golden Mimic Pyce (da 3UP y suelta monedas)
+  [X] Mimic Pyce, Dirty Pyce, NOmic Pyce
+  [X] Golden Mimic Pyce (da 3UP y suelta monedas)
 
 Jefes
-  [ ] NOeye Pyce ......... como Boom Boom, 3 golpes
-  [ ] MoonStar Pyce ...... como Bowser, 5 golpes, jefe final
+  [X] NOeye Pyce ......... como Boom Boom, 3 golpes
+  [X] MoonStar Pyce ...... como Bowser, 5 golpes, jefe final
 
 Jefes fantasma (NOIRrupt = version fuerte de NOsense)
   Comun: atraviesan paredes, se esconden si los miras y te
   persiguen si les das la espalda. Los disparos no les hacen nada.
   Tras atacar se marean unos segundos: ahi se les pisa.
-  [ ] NOsense Pyce ....... 4 golpes. Se mueve sin sentido
+  [X] NOsense Pyce ....... 4 golpes. Se mueve sin sentido
                            (embestidas en direcciones al azar)
                            y lanza ojos.
-  [ ] NOIRrupt Pyce ...... 6 golpes. Igual pero mas rapido, se
+  [X] NOIRrupt Pyce ...... 6 golpes. Igual pero mas rapido, se
                            teletransporta a tu lado, dispara ojos
                            en abanico e invoca Ghost Pyces.
 
 Reglas generales
-  [ ] Los enemigos de tierra nadan bajo el agua (como en SMM)
-  [ ] Se pueden pisar, disparar, golpear con un bloque desde abajo
+  [X] Los enemigos de tierra nadan bajo el agua (como en SMM)
+  [X] Se pueden pisar, disparar, golpear con un bloque desde abajo
       o aplastar con el culetazo
 
 
@@ -173,13 +181,43 @@ Reglas generales
       Playa .... muelle del puerto / toldo
       Fabrica .. vigas en construccion / andamio
       (el resto de mapas ya estan definidos en Themes.js)
-[ ] Pendientes: empinada (45 grados) y suave (2 casillas)
-[ ] Rosquilla (cae si te quedas encima), Bloque Nota, Bloque POW,
-    bloque Pincho, hielo, cintas
-[ ] Bloques A/B: 3 pares de colores (rojo/azul, verde/amarillo,
-    rosa/cian) = 6 bloques + 3 interruptores
-[ ] Interruptor P (monedas <-> bloques)
-[ ] Tuberias y puertas enlazadas
+[ ] Semisolidos DE FONDO (con relleno detras, estilo SMM):
+    sirven para hacer cuevas o niveles aereos sin depender del
+    tema de cielo, y para montar escenarios enteros con la
+    tematica del mapa (ciudades en UR, palmeras/sombrillas en
+    SS, carpas/atracciones en el circo...). Se comportan como
+    semisolido pero ademas pintan su fondo.
+[ ] Decoraciones de terreno (solo VISUAL, sin colision, como la
+    tuberia decorativa 1x1). Dos familias por tamano/forma:
+    1x1, 2x1, 1x2, 3x1 y 1x3 (la 1x3 reservada a vallas y
+    arbustos). Cada mapa con su set tematico, p. ej.:
+      Gelatin Lake .. arbusto-Glob, cartel roto, frutos, arbusto
+      Urbanistic Road farol (parpadea de noche), viga rota...
+[ ] SUELO TEMATICO POR FORMA (autotiling visual, estilo SMM1/2):
+    el suelo es SIEMPRE el mismo tile con la MISMA colision; solo
+    cambia su DIBUJO segun la forma en que lo coloques (aislado,
+    fila horizontal, columna vertical, bloque, borde, esquina,
+    interior) y segun el mapa. Da personalidad sin tocar la
+    fisica. Ya hay base: Sprites.edges() mira los vecinos; falta
+    el set de dibujos por mapa.
+    - Selector de "estilo de suelo" por mapa en el editor (como el
+      de semisolidos A/B): eliges el estilo y el suelo que pintas
+      se dibuja asi.
+    - Urbanistic Road: cierta forma de suelo = VIGAS ROJAS de obra.
+    - ARCADES tangibles (azul/rojo/amarillo/verde/lila): el suelo
+      se ve como maquina arcade SOLO si pones 1 o 2 columnas
+      verticales (cabe un arcade); con 3+ de ancho pasa a PILAR.
+      (hasta ahora los arcades eran solo decoracion 1x1).
+[X] Pendientes: empinada (45 grados) y suave (2 casillas)
+    (Physics.slopeY + 6 variantes; el jugador camina por ellas)
+[X] Rosquilla (cae si te quedas encima), Bloque Nota, Bloque POW,
+    bloque Pincho, hielo, cintas (todo con mecanica en el modelo)
+[X] Bloques A/B: 3 pares de colores (rojo/azul, verde/amarillo,
+    rosa/cian) = 6 bloques + 3 interruptores (estado L.ab, toggleAB)
+[X] Interruptor P (monedas <-> bloques): tile PSW + bloques PBLK
+    (moneda->bloque) y PCOIN (bloque->moneda), temporizado 10 s
+    (level.pActive, pSwitch/setPActive). Modelo + vista + paleta.
+[X] Tuberias y puertas enlazadas
       Cada nivel: zona base + hasta 2 subzonas (3 en total).
       Tuberias y puertas pueden llevar a cualquiera de ellas
       (tambien dentro de la misma zona).
@@ -187,15 +225,24 @@ Reglas generales
       Tuberias: normales o con tapa (la tapa se abre con llave)
       Llave: se recoge, la llevas encima y se gasta al abrir;
       una vez abierta, la puerta / tuberia queda abierta
-[ ] Barra Estelar (como la Fire Bar), carambanos, muelles,
-    plataformas <-> y vertical
-[ ] Setas moviles (semisolido) con recorrido ajustable
-[ ] Capsulas de personaje: te convierten en el Glob que elijas
-[ ] Cajas con cualquier contenido (tambien llaves), monedas rojas
-[ ] Railes para plataformas y enemigos
-[ ] Condiciones de victoria (sin saltar, matar X enemigos,
-    coger X monedas...)
-[ ] Bloques de hielo y de luz adaptados a Paz / Corrupto
+      (enlace o.to {z,i}; bug de enlace cruzando subzonas
+       arreglado: setTool conserva el origen al cambiar de zona)
+[X] Barra Estelar (Fire Bar), carambanos, muelles,
+    plataformas <-> y vertical (todo con mecanica)
+[X] Setas moviles (semisolido) con recorrido ajustable
+    (solo se mueven con alguien encima)
+[X] Capsulas de personaje: te convierten en el Glob que elijas
+[X] Cajas con cualquier contenido (tambien llaves), monedas rojas
+    (set de 8 = 1UP)
+[~] Railes: para PLATAFORMAS hecho (diagonales D1/D2 + recorrido r).
+    Para ENEMIGOS pendiente: ningun enemigo sigue un rail todavia
+    (habria que definir como se siente antes de implementarlo).
+[X] Condiciones de victoria: ninguna, sin saltar, matar X
+    enemigos, juntar X monedas, coger todas las monedas rojas
+    (winMet/winProgress/winText; falta elegirlas en el editor)
+[~] Bloques de hielo y de luz: el hielo resbala (fisica) y el
+    bloque de luz existe como solido; falta la adaptacion
+    especifica Paz / Corrupto de ambos
 
 
 --------------------------------------------------------------
@@ -220,7 +267,9 @@ Reglas generales
                               alucinogenas y las setas se mueven
                               arriba/abajo o izq/der
                               (recorrido elegido en el editor)
-[X] Cotton Skies ............ espejo
+[X] Enredados Nublasticos ... espejo (antes "Cotton Skies";
+                              reestilizado a cielo NSMB/SMW,
+                              ya no pastel rosa)
 [ ] Nucleo Fundido .......... lluvia de meteoritos
 [ ] Fabrica PixelStar ->
     MadStars (castillo) ..... las nubes desaparecen tras 1 s encima
@@ -265,18 +314,36 @@ Semisolidos propuestos:
       Aireado .......... sin suelo inicial (todo vacio)
       Campo de Pruebas . suelo firme en todo el nivel
                          (el estandar, opcion por defecto)
-[ ] Paleta por categorias: Terreno, Bloques, Pyces, Pyces raros,
+[X] Paleta por categorias: Terreno, Bloques, Pyces, Pyces raros,
     Objetos, Mecanismos, Especial
-[ ] Clic otra vez sobre un objeto con recorrido para cambiar
-    su tamano (setas, plataformas, barra estelar)
+    [ ] Falta dibujar iconos propios de los bloques/objetos
+        nuevos en la paleta (algunos usan dibujo generico)
+[X] Clic otra vez sobre un objeto con recorrido para cambiar
+    su tamano (setas, plataformas, barra estelar): cicla r 2/3/5/7
 [ ] Selector de semisolido A/B con la variante del mapa actual
-[ ] Enlazar tuberias y puertas
-[ ] Subzonas: zona base + hasta 2 subzonas (3 en total), con pestanas para cambiar de
-    zona y elegir a cual lleva cada tuberia / puerta
-    (cada subzona con su propio mapa y modo Paz/Corrupto)
-[ ] Condicion de victoria y numero de Medallas (para Event Hub)
+[X] Enlazar tuberias y puertas (herramienta "Enlazar"; funciona
+    tambien cruzando subzonas)
+[X] Subzonas: zona base + hasta 2 subzonas (3 en total), con
+    pestanas para cambiar de zona y elegir a cual lleva cada
+    tuberia / puerta (cada subzona con su propio mapa y modo)
+[X] Condicion de victoria: se elige en el editor (Ajustes del
+    nivel: selector + cantidad) y se MUESTRA en el HUD durante la
+    partida con su progreso (verde cuando ya se cumple). Tipos:
+    ninguna, sin saltar, matar X, juntar X monedas, monedas rojas.
+    [ ] Falta solo el numero de Medallas para Event Hub
+        (medalGate) como ajuste propio.
 [ ] Comprobar que el nivel se puede superar antes de guardarlo
-[ ] El tiempo del nivel se puede modificar, de 10 hasta 500 
+[X] El tiempo del nivel se puede modificar, de 10 hasta 500
+    (ajustes del nivel: campo Tiempo 10-500)
+[X] GIRAR tuberias (visual + mecanica): R alterna la tuberia
+    entre VERTICAL (boca arriba, se entra con ↓ de pie encima) y
+    HORIZONTAL (boca al lado, se entra caminando → / ← hacia ella,
+    tambien en el aire). Se dibuja tumbada, persiste al guardar
+    (o.hdir), y teletransporta igual. Verificado (10/10) + la
+    regresion de 192 niveles sigue en 0 fallos.
+[ ] ALARGAR tuberias: las enlazables (warp 2x2) deberian poder
+    ALARGARSE; la decorativa 1x1 ROTARSE (y se alarga sola como
+    un bloque). Pendiente.
 
 --------------------------------------------------------------
  5b. NIVELES GUARDADOS Y CUENTA GLOB DEFENDERS
@@ -284,9 +351,17 @@ Semisolidos propuestos:
 [X] Limite: 207 niveles guardados como maximo
     (al llegar al limite avisa y no deja guardar mas;
     el contador se ve en "Mis niveles")
-[ ] Vincular la cuenta con Glob Defenders (igual que Star Jump):
-    +1/4 de espacio -> hasta 258 niveles
+[~] Vincular la cuenta con Glob Defenders (igual que Star Jump):
+    +1/4 de espacio -> hasta 258 niveles.
+    [X] SQL de las tablas aplicado en el Supabase de GlD
+        (kiro/supabase_setup.sql).
+    [X] Modulo cliente js/model/GldAccount.js: login, vinculo
+        (link_super_glob_maker_account), cloudSave, publicar,
+        listar publicos, like/unlike. ANON_KEY ya configurada
+        (la nube esta activa, no offline).
+    [ ] Falta la UI (ver abajo).
 [ ] Mostrar tus niveles en el perfil de Glob Defenders
+    (cambio en el codigo de GlD, fuera de este repo)
 [ ] Boton con iconito de internet (globo) en el menu = iniciar
     sesion. Vincular = iniciar sesion con tu cuenta de GlD:
     Super Glob Maker no tiene cuentas propias, usas la misma
@@ -306,6 +381,19 @@ Semisolidos propuestos:
 [ ] Niveles publicados: lista para buscar y jugar niveles de
     otros, marcar "me gusta", contador de partidas y de
     jugadores que lo han superado (como SMM)
+[ ] Favoritos: marcar niveles con el icono del Ducky Glob (los
+    que destacas / compartes). Maximo 7 (quiza 7-10, a decidir).
+[ ] Limites (tres cosas distintas):
+      Guardados . 258 con cuenta (207 sin)
+      Publicados  120 como maximo
+      Favoritos . 7 (subconjunto destacado)
+[ ] Social: amigos en Glob Defenders (anadir gente, ver su
+    perfil y si estan activos/en linea). Igual desde Super Glob
+    Maker. Desde el perfil de un jugador en GlD se llega a sus
+    niveles de SGM.
+    !! Amigos, estado "activo" y favoritos necesitan tablas +
+       RLS nuevas en el Supabase de GlD (PRODUCCION): preparo el
+       SQL y te lo enseno antes de aplicarlo.
 
 Como lo hace Star Jump (leido de StarJump/js/game.js, sin tocarlo):
   - Servidor: Supabase de GlD (https://ptrbixfozzumtzraxtsm.supabase.co)

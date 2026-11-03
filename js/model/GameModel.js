@@ -78,6 +78,8 @@
       this.redCoins = 0;
       // Interruptor G: activa las monedas verdes ocultas (GHID) un tiempo, como el P
       this.gTimer = 0;
+      // Interruptor P clásico: mientras pTimer > 0, pActive = true (monedas P <-> bloques P)
+      this.pTimer = 0; this.level.pActive = false;
       // Monedas Estrella coleccionables del nivel (estilo Star Coin)
       this.starTotal = this.level.objects.filter((o) => (C.OBJECTS[o.type] || {}).collect).length;
       this.stars = 0;
@@ -220,6 +222,8 @@
       const L = this.level, p = this.player;
       // Interruptor G: mientras dura, las monedas verdes ocultas (GHID) se pueden coger
       if (this.gTimer > 0) { this.gTimer -= dt; if (this.gTimer <= 0) this.emit('gSwitchEnd', {}); }
+      // Interruptor P: al expirar, los bloques/monedas P vuelven a su estado normal
+      if (this.pTimer > 0) { this.pTimer -= dt; if (this.pTimer <= 0) { this.setPActive(false); this.emit('pSwitchEnd', {}); } }
       // Rosquillas: si estás encima 0.5 s caen
       if (p.onGround && p.groundTile === TT.DONUT && p.groundX != null) {
         const k = p.groundX + ',' + p.groundY;
@@ -321,6 +325,7 @@
       this.redTotal = 0; for (let i = 0; i < this.level.tiles.length; i++) if (this.level.tiles[i] === TT.RCOIN) this.redTotal++;
       this.starTotal = this.level.objects.filter((o) => (C.OBJECTS[o.type] || {}).collect).length;
       this.level.ab = [0, 0, 0]; this.level.ex = (this.exState || [0, 0, 0]).slice(); this.gTimer = 0;
+      this.pTimer = 0; this.level.pActive = false;
       this.donuts = {}; this.cloudT = {}; this.goneClouds = []; this.boltT = 2; this.meteorT = 3;
       const goal = this.level.objects.find((o) => o.type === 'goal');
       this.goal = goal ? { x: goal.x * T + T / 2 - 4, y: (goal.y + 1) * T - 192, w: 8, h: 192, medalY: 0, tx: goal.x, ty: goal.y } : null;
@@ -340,14 +345,24 @@
 
     // ---------------------------------------------------------------- tuberías y puertas
     tryWarp(p, inp) {
-      if (!p.onGround && !inp.upPressed) return;
+      // (antes había un corte global por onGround; ahora cada rama exige lo suyo, porque
+      //  la tubería horizontal se puede tomar también en el aire, a la altura de su boca)
       for (const e of this.entities) {
         if (!e.gizmo || !e.active) continue;
         if (e.family === 'pipe') {
-          // de pie encima de la tubería y pulsando abajo
-          if (!inp.down || !p.onGround) continue;
-          const cx = p.x + p.w / 2;
-          if (cx < e.x + 4 || cx > e.x + e.w - 4 || Math.abs(p.y + p.h - (e.y + e.h)) > 6 && Math.abs(p.y + p.h - e.y) > 6) continue;
+          if (e.hdir) {
+            // tubería HORIZONTAL: a la altura del tubo y caminando hacia él (→ o ←)
+            const py = p.y + p.h / 2;
+            if (py < e.y + 4 || py > e.y + e.h - 4) continue;             // alineado en vertical con el tubo
+            const toRight = inp.right && p.x + p.w >= e.x - 2 && p.x + p.w < e.x + e.w; // entra por su lado izquierdo yendo →
+            const toLeft = inp.left && p.x <= e.x + e.w + 2 && p.x > e.x;              // entra por su lado derecho yendo ←
+            if (!toRight && !toLeft) continue;
+          } else {
+            // tubería VERTICAL: de pie encima y pulsando abajo
+            if (!inp.down || !p.onGround) continue;
+            const cx = p.x + p.w / 2;
+            if (cx < e.x + 4 || cx > e.x + e.w - 4 || Math.abs(p.y + p.h - (e.y + e.h)) > 6 && Math.abs(p.y + p.h - e.y) > 6) continue;
+          }
         } else {
           // delante de la puerta y pulsando arriba
           if (!inp.upPressed || !p.onGround || !U.overlap(p, e)) continue;
@@ -368,20 +383,28 @@
       const w = this.warping, p = this.player;
       w.t += dt;
       const pipe = w.from.family === 'pipe';
+      // coloca al jugador en la boca de la tubería destino d (según su orientación)
+      const placeAtPipe = (d) => {
+        if (d.hdir) { p.x = d.cx() - p.w / 2; p.y = d.cy() - p.h / 2; } // horizontal: centrado en el tubo
+        else { p.x = d.cx() - p.w / 2; p.y = d.y - p.h; }               // vertical: encima
+      };
       if (w.phase === 'in') {
-        if (pipe) { p.y += 60 * dt; p.x = U.approach(p.x, w.from.cx() - p.w / 2, 200 * dt); }
+        if (pipe) {
+          // entrada: horizontal se desliza hacia el centro en X; vertical cae hacia dentro en Y
+          if (w.from.hdir) { p.y = U.approach(p.y, w.from.cy() - p.h / 2, 160 * dt); p.x = U.approach(p.x, w.from.cx() - p.w / 2, 120 * dt); }
+          else { p.y += 60 * dt; p.x = U.approach(p.x, w.from.cx() - p.w / 2, 200 * dt); }
+        }
         p.warpAlpha = pipe ? 1 : Math.max(0, 1 - w.t / 0.4);
         if (w.t > 0.55) {
           // Destino en otra zona: recargar esa zona y salir en el gizmo destino
           if (w.toZone) {
             const d = this.enterZone(w.toZone.z, w.toZone.i, w.fam);
-            if (d) { p.x = d.cx() - p.w / 2; p.y = d.family === 'pipe' ? d.y - p.h : d.y + d.h - p.h; if (d.family === 'door') d.open = 1; }
+            if (d) { if (d.family === 'pipe') placeAtPipe(d); else { p.x = d.cx() - p.w / 2; p.y = d.y + d.h - p.h; d.open = 1; } }
           } else {
             const d = w.to;
-            // salir encima de la tubería destino o delante de la puerta destino
-            p.x = d.cx() - p.w / 2;
-            p.y = d.family === 'pipe' ? d.y - p.h : d.y + d.h - p.h;
-            if (d.family === 'door') d.open = 1;
+            // salir en la boca de la tubería destino (según orientación) o delante de la puerta destino
+            if (d.family === 'pipe') placeAtPipe(d);
+            else { p.x = d.cx() - p.w / 2; p.y = d.y + d.h - p.h; d.open = 1; }
             if (d.locked) { d.locked = false; this.unlocked[d.tx + ',' + d.ty] = true; }
           }
           w.phase = 'out'; w.t = 0;
@@ -398,9 +421,25 @@
     toggleAB(k) {
       this.level.ab[k] = this.level.ab[k] ? 0 : 1;
       this.emit('abToggle', { k, state: this.level.ab[k] });
-      // si un bloque recién sólido atrapa al jugador, se le saca por arriba
-      const p = this.player, L = this.level;
-      for (let i = 0; i < 3 && S.Model.Physics.solidAt(L, p.x + p.w / 2, p.y + p.h - 2); i++) p.y -= T;
+      this.unstickPlayer();
+    }
+    // Si un bloque recién vuelto sólido ATRAPA el cuerpo del jugador, lo saca por arriba.
+    // Se comprueba el torso (no el pie): el pie siempre roza el suelo y daría falsos
+    // positivos que lanzaban al Glob hacia arriba sin estar realmente atrapado.
+    unstickPlayer() {
+      const p = this.player, L = this.level, P = S.Model.Physics;
+      const stuck = () => {
+        const yTop = p.y + 3, yMid = p.y + p.h * 0.5; // torso, nunca el borde del pie
+        return P.solidAt(L, p.x + 2, yTop) || P.solidAt(L, p.x + p.w - 2, yTop)
+          || P.solidAt(L, p.x + 2, yMid) || P.solidAt(L, p.x + p.w - 2, yMid);
+      };
+      for (let i = 0; i < 4 && stuck(); i++) p.y -= T;
+    }
+    // Interruptor P clásico: durante 10 s las monedas P se vuelven bloques y los bloques P, monedas
+    pSwitch() { this.pTimer = 10; this.setPActive(true); this.emit('pSwitch', { x: this.player.x, y: this.player.y }); }
+    setPActive(on) {
+      this.level.pActive = !!on;
+      this.unstickPlayer(); // igual que A/B: solo sube si el torso queda atrapado
     }
     gSwitch() { this.gTimer = 10; this.emit('gSwitch', { x: this.player.x, y: this.player.y }); }
     // Interruptor "!": activa (de forma persistente) los bloques "!" del color k.
@@ -409,9 +448,8 @@
       if (!this.exState) this.exState = [0, 0, 0];
       this.exState[k] = 1; this.level.ex[k] = 1;
       this.emit('exToggle', { k, x, y });
-      // si un bloque recién sólido atrapa al jugador, lo empuja hacia arriba
-      const p = this.player, L = this.level;
-      for (let i = 0; i < 3 && S.Model.Physics.solidAt(L, p.x + p.w / 2, p.y + p.h - 2); i++) p.y -= T;
+      this.unstickPlayer(); // solo sube si el torso queda atrapado (no el pie)
+      const p = this.player;
       // cuenta como completar por meta oculta (clear directo, sin bajar por un poste)
       this.secretClear = true;
       if (this.state === 'play') {
@@ -510,6 +548,8 @@
         const px = x * T + T / 2, py = y * T + T / 2;
         if (t === TT.COIN) { this.level.set(x, y, 0); this.addCoin(px, py); }
         else if (t === TT.RCOIN) { this.level.set(x, y, 0); this.addRedCoin(px, py); }
+        // Bloque del Interruptor P que ahora mismo es moneda: se recoge (y ya no vuelve)
+        else if (C.isPCoin(t, this.level.pActive)) { this.level.set(x, y, 0); this.addCoin(px, py); }
         else if (t === TT.GHID) { if (this.gTimer > 0) { this.level.set(x, y, 0); this.addValueCoin(px, py, C.coinValue(TT.GCOIN)); } }
         else if (C.isCoin(t)) { this.level.set(x, y, 0); this.addValueCoin(px, py, C.coinValue(t)); }
       }
@@ -646,6 +686,8 @@
       };
       // Interruptor G: activa las monedas verdes ocultas un rato (como el P)
       if (t === TT.SWG) { this.bumps.push({ x, y, t: 0 }); bumpEnemies(); this.gSwitch(); return; }
+      // Interruptor P clásico: intercambia monedas P <-> bloques P durante un rato
+      if (t === TT.PSW) { this.bumps.push({ x, y, t: 0 }); bumpEnemies(); this.pSwitch(); return; }
       // Interruptores A/B: cambian los bloques de su color
       if (C.isSwitch(t)) { this.bumps.push({ x, y, t: 0 }); bumpEnemies(); this.toggleAB(t - TT.SW0); return; }
       // POW: un solo uso
@@ -761,6 +803,7 @@
         case 'nojump': return !this.jumped;
         case 'kills': return this.kills >= w.n;
         case 'coins': return this.coins >= w.n;
+        case 'redcoins': return this.redTotal === 0 || this.redCoins >= this.redTotal;
       }
       return true;
     }
@@ -770,6 +813,7 @@
       switch (w.type) {
         case 'kills': return { have: this.kills, need: w.n };
         case 'coins': return { have: this.coins, need: w.n };
+        case 'redcoins': return { have: this.redCoins, need: this.redTotal };
         case 'nojump': return { have: this.jumped ? 0 : 1, need: 1 };
         default: return { have: 0, need: 0 };
       }
@@ -780,6 +824,7 @@
       if (w.type === 'nojump') return 'Llega sin saltar';
       if (w.type === 'kills') return `Derrota ${w.n} enemigos (${Math.min(this.kills, w.n)}/${w.n})`;
       if (w.type === 'coins') return `Junta ${w.n} monedas (${Math.min(this.coins, w.n)}/${w.n})`;
+      if (w.type === 'redcoins') return `Coge las monedas rojas (${this.redCoins}/${this.redTotal})`;
       return def.name;
     }
 

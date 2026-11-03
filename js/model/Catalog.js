@@ -5,16 +5,23 @@
     EMPTY: 0, GROUND: 1, BRICK: 2, BOX: 3, HARD: 4, SEMI: 5, SPIKE: 6, BOUNCE: 7, ICE: 8, LIQUID: 9, USED: 10, CLOUD: 11, COIN: 12, HIDDEN: 13,
     CONV_L: 14, CONV_R: 15, WATER: 16, SEMI2: 17, DONUT: 18, NOTE: 19,
     A0: 20, B0: 21, A1: 22, B1: 23, A2: 24, B2: 25, SW0: 26, SW1: 27, SW2: 28,
-    S45U: 29, S45D: 30, G1U: 31, G2U: 32, G1D: 33, G2D: 34, POW: 36, PIPE: 37,
+    S45U: 29, S45D: 30, G1U: 31, G2U: 32, G1D: 33, G2D: 34, PSW: 35, POW: 36, PIPE: 37,
+    // Interruptor P clásico (PSW) + sus dos bloques, temporizado (level.pActive):
+    //   PBLK = por defecto MONEDA recogible; con el P activo se vuelve BLOQUE sólido.
+    //   PCOIN = por defecto BLOQUE sólido; con el P activo se vuelve MONEDA recogible.
+    PBLK: 42, PCOIN: 43,
     // Monedas tile 1x1: roja (8 = 1UP), azul (vale mas), verde (interruptor G), rosa (oculta).
     // SWG = interruptor G, GHID = verde latente. Las numeradas (x10/x30/x50/x100) son OBJETOS 2x2.
     RCOIN: 38, BCOIN: 39, GCOIN: 40, KCOIN: 41, SWG: 46, GHID: 47, LIGHT: 48,
     // Bloques "!" de 3 colores (rojo/verde/rosa): empiezan intangibles y se vuelven sólidos
     // al activar el interruptor "!" de su color (estado persistente). EX0=rojo, EX1=verde, EX2=rosa.
-    EX0: 49, EX1: 50, EX2: 51, PIPEDECO: 52, WALL: 99
+    EX0: 49, EX1: 50, EX2: 51, PIPEDECO: 52,
+    // Segundo suelo "tematico": misma colision que GROUND, pero su DIBUJO depende del mapa
+    // (vigas, montaña rusa, casas, runas...). Se dibuja en js/view/GroundStyles.js.
+    GROUND2: 53, WALL: 99
   };
   const EXCLAIM = [{ c: '#ffd000', name: 'amarillo' }, { c: '#2fd46a', name: 'verde' }, { c: '#ff4fd8', name: 'rosa' }];
-  const SOLID = new Set([T.GROUND, T.BRICK, T.BOX, T.HARD, T.SPIKE, T.BOUNCE, T.ICE, T.USED, T.CONV_L, T.CONV_R, T.DONUT, T.NOTE, T.SW0, T.SW1, T.SW2, T.SWG, T.POW, T.PIPE, T.LIGHT, T.WALL]);
+  const SOLID = new Set([T.GROUND, T.GROUND2, T.BRICK, T.BOX, T.HARD, T.SPIKE, T.BOUNCE, T.ICE, T.USED, T.CONV_L, T.CONV_R, T.DONUT, T.NOTE, T.SW0, T.SW1, T.SW2, T.SWG, T.PSW, T.POW, T.PIPE, T.LIGHT, T.WALL]);
   const SEMI = new Set([T.SEMI, T.SEMI2, T.CLOUD]);
   const CONTAINERS = new Set([T.BOX, T.BRICK, T.HIDDEN, T.NOTE]);
   const SLOPES = new Set([T.S45U, T.S45D, T.G1U, T.G2U, T.G1D, T.G2D]);
@@ -33,11 +40,13 @@
     20: 'Bloque A rojo', 21: 'Bloque B azul', 22: 'Bloque A verde', 23: 'Bloque B amarillo', 24: 'Bloque A rosa', 25: 'Bloque B cian',
     26: 'Interruptor A/B rojo-azul', 27: 'Interruptor A/B verde-amarillo', 28: 'Interruptor A/B rosa-cian',
     29: 'Pendiente empinada ↗', 30: 'Pendiente empinada ↘', 31: 'Pendiente suave ↗ (baja)', 32: 'Pendiente suave ↗ (alta)',
-    33: 'Pendiente suave ↘ (alta)', 34: 'Pendiente suave ↘ (baja)', 36: 'Bloque POW', 37: 'Tubería',
+    33: 'Pendiente suave ↘ (alta)', 34: 'Pendiente suave ↘ (baja)', 35: 'Interruptor P', 36: 'Bloque POW', 37: 'Tubería',
+    42: 'Bloque P (moneda → bloque)', 43: 'Bloque P (bloque → moneda)',
     38: 'Moneda roja (8 = 1UP)', 39: 'Moneda azul', 40: 'Moneda verde (interruptor G)', 41: 'Moneda rosa (oculta)',
     46: 'Interruptor G', 47: 'Moneda verde oculta', 48: 'Bloque de luz',
     49: 'Bloque "!" amarillo', 50: 'Bloque "!" verde', 51: 'Bloque "!" rosa',
-    52: 'Tubería pequeña (decoración)'
+    52: 'Tubería pequeña (decoración)',
+    53: 'Suelo temático (según el mapa)'
   };
 
   // anchor: bottom = apoyado en el suelo de la casilla, center, top = colgando del techo
@@ -128,6 +137,9 @@
     lockwarp: { name: 'Tubería con tapa', cat: 'gizmo', w: 62, h: 62, desc: 'Tubería 2×2 con tapa. Necesita una llave para quitar la tapa.' },
     firebar: { name: 'Barra Estelar', cat: 'gizmo', w: 32, h: 32, anchor: 'center', range: true, desc: 'Barra giratoria de estrellas. Clic otra vez para alargarla.' },
     icicle: { name: 'Carámbano', cat: 'gizmo', w: 22, h: 30, anchor: 'top', desc: 'Cae cuando pasas por debajo.' },
+    // Decoración visual (SIN colisión). El adorno concreto va en o.deco; el set es por mapa
+    // (ver js/view/Decorations.js). No tiene clase de entidad: el modelo la ignora.
+    deco: { name: 'Decoración', cat: 'deco', w: 24, h: 24, decoration: true, desc: 'Adorno visual sin colisión (según el mapa).' },
     // ----- solo en tiempo de juego -----
     starbullet: { w: 28, h: 22, anchor: 'center' }, eshot: { w: 14, h: 10, anchor: 'center' }, shot: { w: 14, h: 14, anchor: 'center' }, coinpop: { w: 20, h: 20, anchor: 'center' },
     poop: { w: 16, h: 16, anchor: 'center' }, goo: { w: 32, h: 6 }, starwave: { w: 18, h: 18, anchor: 'center' },
@@ -150,6 +162,8 @@
   ['cannon', 'flower', 'firebar', 'icicle'].forEach((k) => { if (OBJECTS[k]) OBJECTS[k].rotV = true; });
   // Mecanismos direccionales horizontales.
   ['spring'].forEach((k) => { if (OBJECTS[k]) OBJECTS[k].rotH = true; });
+  // Tuberias: R alterna vertical / horizontal (via o.hdir, ver EditorModel.rotateObjectAt)
+  ['warp', 'lockwarp'].forEach((k) => { if (OBJECTS[k]) OBJECTS[k].rotH = true; });
   const canRotate = (type, axis) => { const d = OBJECTS[type]; return !!(d && (axis === 'v' ? d.rotV : d.rotH)); };
 
   const BOX_ITEMS = ['coin', 'evo', 'flor', 'caca', 'vacio', 'brillo', 'miniglob', 'key'].concat(S.Model.Characters.list.map((c) => 'cap_' + c.id));
@@ -157,12 +171,14 @@
   const tiles = (ids) => ids.map((id) => ({ kind: 'tile', id }));
   const objs = (ids) => ids.map((type) => ({ kind: 'obj', type }));
   const PALETTE = [
-    { id: 'terrain', name: 'Terreno', items: tiles([1, 5, 17, 11, 29, 30, 31, 32, 33, 34, 37, 52, 8, 6, 9, 16, 14, 15, 48]) },
-    { id: 'blocks', name: 'Bloques', items: tiles([2, 3, 13, 4, 7, 19, 18, 36, 12, 38, 39, 41, 40, 47, 46, 20, 21, 22, 23, 24, 25, 26, 27, 28, 49, 50, 51]) },
+    { id: 'terrain', name: 'Terreno', items: tiles([1, 53, 5, 17, 11, 29, 30, 31, 32, 33, 34, 37, 52, 8, 6, 9, 16, 14, 15, 48]) },
+    { id: 'blocks', name: 'Bloques', items: tiles([2, 3, 13, 4, 7, 19, 18, 36, 12, 38, 39, 41, 40, 47, 46, 20, 21, 22, 23, 24, 25, 26, 27, 28, 49, 50, 51, 35, 42, 43]) },
     { id: 'pyces', name: 'Pyces', items: objs(['stupid', 'so', 'symbol', 'pyce2', 'guest', 'noob', 'elf', 'umbrella', 'zom', 'crystal', 'knight', 'rebel', 'skelebone', 'snowcap', 'festive', 'bomb', 'toybomb', 'wingel', 'strechy', 'flower', 'cannon']) },
     { id: 'pyces2', name: 'Pyces raros', items: objs(['ghost', 'holo', 'motions', 'hacker', 'pysh', 'clownpysh', 'axolotl', 'shark', 'mimic', 'dirty', 'nomic', 'goldmimic', 'noeye', 'nosense', 'noir', 'moonstar']) },
     { id: 'items', name: 'Objetos', items: objs(['evo', 'flor', 'caca', 'vacio', 'brillo', 'miniglob'].concat(S.Model.Characters.list.map((c) => 'cap_' + c.id)).concat(['coin10', 'coin30', 'coin50', 'coin100', 'spring', 'checkpoint', 'starcoin', 'starcoin_giga', 'starcoin_moon', 'starcoin_rg', 'starcoin_magic', 'starcoin_traitor'])) },
     { id: 'gizmos', name: 'Mecanismos', items: objs(['platform', 'platformV', 'platformD1', 'platformD2', 'shroomH', 'shroomV', 'warp', 'lockwarp', 'door', 'lockdoor', 'key', 'firebar', 'icicle', 'exswitch0', 'exswitch1', 'exswitch2']) },
+    // Decoración: los items se rellenan dinámicamente según el mapa (ver EditorView.refreshItems)
+    { id: 'deco', name: 'Decoración', items: [], dynamic: 'deco' },
     { id: 'special', name: 'Especial', items: [{ kind: 'obj', type: 'start' }, { kind: 'obj', type: 'goal' }, { kind: 'obj', type: 'goalhidden' }, { kind: 'link' }, { kind: 'erase' }] }
   ];
 
@@ -173,13 +189,19 @@
     if (ab) return ((L && L.ab ? L.ab[ab.k] : 0) === ab.b);
     // Bloques "!": sólidos solo si su color está activado (L.ex)
     if (t >= T.EX0 && t <= T.EX2) return !!(L && L.ex && L.ex[t - T.EX0]);
+    // Bloques del Interruptor P: PBLK es sólido con el P activo; PCOIN, con el P inactivo
+    const pActive = !!(L && L.pActive);
+    if (t === T.PBLK) return pActive;
+    if (t === T.PCOIN) return !pActive;
     return false;
   }
+  // ¿El tile es una moneda recogible del Interruptor P dado el estado pActive?
+  const isPCoin = (t, pActive) => (t === T.PBLK && !pActive) || (t === T.PCOIN && pActive);
   const exInfo = (t) => (t >= T.EX0 && t <= T.EX2 ? t - T.EX0 : -1);
 
   S.Model.Catalog = {
     T, OBJECTS, PALETTE, TILE_NAMES, BOX_ITEMS, AB, ENEMY_TYPES, COIN_VALUE, EXCLAIM,
-    isSolid, abInfo, canRotate, exInfo,
+    isSolid, abInfo, canRotate, exInfo, isPCoin,
     isSemi: (t) => SEMI.has(t),
     isSlope: (t) => SLOPES.has(t),
     isContainer: (t) => CONTAINERS.has(t),

@@ -406,6 +406,15 @@
   // Entrada de tubería (y con tapa). e.col = índice de color (0-3)
   function pipeMouth(ctx, e, locked) {
     const x = e.x, y = e.y, w = e.w, h = e.h, c = PIPE_COL[(e.col | 0) % 4] || PIPE_COL[0];
+    if (e.hdir) {
+      // Tubería HORIZONTAL: cuerpo tumbado + boca (collar) en el lado izquierdo
+      rr(ctx, x + 6, y + 2, w - 6, h - 4, 4); fillStroke(ctx, c[0], 3.5);
+      rr(ctx, x, y - 1, 12, h + 2, 4); fillStroke(ctx, c[1], 3.5);
+      ctx.fillStyle = c[2]; ctx.fillRect(x + 14, y + 5, 4, h - 10);
+      ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(x + 12, y + h - 10, w - 14, 5);
+      if (locked) { rr(ctx, x + w * 0.5 - 7, y + h / 2 - 6, 14, 12, 3); fillStroke(ctx, '#ffd000', 2.5); ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(x + w * 0.5, y + h / 2, 2, 0, 7); ctx.fill(); }
+      return;
+    }
     rr(ctx, x + 2, y + 6, w - 4, h - 6, 4); fillStroke(ctx, c[0], 3.5);
     rr(ctx, x - 1, y, w + 2, 12, 4); fillStroke(ctx, c[1], 3.5);
     ctx.fillStyle = c[2]; ctx.fillRect(x + 5, y + 14, w - 10, 4);
@@ -509,6 +518,15 @@
     o = o || {};
     const px = x * T, py = y * T + (o.bump || 0);
     switch (t) {
+      case TT.GROUND2: {
+        // Segundo suelo: estilo tematico por mapa (modulo aislado GroundStyles). Protegido:
+        // si el modulo falla o el mapa no tiene estilo, cae al dibujo del suelo base.
+        const edg = edges(level, x, y, (q) => q === TT.GROUND2);
+        if (o.theme && S.View.GroundStyles) {
+          try { if (S.View.GroundStyles.draw(ctx, level, x, y, pal, edg, time, o.theme)) break; } catch (e) { /* cae al generico */ }
+        }
+        /* falls through al dibujo del suelo base si no hay estilo */
+      }
       case TT.GROUND: {
         const ed = edges(level, x, y, isGround);
         ctx.fillStyle = pal.ground; ctx.fillRect(px, py, T, T);
@@ -589,13 +607,15 @@
       case TT.LIQUID: {
         // solo hay superficie si arriba está el aire (si toca techo/bloque, no sale superficie)
         const top = level.get(x, y - 1) === TT.EMPTY;
-        ctx.fillStyle = pal.liquid; ctx.fillRect(px, py + (top ? 8 : 0), T, T - (top ? 8 : 0));
+        // Sound Discotech pasa un color cambiante en o.liquidCol/o.liquidTopCol
+        const liqCol = o.liquidCol || pal.liquid, liqTop = o.liquidTopCol || pal.liquidTop;
+        ctx.fillStyle = liqCol; ctx.fillRect(px, py + (top ? 8 : 0), T, T - (top ? 8 : 0));
         if (top) {
           ctx.beginPath(); ctx.moveTo(px, py + 10);
           for (let i = 0; i <= 8; i++) ctx.lineTo(px + i * 4, py + 8 + Math.sin(time * 3 + (x * 8 + i) * 0.8) * 2.5);
-          ctx.lineTo(px + T, py + 14); ctx.lineTo(px, py + 14); ctx.closePath(); ctx.fillStyle = pal.liquidTop; ctx.fill();
+          ctx.lineTo(px + T, py + 14); ctx.lineTo(px, py + 14); ctx.closePath(); ctx.fillStyle = liqTop; ctx.fill();
         }
-        ctx.fillStyle = U.rgba(pal.liquidTop, 0.6);
+        ctx.fillStyle = U.rgba(liqTop, 0.6);
         const bx = U.hash2(x, Math.floor(time + x)) * 24; ctx.beginPath(); ctx.arc(px + 4 + bx, py + T - ((time * 20 + x * 9) % T), 2, 0, 7); ctx.fill();
         break;
       }
@@ -616,6 +636,25 @@
       case TT.SWG:
         pushButton(ctx, px + 1, py + 2, T - 2, T - 3, '#00c24a', 'G', false);
         break;
+      case TT.PSW:
+        pushButton(ctx, px + 1, py + 2, T - 2, T - 3, '#2f6fd0', 'P', !!(level && level.pActive));
+        break;
+      // Bloques del Interruptor P. PBLK: moneda por defecto -> bloque con P activo.
+      // PCOIN: bloque por defecto -> moneda con P activo. Se dibuja según level.pActive.
+      case TT.PBLK: case TT.PCOIN: {
+        const pOn = !!(level && level.pActive);
+        const asBlock = (t === TT.PBLK) ? pOn : !pOn; // ¿se muestra como bloque sólido?
+        if (asBlock) {
+          rr(ctx, px + 1, py + 1, T - 2, T - 2, 5); fillStroke(ctx, '#4a6fb0', 3.5);
+          ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.font = 'bold 15px "Trebuchet MS",sans-serif';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('P', px + T / 2, py + T / 2 + 1);
+          ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+        } else {
+          coin(ctx, px + T / 2, py + T / 2, 10, time * 4 + x * 0.4, '#8fb6ff');
+          if (o.editor) { ctx.globalAlpha = 0.7; ctx.fillStyle = '#2f6fd0'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('P', px + T / 2, py + T - 3); ctx.textAlign = 'left'; ctx.globalAlpha = 1; }
+        }
+        break;
+      }
       // Tubería pequeña decorativa (fondo, no sólida): dos tubitos
       case TT.PIPEDECO:
         ctx.fillStyle = '#3a6a44'; ctx.fillRect(px + 7, py, 8, T); ctx.fillRect(px + 18, py, 8, T);
@@ -739,8 +778,10 @@
       // para los semisólidos, muestra el estilo del mapa (si se pasó el tema)
       const sm = (theme && theme.semis) || [];
       const semi = [sm[0] && sm[0][1], sm[1] && sm[1][1]];
-      if (item.id === TT.HIDDEN) { drawTile(ctx, fake, 0, 0, item.id, pal, 0, { editor: true, semi }); }
-      else drawTile(ctx, fake, 0, 0, item.id, pal, 0, { semi });
+      // el suelo temático (GROUND2) muestra en el icono el sprite del MAPA actual
+      const themeId = theme && theme.id;
+      if (item.id === TT.HIDDEN) { drawTile(ctx, fake, 0, 0, item.id, pal, 0, { editor: true, semi, theme: themeId }); }
+      else drawTile(ctx, fake, 0, 0, item.id, pal, 0, { semi, theme: themeId });
     } else if (item.kind === 'erase') {
       ctx.scale(s, s);
       rr(ctx, 6, 8, 20, 14, 4); ctx.save(); ctx.translate(16, 16); ctx.rotate(-0.5); ctx.translate(-16, -16); fillStroke(ctx, '#ff7ab8', 3); ctx.restore();

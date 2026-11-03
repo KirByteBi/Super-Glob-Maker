@@ -141,6 +141,128 @@ B) Monedas ESTRELLA (coleccionables del nivel, estilo Star Coin;
 
 
 --------------------------------------------------------------
+ 1c. DECORACIONES DE TERRENO  [HECHO base, mas adornos pendientes]
+ -- Modulo aislado js/view/Decorations.js (no toca el dibujo base).
+ -- Objeto { type:'deco', x, y, deco:<id> }, SIN colision (el modelo lo
+    ignora). Categoria "Decoracion" en la paleta (items por mapa).
+    Se dibujan DETRAS del terreno (juego + editor). Persisten al guardar.
+    Hechas de ejemplo: Gelatin Lake (arbusto-Glob, cartel roto, frutos,
+    arbusto) y Urbanistic Road (farol que parpadea de noche, viga rota).
+    PENDIENTE: dibujar el set de adornos del resto de mapas y tamaños.
+ -- (texto original de referencia abajo)
+--------------------------------------------------------------
+Adornos puramente VISUALES, SIN COLISION (como la tuberia
+decorativa 1x1 que ya existe). No afectan a la partida; solo
+dan vida y tematica a cada mapa.
+
+Dos familias, como en SMM ("decoraciones" y "decoraciones
+menores"). La diferencia es el tamano/forma de la pieza:
+  - 1x1 ................ adorno pequeno (1 casilla)
+  - 2x1 (horizontal) ... pieza ancha de 2
+  - 1x2 (vertical) ..... pieza alta de 2
+  - 3x1 (horizontal) ... pieza ancha de 3
+  - 1x3 (vertical) ..... pieza alta de 3 (reservada a vallas
+                         y arbustos grandes)
+
+Cada mapa tiene su propio SET tematico que rellena esas formas.
+Ejemplos:
+  - Gelatin Lake .. arbusto con forma de Glob, cartel roto,
+                    frutos de comida, arbusto normal
+  - Urbanistic Road  farol (parpadea de noche / modo Corrupto),
+                    trozo de viga rota, etc.
+  (el resto de mapas tendran su propio set en el mismo estilo)
+
+Nota tecnica (lo defino yo al construirlo): cada decoracion se
+guarda como objeto con su posicion y tamano en casillas; la
+vista la dibuja sin que el modelo la considere solida. El editor
+tendra una categoria "Decoracion" en la paleta, por mapa.
+
+
+--------------------------------------------------------------
+ 1d. SEMISOLIDOS DE FONDO (sin hacer)
+--------------------------------------------------------------
+Semisolidos que llevan un FONDO detras (estilo SMM): no son solo
+una plataforma, sino una pieza de escenario con relleno.
+
+Para que sirven:
+  - Hacer CUEVAS o niveles AEREOS sin depender del tema de cielo
+    (el fondo lo pones tu con estos semisolidos).
+  - Construir escenarios enteros con la tematica del mapa:
+      Urbanistic Road . ciudades completas (edificios de fondo)
+      Sunlight Seaside  palmeras y sombrillas
+      Pumpkin Circus .. carpas y atracciones
+      (cada mapa, su propia variante)
+
+Se comportan como semisolido (te subes por encima, los
+atraviesas por abajo/lados) pero ademas pintan su fondo. Encaja
+con el sistema de semisolidos tematicos que ya estaba previsto
+(2 variantes por mapa): estos serian la version "con fondo".
+
+
+--------------------------------------------------------------
+ 1e. SUELO TEMATICO POR FORMA (autotiling visual)  [HECHO]
+--------------------------------------------------------------
+IMPLEMENTADO como SEGUNDO SUELO (tile aparte GROUND2, id 53), NO
+sobre el suelo base: el suelo normal queda intacto. Modulo aislado
+js/view/GroundStyles.js + gancho protegido en Sprites (case GROUND2,
+try/catch, bucles acotados para no colgar). Misma colision que el
+suelo normal. En la paleta de Terreno junto al suelo base.
+Clasifica la forma del tramo (piece / col / row / fill) y dibuja
+segun el mapa. Los 16 mapas tienen estilo:
+  UR: viga ligera (pieza/col/fila) / carretera (masa)
+  circo: atraccion (col) / montaña rusa azul recta y flotante (fila)
+         / carpa (masa)
+  casino: arcade (pieza) / tablero de ruleta (masa)
+  disco: pista de baile ; playa: muelle/poste ; ruinas: pilares
+  time attack: relojes/engranajes ; volcan: roca caliente/cueva
+  nubes: enredaderas ; Gelatin Lake: casas ; Event Hub: suelo azul
+  Vortice: runas verde-azuladas (estilo Dark Glob)
+  PixelStar: azul cian con estrellas amarillas
+  nieve: hielo ; abismo: coral ; bosque: raices
+Verificado: solido, en paleta, autotiling sin colgar, no se fusiona
+con el suelo base (8/8). Pendiente: pulir dibujos al gusto al verlos.
+
+
+--------------------------------------------------------------
+ 1e-bis. (texto original del suelo por forma)
+--------------------------------------------------------------
+Estilo SMM1/2: el suelo es SIEMPRE el mismo tile y con la MISMA
+colision. Lo unico que cambia es su DIBUJO segun la FORMA en que
+lo coloques y segun el mapa. No toca la fisica; solo da
+personalidad al terreno.
+
+La forma se lee de los vecinos (ya hay base: Sprites.edges()
+mira arriba/abajo/izq/der). Casos a dibujar: tile aislado (1x1),
+extremo y interior de fila horizontal, columna vertical, bloque,
+bordes y esquinas, interior relleno.
+
+Formas a distinguir: las del repertorio estandar de edges()
+(aislado 1x1, extremo e interior de fila, columna vertical,
+esquina, interior de bloque). TODOS los suelos tienen la MISMA
+mecanica; solo cambia el dibujo. El dibujo depende del mapa.
+
+Ejemplos concretos:
+  - Urbanistic Road: cierta forma de suelo = VIGAS ROJAS de obra.
+  - Enredados Nublasticos: el suelo en tiles 1x1 y 2x2
+    (verticales u horizontales) se dibuja como ENREDADERAS
+    (encaja con el nombre del mapa).
+  - ARCADES tangibles (colores: azul, rojo, amarillo, verde,
+    lila). Regla de forma: se ven como maquina arcade SOLO si
+    pones 1 o 2 columnas VERTICALES (ahi cabe un arcade). Con 3+
+    de ancho pasan a dibujarse como PILAR. Hasta ahora los
+    arcades iban a ser solo decoracion 1x1; con esto, el propio
+    suelo puede tener pinta de arcade (tangible, misma colision).
+
+Color de los arcades: ALEATORIO entre los 5, pero sin repetirse
+entre arcades contiguos (dejar margen). OJO tecnico: el color
+debe ser DETERMINISTA (derivado de un hash de la posicion, p.ej.
+U.hash2(x,y), descartando el color del vecino), NO Math.random()
+en cada frame; si no, los arcades parpadearian de color. Asi se
+ve aleatorio pero estable entre fotogramas y recargas.
+No hace falta selector: el juego reparte los colores solo.
+
+
+--------------------------------------------------------------
  2. ELEMENTOS DE SMM QUE FALTAN (sin hacer)
 --------------------------------------------------------------
   - [HECHO en modelo] Subzonas: zona base + hasta 2 subzonas
@@ -166,9 +288,21 @@ B) Monedas ESTRELLA (coleccionables del nivel, estilo Star Coin;
     si se quiere, y el contador en el HUD.
   - [HECHO en modelo] Condiciones de victoria: Level.win
     { type, n }. Tipos: none, nojump, kills, coins, redcoins.
-    GameModel.winMet() bloquea la Medalla si no se cumple y
-    emite winLocked con el texto; winProgress()/winText() para
-    el HUD. Falta: elegirla en el editor y mostrarla en el HUD.
+    redcoins (coger TODAS las monedas rojas) anadido y cableado
+    en winMet()/winProgress()/winText(). GameModel.winMet()
+    bloquea la Medalla si no se cumple y emite winLocked con el
+    texto. Falta: elegirla en el editor y mostrarla en el HUD.
+  - [HECHO] Interruptor P clasico (monedas <-> bloques): tiles
+    PSW (interruptor), PBLK (moneda->bloque) y PCOIN
+    (bloque->moneda). Temporizado 10 s (level.pActive). Modelo
+    (pSwitch/setPActive en hitBlock + updateWorld), vista
+    (Sprites) y paleta. Antes NO existia (solo el interruptor G).
+  - [HECHO] Enlace de tuberias/puertas cruzando subzonas: estaba
+    roto (al cambiar de pestana de zona se perdia el origen del
+    enlace). setTool conserva linkFrom si sigues en 'link'.
+  - [PENDIENTE] Railes para ENEMIGOS: no existe; hay que definir
+    como se siente antes de implementarlo. (Los railes de
+    plataformas si estan.)
   - Bloques de luz adaptados a Paz / Corrupto
 
 
@@ -216,14 +350,29 @@ musica, nivel de Modo Historia y su efecto Corrupto.
     APLICADO en el Supabase de GlD por el usuario.
   - [HECHO] Modulo cliente js/model/GldAccount.js (login,
     vinculo, cloudSave, publicar, listar publicos, me gusta,
-    contadores). Funciona offline hasta poner la ANON_KEY.
-    LevelStorage.setLinked ya refleja la sesion.
-  - FALTA: la ANON_KEY publica de GlD (la pega el usuario) para
-    activar la nube de verdad.
+    contadores). LevelStorage.setLinked ya refleja la sesion.
+  - [HECHO] La ANON_KEY publica de GlD ya esta configurada en
+    GldAccount.js: la nube esta ACTIVA (ya no es offline).
   - FALTA UI: boton con iconito de internet = login; pantallas
     de publicar / lista de niveles de otros / me gusta.
+  - FALTA: FAVORITOS. Marcar niveles como favoritos con el icono
+    del Ducky Glob. Son los que destacas/compartes. Maximo 7.
+    (si al final quieres 7 o 10 se decide al implementarlo;
+    por ahora el tope de referencia es 7.)
+  - FALTA: limite de PUBLICADOS = 120 niveles como maximo.
+    Ojo, son tres cosas distintas:
+      * Guardados ...... hasta 258 con cuenta vinculada (207 sin)
+      * Publicados ..... hasta 120 (los que ven otros jugadores)
+      * Favoritos ...... hasta 7 (subconjunto destacado)
+  - FALTA: SOCIAL (amigos). En Glob Defenders se podra anadir
+    gente como amigos, ver sus perfiles y si estan activos
+    (en linea). Lo mismo aplica desde Super Glob Maker. Desde el
+    perfil de un jugador en GlD se accede a sus niveles de SGM.
   !! El perfil de GlD (la web) debe leer esos niveles:
      cambio en el codigo de GlD (fuera de este repo).
+  !! Amigos / estado "activo" y favoritos necesitan tablas y
+     politicas (RLS) nuevas en el Supabase de GlD (PRODUCCION):
+     preparo el SQL y te lo enseno antes de aplicarlo.
 
 
 --------------------------------------------------------------
@@ -238,11 +387,20 @@ que hara cada uno (anticipo de su habilidad de power-up):
   - Gris ... (con la familia negra) su habilidad de power-up es
              DISPARAR; de especial, nadan mas rapido
   - Negro .. saltan mas alto y lanzan proyectiles con power-up
-Power-ups / evoluciones (como SMB):
-  - Gota Evo (hoja) = Super Champinon: EVO1 -> EVO2 (crecer).
-    Solo UNA subida.
-  - Falta CREAR un 2o power-up = Flor de Fuego: EVO2 -> EVO3,
-    la forma que da la habilidad (disparar en gris/negro, etc.).
+ESTADO REAL (ya implementado, pendiente de AFINAR al gusto):
+  - [HECHO] Los 6 Globs ya tienen matices en Characters.js:
+    verde equilibrado, rojo mas rapido, azul resbala e ignora
+    pinchos MIENTRAS patina, negro salta mas alto y dispara en
+    EVO3, gris culetazo que rompe bloques y dispara en EVO3.
+  - [HECHO] Los DOS power-ups existen: Gota Evo (EVO1->EVO2,
+    crecer) y Flor Estelar (EVO2->EVO3, la de la habilidad).
+    OJO: se llama "Flor Estelar", no "Flor de Fuego", y el
+    disparo de EVO3 solo funciona si el Glob tiene habilidad
+    'shoot' (gris/negro), no es universal.
+  [ ] A decidir por ti (son ajustes de diseno, no bugs):
+      - si el azul debe ignorar pinchos SIEMPRE o solo al patinar
+      - si el gris debe "nadar" mejor como rasgo base
+      - si la flor debe hacer disparar a CUALQUIER Glob
 
 
 --------------------------------------------------------------
@@ -300,3 +458,49 @@ Power-ups / evoluciones (como SMB):
   - 3 modos de inicio (Campo de Pruebas, Clasico, Aireado)
   - Limite de 207 niveles
   - Controles: Espacio dispara
+  - [HECHO] Setas moviles (shroomH/shroomV): ahora se mueven
+    SOLO con alguien encima (el jugador montado). Sin nadie
+    encima se quedan quietas donde esten (conservan la fase).
+    En Darkness Forest Corrupto (movingShrooms) siguen
+    moviendose siempre. Modelo + descripcion del editor.
+  - [HECHO] Al PROBAR un nivel, Esc o Ctrl+P vuelven al editor
+    al instante (sin pasar por el menu de pausa). En partida
+    normal, Esc/Enter/P siguen pausando. Ignora autorepeat para
+    que no rebote entre editar y probar. Anotado en Controles.
+  - [HECHO] Colores de liquido peligroso coherentes por tema y
+    NUNCA verdes (el verde queda para agua/gelatina): UR petroleo
+    negro, SS lila, circus rojo, vortex lila oscuro, jungle lila,
+    factory cian, clock azul brillante, hub verde oscuro. El resto
+    ya eran coherentes (GL rosa, volcan naranja, etc.). Verificado
+    (ningun liquid verde ni en Paz ni en Corrupto).
+  - [HECHO] Sound Discotech: el liquido peligroso cambia de color
+    al ritmo del tempo del tema (rojo/azul/amarillo/rosa, con
+    transicion suave). Calculado en WorldRenderer y pintado en
+    Sprites via o.liquidCol/o.liquidTopCol.
+    [ ] Mejora futura: pulso de audio REAL (beatT) cuando se haga
+        el efecto 'beat' del disco Corrupto.
+  - [HECHO] Interruptor P clasico (monedas <-> bloques) y
+    condicion de victoria por monedas rojas (redcoins). Ver
+    seccion 2.
+  - [HECHO] Arreglado el enlace de tuberias/puertas cruzando
+    subzonas (se perdia el origen al cambiar de pestana).
+  - [HECHO] Arreglado el bug de "lanzamiento hacia arriba" al
+    tocar interruptores A/B, P y "!": el anti-atrapamiento miraba
+    el PIE (que roza el suelo, falso positivo). Ahora
+    unstickPlayer() mira el TORSO; solo sube si de verdad queda
+    atrapado dentro de un bloque recien solido. Verificado.
+  - [HECHO] Pantalla de "Nivel superado" mejorada: dice si lo
+    pasaste por META OCULTA, muestra las Monedas Estrella
+    conseguidas (x/total) y avisa si el nivel esconde una meta
+    oculta / interruptor "!" que no usaste (mira base + subzonas).
+  - [HECHO] Mapa de nubes renombrado a "Enredados Nublasticos" y
+    reestilizado: cielo azul clasico estilo NSMBWii/U + SMW (ya
+    no el pastel rosa). Nombre + paleta en Themes.js.
+  - [HECHO] Condicion de victoria en el HUD: durante la partida se
+    muestra el objetivo y su progreso (verde al cumplirse). Elegir
+    la condicion en el editor ya estaba hecho (Ajustes del nivel).
+  - [HECHO] Tuberias GIRABLES (visual + mecanica): R en el editor
+    alterna vertical/horizontal (o.hdir). La horizontal se entra
+    caminando hacia su boca (→/←, tambien en el aire); la vertical
+    sigue igual (de pie encima + ↓). Dibujo tumbado, persiste al
+    guardar, teletransporta igual. Falta: poder ALARGARLAS.

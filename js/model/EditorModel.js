@@ -57,7 +57,10 @@
     // Devuelve el nivel COMPLETO (base con sus subs sincronizadas) para guardar/probar
     full() { this.syncZone(); return this.base; }
 
-    setTool(t) { this.linkFrom = null; this.tool = t; this.emit('tool'); }
+    // Al reconstruir la toolbar (p. ej. al cambiar de zona) se re-selecciona la misma
+    // herramienta; en ese caso NO borramos el origen del enlace a medio hacer, para poder
+    // enlazar cruzando zonas (marcar origen en una zona, destino en otra).
+    setTool(t) { if (!(t && t.kind === 'link' && this.tool && this.tool.kind === 'link')) this.linkFrom = null; this.tool = t; this.emit('tool'); }
     setLevel(l) { this.base = l; this.activeZone = 0; this.level = l; this.undoStack = []; this.redoStack = []; this.dirty = false; this.camX = 0; this.camY = Math.max(0, l.height * S.TILE - S.VIEW_H); this.emit('level'); }
 
     snapshot() { return JSON.stringify(this.level.toJSON()); }
@@ -137,6 +140,7 @@
         if (L.objects.filter((o) => o.type === type).length >= limit) { this.emit('limit', { type }); return; }
         const no = { type, x, y };
         if (def.range) no.r = 3;
+        if (type === 'deco' && tool.deco) no.deco = tool.deco; // qué adorno es
         L.objects.push(no);
         this.changed = true;
       }
@@ -167,7 +171,9 @@
       const o = this.level.objectAt(x, y);
       if (!o || !C.canRotate(o.type, axis)) return false;
       this.beginStroke();
-      if (axis === 'v') o.fv = o.fv ? 0 : 1;
+      // Tuberías: R alterna entre vertical (hdir 0) y horizontal (hdir 1)
+      if ((o.type === 'warp' || o.type === 'lockwarp') && axis === 'h') o.hdir = o.hdir ? 0 : 1;
+      else if (axis === 'v') o.fv = o.fv ? 0 : 1;
       else o.dir = o.dir === 1 ? -1 : 1;
       this.changed = true; this.endStroke();
       this.emit('rotate', { x, y, axis });

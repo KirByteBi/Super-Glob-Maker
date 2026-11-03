@@ -38,6 +38,17 @@
           else { Sp.star(ctx, cx, cy, 12, 5.5, 5, -Math.PI / 2); ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.lineWidth = 2; ctx.setLineDash([3, 3]); ctx.lineJoin = 'round'; ctx.stroke(); ctx.setLineDash([]); }
         }
       }
+      // Condicion de victoria del nivel (si la hay): texto + progreso.
+      // Verde cuando ya se cumple (puedes ir a por la Medalla).
+      const win = g.level.win;
+      const showWin = (win && win.type && win.type !== 'none') || (g.fx.medalGate && g.starTotal > 0);
+      if (showWin && g.state === 'play') {
+        const met = g.winMet(), label = g.winText();
+        const wy = p.star > 0 ? 92 : 60; // debajo del indicador de Brillo si esta activo
+        const ww = Math.max(170, 12 + label.length * 7.2);
+        pill(ctx, 12, wy, ww, 26);
+        txt(ctx, (met ? '✓ ' : '🎯 ') + label, 22, wy + 13, 13, met ? '#8fff9a' : '#ffe600');
+      }
       // potenciadores con tiempo
       if (p.star > 0) { pill(ctx, 12, 60, 150, 26); txt(ctx, '★ Brillo ' + Math.ceil(p.star) + 's', 22, 73, 13, '#ffe600'); }
       if (g.mode === 'corrupt') { pill(ctx, W - 300, 60, 288, 26); txt(ctx, '☠ ' + g.theme.effectLabel, W - 290, 73, 12, '#ff7af0'); }

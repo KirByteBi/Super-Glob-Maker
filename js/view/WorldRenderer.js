@@ -24,7 +24,7 @@
         if (!tt) continue;
         const back = tt === TT.WATER;
         if ((pass === 0) !== back) continue;
-        Sp.drawTile(ctx, level, x, y, tt, pal, t, { bump: bumps[x + ',' + y] || 0, editor: opt.editor, convDir: opt.convDir, semi: semiStyle, mush: opt.mush, poison: opt.poison });
+        Sp.drawTile(ctx, level, x, y, tt, pal, t, { bump: bumps[x + ',' + y] || 0, editor: opt.editor, convDir: opt.convDir, semi: semiStyle, mush: opt.mush, poison: opt.poison, theme: level.theme, liquidCol: opt.liquidCol, liquidTopCol: opt.liquidTopCol });
         if (opt.editor && opt.contents && opt.contents[x + ',' + y]) drawContentBadge(ctx, x, y, opt.contents[x + ',' + y], pal, opt.ch);
       }
     }
@@ -79,7 +79,24 @@
       const shake = particles ? particles.shake : 0;
       ctx.save();
       ctx.translate(-Math.round(cam.x) + U.rand(-shake, shake), -Math.round(cam.y) + U.rand(-shake, shake));
-      drawTiles(ctx, g.level, g.pal, cam, t, { bumps: g.bumps, convDir: g.convDir * g.obstacleMul, mush: !!g.fx.movingShrooms, poison: !!g.fx.poisonWater });
+      // Decoraciones (sin colisión): se pintan DETRAS del terreno. Modulo aislado + protegido.
+      if (S.View.Decorations) {
+        try { g.level.objects.forEach((o) => { if (o.type === 'deco' && o.x + 3 > cam.x / T - 1 && o.x < (cam.x + cam.w) / T + 1) S.View.Decorations.drawObject(ctx, o, t, g.mode); }); } catch (e) { /* los adornos no deben romper el render */ }
+      }
+      const tileOpt = { bumps: g.bumps, convDir: g.convDir * g.obstacleMul, mush: !!g.fx.movingShrooms, poison: !!g.fx.poisonWater };
+      // Sound Discotech: el líquido cambia de color al ritmo del tempo del tema
+      // (rojo → azul → amarillo → rosa). beatT, si existe, aporta un "latido" extra.
+      if (g.theme.id === 'disco') {
+        const DISCO = ['#ff2f4f', '#2f7bff', '#ffe02f', '#ff4fd8'];
+        const bps = (g.theme.music.tempo || 140) / 60; // beats por segundo
+        const phase = t * bps / 2;                     // un color cada 2 beats
+        const i = Math.floor(phase) % DISCO.length;
+        const f = phase - Math.floor(phase);
+        const col = U.mix(DISCO[i], DISCO[(i + 1) % DISCO.length], f);
+        tileOpt.liquidCol = col;
+        tileOpt.liquidTopCol = U.mix(col, '#ffffff', 0.45);
+      }
+      drawTiles(ctx, g.level, g.pal, cam, t, tileOpt);
       if (g.goal) S.View.Sprites.goal(ctx, g.goal, t, g.player.ch.color);
       if (g.goalHidden) { ctx.save(); ctx.globalAlpha = 0.55; S.View.Sprites.goal(ctx, g.goalHidden, t, '#b44dff'); ctx.restore(); }
       const opt = { pal: g.pal, color: g.player.ch.color };

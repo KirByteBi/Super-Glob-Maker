@@ -82,6 +82,8 @@
       if (o && o.to) e.to = { z: o.to.z, i: o.to.i };
       // color de la tubería (0-3); el enlace iguala el color de ambos extremos
       if (o && o.col != null) e.col = o.col | 0;
+      // orientación de la tubería: 0 = vertical, 1 = horizontal (girada en el editor con R)
+      if (o && o.hdir) e.hdir = 1;
       if (e.init) e.init(o || {});
       return e;
     },

@@ -32,6 +32,10 @@
         if (o.to && typeof o.to.z === 'number' && typeof o.to.i === 'number') ob.to = { z: o.to.z | 0, i: o.to.i | 0 };
         // color de la tubería (0-3)
         if (o.col != null) ob.col = o.col | 0;
+        // orientación de la tubería: 1 = horizontal (0/ausente = vertical)
+        if (o.hdir) ob.hdir = 1;
+        // decoración visual (sin colisión): cuál es el adorno
+        if (o.deco) ob.deco = o.deco;
         return ob;
       }).filter((o) => C.OBJECTS[o.type]);
       this.ab = [0, 0, 0]; // estado de los bloques A/B (solo en partida)
@@ -64,7 +68,8 @@
         none: { name: 'Llegar a la Medalla', hasN: false },
         nojump: { name: 'Sin saltar', hasN: false },
         kills: { name: 'Derrotar enemigos', hasN: true, def: 5, max: 99 },
-        coins: { name: 'Juntar monedas', hasN: true, def: 20, max: 999 }
+        coins: { name: 'Juntar monedas', hasN: true, def: 20, max: 999 },
+        redcoins: { name: 'Coger todas las monedas rojas', hasN: false }
       };
     }
     static normWin(w) {
@@ -137,6 +142,8 @@
           if (o.fv) j.fv = 1;
           if (o.to) j.to = { z: o.to.z, i: o.to.i };
           if (o.col != null) j.col = o.col;
+          if (o.hdir) j.hdir = 1;
+          if (o.deco) j.deco = o.deco;
           return j;
         }), contents: Object.assign({}, this.contents),
         win: { type: this.win.type, n: this.win.n },

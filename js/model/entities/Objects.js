@@ -92,7 +92,9 @@
   // Tuberías y puertas: se conectan con la siguiente de su familia (las de tubería con tuberías, las puertas con puertas).
   // Las versiones con llave/tapa empiezan cerradas y se abren gastando una llave; abiertas funcionan igual.
   class Warp extends Entity {
-    constructor(tx, ty, o, type) { super(type || 'warp', tx, ty); this.gravity = 0; this.tiles = false; this.gizmo = true; this.family = 'pipe'; this.locked = false; }
+    // hdir: 0 = vertical (boca arriba, se entra con ↓), 1 = horizontal (boca al lado, se entra
+    // caminando). Lo aplica Entities.create desde o.hdir (como o.dir/o.col), no el constructor.
+    constructor(tx, ty, o, type) { super(type || 'warp', tx, ty); this.gravity = 0; this.tiles = false; this.gizmo = true; this.family = 'pipe'; this.locked = false; this.hdir = 0; }
     physics() {}
   }
   class LockWarp extends Warp { constructor(tx, ty, o) { super(tx, ty, o, 'lockwarp'); this.locked = true; } }

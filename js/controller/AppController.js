@@ -40,6 +40,7 @@
       const inp = this.input.poll();
       if (this.mode === 'game' && this.game) { this.game.update(dt, inp); this.game.render(this.t); }
       else if (this.mode === 'editor' && this.editor) { this.editor.update(dt); this.editor.render(this.t); }
+      else if (this.mode === 'map' && this.worldmap) { this.worldmap.update(dt, inp); this.worldmap.render(this.t); }
       else this.drawMenuBackdrop();
       requestAnimationFrame((t) => this.loop(t));
     }
@@ -55,6 +56,7 @@
     clearAll() {
       if (this.game) { this.game.destroy(); this.game = null; }
       if (this.editor) { this.editor.destroy(); this.editor = null; }
+      if (this.worldmap) { this.worldmap.destroy(); this.worldmap = null; }
       this.menu.closeModal(); this.menu.clear(); this.mode = 'menu';
     }
 
@@ -82,6 +84,8 @@
     }
 
     showStory() {
+      // World-map (mapamundi). Si el modulo no cargo, cae al grid clasico (fallback seguro).
+      if (S.Controller.MapController && S.Model.StoryMap) { this.showStoryMap(); return; }
       this.clearAll();
       const mode = this.prefs.storyMode;
       this.menu.story(mode, this.prefs.character, {
@@ -94,6 +98,20 @@
           this.playLevel(L.toJSON(), { character: this.prefs.character, story: { theme: themeId, mode } });
         }
       });
+    }
+
+    // Mapamundi del Modo Historia
+    showStoryMap(worldId) {
+      this.clearAll();
+      this.worldmap = new S.Controller.MapController(this, worldId || 'w1', this.prefs.storyMode);
+      this.mode = 'map';
+    }
+
+    // Lanzar el nivel de un nodo del mapamundi
+    playStoryNode(worldId, nodeId, mode) {
+      const node = S.Model.StoryMap.world(worldId).map[nodeId];
+      const L = S.Model.SampleLevels.build(node.theme, mode);
+      this.playLevel(L.toJSON(), { character: this.prefs.character, story: { theme: node.theme, mode, world: worldId, node: nodeId } });
     }
 
     showLevels() {
@@ -185,21 +203,55 @@
     exitGame() {
       if (this.suspendedEditor) { this.backToEditor(); return; }
       const story = this.lastPlay && this.lastPlay.opts.story;
-      if (story) this.showStory(); else this.showTitle();
+      if (story && story.world) this.showStoryMap(story.world); // vuelve al mapamundi
+      else if (story) this.showStory();
+      else this.showTitle();
     }
 
     progress() { try { return JSON.parse(localStorage.getItem(PROG) || '{}'); } catch (e) { return {}; } }
+
+    // ¿El nivel (base + subzonas) esconde meta oculta o interruptor "!"? Para la pantalla de resultado.
+    levelSecrets(data) {
+      const out = { hidden: false, exSwitch: false };
+      const scan = (objs) => {
+        if (!Array.isArray(objs)) return;
+        for (const o of objs) {
+          if (o.type === 'goalhidden') out.hidden = true;
+          else if (o.type === 'exswitch0' || o.type === 'exswitch1' || o.type === 'exswitch2') out.exSwitch = true;
+        }
+      };
+      if (data) { scan(data.objects); if (Array.isArray(data.subs)) data.subs.forEach((s) => scan(s && s.objects)); }
+      return out;
+    }
 
     onGameFinished(kind, g) {
       const lp = this.lastPlay, testing = !!this.suspendedEditor;
       if (kind === 'clear' && lp.opts.story) {
         const p = this.progress(); p[lp.opts.story.theme + ':' + lp.opts.story.mode] = Math.max(p[lp.opts.story.theme + ':' + lp.opts.story.mode] || 0, g.score);
         try { localStorage.setItem(PROG, JSON.stringify(p)); } catch (e) { /* nada */ }
+        // Mapamundi: marca el nodo como completado (y por meta oculta si aplica) para desbloquear
+        if (lp.opts.story.world && lp.opts.story.node && S.Model.StoryMap) {
+          S.Model.StoryMap.markCleared(lp.opts.story.world, lp.opts.story.node, !!g.secretClear);
+        }
       }
       const img = g.player.formPath();
-      const lines = kind === 'clear'
-        ? ['🏅 ¡Has conseguido la Medalla!', 'Puntos: ' + g.score, 'Globins: ' + g.coins, 'Forma final: ' + g.player.formName()]
-        : ['Te has quedado sin vidas…', 'Puntos: ' + g.score];
+      let lines;
+      if (kind === 'clear') {
+        // ¿superado por meta oculta / interruptor "!" o por la meta normal?
+        lines = [g.secretClear ? '🏅 ¡Medalla por META OCULTA!' : '🏅 ¡Has conseguido la Medalla!',
+          'Puntos: ' + g.score, 'Globins: ' + g.coins, 'Forma final: ' + g.player.formName()];
+        // Monedas Estrella conseguidas (si el nivel tiene)
+        if (g.starTotal > 0) lines.push('⭐ Monedas Estrella: ' + g.stars + ' / ' + g.starTotal + (g.stars >= g.starTotal ? ' ¡todas!' : ''));
+        // ¿el nivel esconde una salida secreta que NO usaste? (meta oculta o interruptor "!")
+        const secretInfo = this.levelSecrets(lp.data);
+        if (!g.secretClear && (secretInfo.hidden || secretInfo.exSwitch)) {
+          lines.push(secretInfo.hidden && secretInfo.exSwitch ? '🔍 Este nivel esconde una META OCULTA y un interruptor "!"'
+            : secretInfo.hidden ? '🔍 Este nivel esconde una META OCULTA'
+              : '🔍 Este nivel esconde un interruptor "!"');
+        }
+      } else {
+        lines = ['Te has quedado sin vidas…', 'Puntos: ' + g.score];
+      }
       if (kind === 'gameover') S.events.emit('game:gameover_sfx');
       const btns = [['Reintentar', () => { this.menu.closeModal(); this.restartGame(); }, kind === 'clear' ? '' : 'primary']];
       if (testing) btns.push(['Volver al editor', () => this.backToEditor(), 'primary']);

@@ -30,9 +30,11 @@
       for (let x = x0; x <= x1; x++) { ctx.moveTo(x * T + 0.5, y0 * T); ctx.lineTo(x * T + 0.5, y1 * T); }
       for (let y = y0; y <= y1; y++) { ctx.moveTo(x0 * T, y * T + 0.5); ctx.lineTo(x1 * T, y * T + 0.5); }
       ctx.stroke();
+      // Decoraciones (sin colisión): detrás del terreno
+      if (S.View.Decorations) { try { L.objects.forEach((o) => { if (o.type === 'deco') S.View.Decorations.drawObject(ctx, o, t, L.mode); }); } catch (e) { /* no romper el editor */ } }
       S.View.WorldRenderer.drawTiles(ctx, L, pal, cam, t, { editor: true, contents: L.contents, ch });
-      // objetos
-      L.objects.forEach((o) => this.drawObject(ctx, o, pal, ch, t));
+      // objetos (las decoraciones ya se pintaron detrás del terreno)
+      L.objects.forEach((o) => { if (o.type !== 'deco') this.drawObject(ctx, o, pal, ch, t); });
       // cursor
       if (this.hover && L.inBounds(this.hover.x, this.hover.y)) {
         const hx = this.hover.x * T, hy = this.hover.y * T;
@@ -134,14 +136,22 @@
       const ch = S.Model.Characters.get(L.character);
       const cat = C.PALETTE.find((c) => c.id === this.cat);
       this.items.innerHTML = '';
-      cat.items.forEach((it) => {
+      // Decoración: items dinámicos según el mapa (set temático de S.View.Decorations)
+      let items = cat.items;
+      if (cat.dynamic === 'deco' && S.View.Decorations) {
+        items = S.View.Decorations.forMap(L.theme).map((d) => ({ kind: 'obj', type: 'deco', deco: d.id, name: d.name }));
+        if (!items.length) { this.items.appendChild(el('p', 'empty', 'Este mapa no tiene decoraciones todavía.')); return; }
+      }
+      items.forEach((it) => {
         const b = el('button', 'ed-item');
         const cv = document.createElement('canvas'); cv.width = 44; cv.height = 44;
-        const x = cv.getContext('2d'); x.translate(4, 4); S.View.Sprites.drawIcon(x, it, 36, pal, ch, theme);
+        const x = cv.getContext('2d'); x.translate(4, 4);
+        if (it.deco && S.View.Decorations) { try { S.View.Decorations.drawObject(x, { x: 0, y: 0, deco: it.deco }, 0, L.mode); } catch (e) { /* icono fallido */ } }
+        else S.View.Sprites.drawIcon(x, it, 36, pal, ch, theme);
         b.appendChild(cv);
-        const name = C.itemName(it);
-        b.title = name + (it.kind === 'obj' && C.OBJECTS[it.type].desc ? ' - ' + C.OBJECTS[it.type].desc : '');
-        const sel = ed.tool.kind === it.kind && (ed.tool.id === it.id && it.kind === 'tile' || ed.tool.type === it.type && it.kind === 'obj' || it.kind === 'erase');
+        const name = it.name || C.itemName(it);
+        b.title = name;
+        const sel = ed.tool.kind === it.kind && (ed.tool.id === it.id && it.kind === 'tile' || ed.tool.type === it.type && it.kind === 'obj' || it.kind === 'erase') && (!it.deco || ed.tool.deco === it.deco);
         if (sel) b.classList.add('on');
         b.onclick = () => { ed.setTool(it); S.events.emit('ui:click'); this.refreshItems(ed); };
         this.items.appendChild(b);
