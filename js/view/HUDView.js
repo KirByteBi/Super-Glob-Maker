@@ -4,6 +4,7 @@
   const W = S.VIEW_W, H = S.VIEW_H;
 
   function txt(ctx, s, x, y, size, color, align) {
+    if (S.tr && typeof s === 'string') s = S.tr(s);
     ctx.font = `900 ${size}px "Trebuchet MS", sans-serif`; ctx.textAlign = align || 'left'; ctx.textBaseline = 'middle';
     ctx.lineJoin = 'round'; ctx.strokeStyle = '#000'; ctx.lineWidth = 5; ctx.strokeText(s, x, y);
     ctx.fillStyle = color || '#fff'; ctx.fillText(s, x, y);

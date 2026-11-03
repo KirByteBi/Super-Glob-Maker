@@ -126,6 +126,6 @@
     list, EFFECTS, SCALES,
     get(id) { return list.find((t) => t.id === id) || list[0]; },
     palette(theme, mode) { return mode === 'corrupt' ? theme.corruptPal : theme.pal; },
-    name(theme, mode) { return mode === 'corrupt' ? theme.corruptName : theme.name; }
+    name(theme, mode) { const n = mode === 'corrupt' ? theme.corruptName : theme.name; return S.tr ? S.tr(n) : n; }
   };
 })(window.SGM);

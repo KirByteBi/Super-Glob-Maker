@@ -16,12 +16,12 @@
     closeModal() { this.modal.innerHTML = ''; this.modal.style.display = 'none'; }
     openModal(title) {
       this.modal.innerHTML = ''; this.modal.style.display = 'flex';
-      const box = el('div', 'modal-box'); box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', title);
+      const box = el('div', 'modal-box'); box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', S.tr ? S.tr(title) : title);
       box.appendChild(el('h2', '', title)); this.modal.appendChild(box);
       return box;
     }
     toast(msg, ms) {
-      this.toastEl.textContent = msg; this.toastEl.classList.add('show');
+      this.toastEl.textContent = S.tr ? S.tr(msg) : msg; this.toastEl.classList.add('show');
       clearTimeout(this.toastT); this.toastT = setTimeout(() => this.toastEl.classList.remove('show'), ms || 2200);
     }
 
@@ -44,7 +44,10 @@
       menu.appendChild(b3d);
       const row = el('div', 'row');
       row.appendChild(button('🎮 Controles', '', h.controls));
-      row.appendChild(button(S.View.SoundView.isMuted() ? '🔇 Sonido' : '🔊 Sonido', '', () => { const m = S.View.SoundView.toggleMute(); row.children[1].textContent = m ? '🔇 Sonido' : '🔊 Sonido'; }));
+      // Idioma: Español / English (se vuelve a dibujar la pantalla)
+      if (S.i18n && h.lang) row.appendChild(button(S.i18n.lang === 'es' ? '🌍 ES → EN' : '🌍 EN → ES', '', h.lang));
+      const snd = button(S.View.SoundView.isMuted() ? '🔇 Sonido' : '🔊 Sonido', '', () => { const m = S.View.SoundView.toggleMute(); const t = m ? '🔇 Sonido' : '🔊 Sonido'; snd.textContent = S.tr ? S.tr(t) : t; });
+      row.appendChild(snd);
       menu.appendChild(row);
       s.appendChild(menu);
       s.appendChild(el('div', 'foot', 'Versión 2D · Los Globs y sus amigos'));
@@ -274,7 +277,8 @@
       head.appendChild(acc);
       if (st.user) head.appendChild(button('⚙', '', h.account)); // cuenta (cerrar sesión)
       s.appendChild(head);
-      const TABS = [['home', '⭐ Destacados'], ['top', '🏆 Top 10'], ['new', '🆕 Recientes'], ['plays', '🔥 Más jugados'], ['hard', '💀 Más difíciles'], ['search', '🔍 Buscar'], ['me', '👤 Mi perfil']];
+      const TABS = [['home', '⭐ Destacados'], ['top', '🏆 Top 10'], ['new', '🆕 Recientes'], ['plays', '🔥 Más jugados'], ['hard', '💀 Más difíciles'], ['search', '🔍 Buscar'], ['friends', '👥 Amigos'], ['me', '👤 Mi perfil']];
+      if (st.admin) head.insertBefore(el('span', 'badge admin', '🛡 ADMIN'), acc);
       const tabs = el('div', 'tabs');
       TABS.forEach(([id, label]) => { const b = button(label, 'tab' + (st.tab === id || (st.tab === 'author' && id === 'search' && false) ? ' on' : ''), () => h.tab(id)); tabs.appendChild(b); });
       s.appendChild(tabs);
@@ -298,7 +302,18 @@
       }
       if (st.loading) { wrap.appendChild(el('p', 'empty', 'Cargando…')); return; }
       if (st.error) { wrap.appendChild(el('p', 'empty', st.error === 'offline' ? 'Sin conexión con Glob Defenders. Lo online necesita internet.' : 'No se pudo cargar: ' + st.error)); return; }
+      this._st = st; // para que onlineRow sepa si eres admin
       if (st.tab === 'me') { this.onlineProfile(wrap, st, h); return; }
+      if (st.tab === 'friends') { this.onlineFriends(wrap, st, h); return; }
+      if (st.tab === 'home' && st.gods && st.gods.length) {
+        wrap.appendChild(el('h3', 'sec', '👑 Niveles GOD'));
+        st.gods.forEach((r) => wrap.appendChild(this.onlineRow(r, -1, h, true)));
+      }
+      if (st.tab === 'author' && st.favs && st.favs.length) {
+        wrap.appendChild(el('h3', 'sec', '🦆 Favoritos de @' + st.author));
+        st.favs.forEach((r) => wrap.appendChild(this.onlineRow(r, -1, h)));
+        wrap.appendChild(el('h3', 'sec', '🌐 Todos sus niveles'));
+      }
       if (st.tab === 'home' && st.featured) {
         wrap.appendChild(el('h3', 'sec', '📅 Nivel del día'));
         wrap.appendChild(this.onlineRow(st.featured, -1, h, true));
@@ -315,7 +330,7 @@
       const cv = document.createElement('canvas'); cv.width = 160; cv.height = 90; this.drawThemeThumb(cv, theme, r.mode || 'peace');
       row.appendChild(cv);
       const info = el('div', 'info');
-      info.appendChild(el('b', '', r.name));
+      info.appendChild(el('b', '', (r.god ? '👑 ' : '') + (r.favorite ? '🦆 ' : '') + r.name));
       const by = el('small', 'by');
       if (r.author) { const a = el('button', 'link', '@' + r.author); a.onclick = () => { click(); h.author(r.author); }; by.appendChild(document.createTextNode('por ')); by.appendChild(a); by.appendChild(document.createTextNode(' · ')); }
       by.appendChild(document.createTextNode(S.Model.Themes.name(theme, r.mode || 'peace')));
@@ -325,7 +340,34 @@
       row.appendChild(info);
       row.appendChild(button('▶ Jugar', 'primary', () => h.play(r)));
       if (h.download) row.appendChild(button('⬇', '', () => h.download(r))).title = 'Descargar a Mis niveles (solo para jugar)';
+      // herramientas de ADMIN: marcar GOD y borrar para todos
+      if (this._st && this._st.admin && h.adminGod) {
+        row.appendChild(button(r.god ? '👑 Quitar GOD' : '👑 GOD', r.god ? 'primary' : '', () => h.adminGod(r, !r.god)));
+        row.appendChild(button('🛡🗑', 'danger', () => h.adminDelete(r))).title = 'ADMIN: borrar para todos';
+      }
       return row;
+    }
+    // Amigos: añadir por nombre, ver si están en línea (activos en los últimos 5 min) y sus niveles
+    onlineFriends(wrap, st, h) {
+      if (!st.user) { wrap.appendChild(el('p', 'empty compact', 'Inicia sesión para tener amigos.')); return; }
+      const f = el('div', 'search-row');
+      const inp = document.createElement('input'); inp.type = 'text'; inp.placeholder = 'Usuario de tu amigo'; inp.maxLength = 24; inp.setAttribute('aria-label', 'Añadir amigo');
+      inp.onkeydown = (e) => { if (e.key === 'Enter' && inp.value.trim()) h.addFriend(inp.value.trim()); };
+      f.appendChild(inp); f.appendChild(button('➕ Añadir', 'primary', () => { if (inp.value.trim()) h.addFriend(inp.value.trim()); }));
+      wrap.appendChild(f);
+      const list = st.friends || [];
+      if (!list.length) { wrap.appendChild(el('p', 'empty compact', 'Aún no tienes amigos añadidos.')); return; }
+      list.forEach((fr) => {
+        const row = el('div', 'level-row');
+        const mins = fr.last_seen ? (Date.now() - new Date(fr.last_seen).getTime()) / 60000 : Infinity;
+        const info = el('div', 'info');
+        info.appendChild(el('b', '', (mins < 5 ? '🟢 ' : '⚪ ') + fr.username + (fr.follows_me ? ' 🤝' : '')));
+        info.appendChild(el('small', '', (mins < 5 ? 'En línea ahora' : fr.last_seen ? 'Visto hace ' + (mins < 60 ? Math.round(mins) + ' min' : mins < 1440 ? Math.round(mins / 60) + ' h' : Math.round(mins / 1440) + ' días') : 'Nunca visto') + ' · ' + (fr.levels || 0) + ' niveles publicados'));
+        row.appendChild(info);
+        row.appendChild(button('🌐 Sus niveles', 'primary', () => h.author(fr.username)));
+        row.appendChild(button('✖', 'danger', () => this.confirm('¿Quitar a ' + fr.username + ' de tus amigos?', () => h.removeFriend(fr.username))));
+        wrap.appendChild(row);
+      });
     }
     onlineProfile(wrap, st, h) {
       if (!st.user) {
@@ -345,6 +387,7 @@
         row.lastChild.remove(); // el botón Jugar se sustituye por los de gestión
         row.appendChild(el('span', 'badge ' + (m.is_public ? 'on' : 'off'), m.is_public ? '☄ Público' : 'Oculto'));
         // un nivel publicado se puede ocultar, pero no volver a publicar
+        if (m.is_public && h.favorite) { const fb = button(m.favorite ? '🦆 Favorito' : '🦆', m.favorite ? 'primary' : '', () => h.favorite(m, !m.favorite)); fb.title = 'Favoritos (máx. 7): salen destacados en tu perfil'; row.appendChild(fb); }
         if (m.is_public) row.appendChild(button('🙈 Ocultar', '', () => this.confirm('¿Ocultar "' + m.name + '"? Ya no podrás volver a publicarlo.', () => h.setPublic(m, false))));
         row.appendChild(button('🗑', 'danger', () => this.confirm('¿Borrar "' + m.name + '" de la nube? (tu copia local no se borra)', () => h.removeCloud(m))));
         wrap.appendChild(row);

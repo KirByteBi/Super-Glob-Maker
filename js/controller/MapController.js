@@ -194,14 +194,15 @@
       // barra superior: nombre del mundo
       ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(0, 0, W, 40);
       ctx.fillStyle = '#fff'; ctx.font = '900 20px "Trebuchet MS",sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-      ctx.fillText(this.world.name, 16, 20);
+      const tr = S.tr || ((s) => s);
+      ctx.fillText(tr(this.world.name), 16, 20);
       ctx.font = '600 13px "Trebuchet MS",sans-serif'; ctx.textAlign = 'right';
-      ctx.fillText('Flechas: mover · Z/Enter: entrar · Esc: salir', W - 16, 20);
+      ctx.fillText(tr('Flechas: mover · Z/Enter: entrar · Esc: salir'), W - 16, 20);
       // cartel inferior con el nombre del nodo seleccionado (estilo SMM2)
       let label = '';
-      if (cur.type === 'castle') label = '🏰 Castillo · ' + S.Model.Themes.name(S.Model.Themes.get(cur.theme), this.mode);
-      else if (cur.type === 'palace') label = '⚠ Palacio del interruptor "!"';
-      else if (cur.type === 'start') label = 'Salida';
+      if (cur.type === 'castle') label = '🏰 ' + tr('Castillo') + ' · ' + S.Model.Themes.name(S.Model.Themes.get(cur.theme), this.mode);
+      else if (cur.type === 'palace') label = tr('⚠ Palacio del interruptor "!"');
+      else if (cur.type === 'start') label = tr('Salida');
       else { const idx = this.world.nodes.filter((n) => n.type === 'level').indexOf(cur) + 1; label = this.world.id.toUpperCase() + ' - ' + idx + ' · ' + S.Model.Themes.name(S.Model.Themes.get(cur.theme), this.mode); }
       ctx.font = '800 18px "Trebuchet MS",sans-serif'; const tw = ctx.measureText(label).width;
       rr(ctx, W / 2 - tw / 2 - 18, H - 46, tw + 36, 32, 8); ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = '#ffe600'; ctx.stroke();

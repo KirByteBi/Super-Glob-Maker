@@ -239,10 +239,11 @@
       return TS;
     },
     itemName(it) {
-      if (it.kind === 'tile') return TILE_NAMES[it.id] || 'Bloque';
-      if (it.kind === 'erase') return 'Borrador';
-      if (it.kind === 'link') return 'Enlazar tubería/puerta';
-      return (OBJECTS[it.type] && OBJECTS[it.type].name) || it.type;
+      const tr = S.tr || ((s) => s);
+      if (it.kind === 'tile') return tr(TILE_NAMES[it.id] || 'Bloque');
+      if (it.kind === 'erase') return tr('Borrador');
+      if (it.kind === 'link') return tr('Enlazar tubería/puerta');
+      return tr((OBJECTS[it.type] && OBJECTS[it.type].name) || it.type);
     }
   };
 })(window.SGM);

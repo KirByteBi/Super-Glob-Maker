@@ -172,7 +172,8 @@
     }
   }
 
-  function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  // (los textos pasan por el traductor ES/EN)
+  function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = S.tr ? S.tr(text) : text; return e; }
   S.View.el = el;
   S.View.EditorView = EditorView;
 })(window.SGM);

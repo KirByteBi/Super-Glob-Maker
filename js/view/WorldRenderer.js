@@ -6,6 +6,23 @@
   const W = S.VIEW_W, H = S.VIEW_H;
   const TT = S.Model.Catalog.T;
 
+  // Meta con condición de victoria sin cumplir: candado sobre la Medalla y lo que falta encima
+  function lockMark(ctx, gg, g, t) {
+    const cx = gg.x + gg.w / 2 - 20, cy = gg.y + 20 + (gg.medalY || 0), Sp = S.View.Sprites;
+    ctx.save();
+    ctx.lineWidth = 3; ctx.strokeStyle = '#1a1033';
+    ctx.beginPath(); ctx.arc(cx, cy + 2, 6, Math.PI, 0); ctx.stroke();
+    Sp.rr(ctx, cx - 9, cy + 1, 18, 14, 3); Sp.fillStroke(ctx, '#ff4f4f', 2.5);
+    ctx.fillStyle = '#1a1033'; ctx.fillRect(cx - 1.5, cy + 5, 3, 6);
+    const gate = g.fx.medalGate && g.starTotal > 0 && g.stars < g.starTotal;
+    const prog = gate ? { have: g.stars, need: g.starTotal } : (g.level.win ? g.winProgress() : { have: 0, need: 0 }), label = prog.need > 0 ? prog.have + '/' + prog.need : '🔒';
+    ctx.font = '900 14px "Trebuchet MS",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round'; ctx.strokeStyle = '#000'; ctx.lineWidth = 4;
+    const ly = gg.y - 18 + Math.sin(t * 3) * 2;
+    ctx.strokeText(label, gg.x + gg.w / 2, ly); ctx.fillStyle = '#ffe600'; ctx.fillText(label, gg.x + gg.w / 2, ly);
+    ctx.restore();
+  }
+
   function drawTiles(ctx, level, pal, cam, t, opt) {
     opt = opt || {};
     const Sp = S.View.Sprites;
@@ -103,8 +120,8 @@
         const gg = g.goal; ctx.save(); ctx.globalAlpha = 0.45 + Math.sin(t * 3) * 0.1; ctx.setLineDash([6, 6]); ctx.strokeStyle = '#c38bff'; ctx.lineWidth = 3;
         ctx.strokeRect(gg.x - 2, gg.y, gg.w + 4, gg.h); ctx.beginPath(); ctx.arc(gg.x + gg.w / 2, gg.y + 14, 14, 0, 7); ctx.stroke(); ctx.setLineDash([]);
         ctx.fillStyle = '#e6d0ff'; ctx.font = 'bold 13px "Trebuchet MS",sans-serif'; ctx.textAlign = 'center'; ctx.fillText(g.purpleCoins + '/' + g.purpleNeed, gg.x + gg.w / 2, gg.y + 19); ctx.textAlign = 'left'; ctx.restore();
-      } else if (g.goal) S.View.Sprites.goal(ctx, g.goal, t, g.player.ch.color);
-      if (g.goalHidden) { ctx.save(); ctx.globalAlpha = 0.55; S.View.Sprites.goal(ctx, g.goalHidden, t, '#b44dff'); ctx.restore(); }
+      } else if (g.goal) { S.View.Sprites.goal(ctx, g.goal, t, g.player.ch.color); if (g.state === 'play' && !g.winMet(false)) lockMark(ctx, g.goal, g, t); }
+      if (g.goalHidden) { ctx.save(); ctx.globalAlpha = 0.55; S.View.Sprites.goal(ctx, g.goalHidden, t, '#b44dff'); ctx.restore(); if (g.state === 'play' && !g.winMet(true)) lockMark(ctx, g.goalHidden, g, t); }
       const opt = { pal: g.pal, color: g.player.ch.color };
       const onCam = (e) => e.x + e.w > cam.x - 64 && e.x < cam.x + cam.w + 64;
       g.entities.forEach((e) => {

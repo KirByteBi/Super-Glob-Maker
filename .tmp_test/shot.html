@@ -5,18 +5,19 @@
 <pre id="err" style="position:fixed;left:0;top:0;color:#f00;background:#fff;z-index:99;font-size:12px;margin:0"></pre>
 <script>
   window.onerror = (m, s, l, c, e) => { document.getElementById('err').textContent += m + ' @' + (s||'').split('/').pop() + ':' + l + '\n'; };
+  if (location.search.includes('touch=1')) window.ontouchstart = null; // simula pantalla táctil
   // Las imágenes deben resolverse relativas a la raíz del juego
   document.write('<base href="../">');
 </script>
 <!-- mismos scripts que index.html (sin main.js: aquí se arranca a mano) -->
-<script src="js/core/sgm.js"></script>
+<script src="js/core/sgm.js"></script><script src="js/core/i18n.js"></script>
 <script src="js/model/Characters.js"></script><script src="js/model/Themes.js"></script><script src="js/model/Catalog.js"></script>
 <script src="js/model/Level.js"></script><script src="js/model/LevelStorage.js"></script><script src="js/model/GldAccount.js"></script><script src="js/model/Physics.js"></script>
 <script src="js/model/entities/Entity.js"></script><script src="js/model/entities/Enemies.js"></script><script src="js/model/entities/EnemiesSpecial.js"></script><script src="js/model/entities/Objects.js"></script>
 <script src="js/model/Player.js"></script><script src="js/model/GameModel.js"></script><script src="js/model/EditorModel.js"></script><script src="js/model/SampleLevels.js"></script><script src="js/model/StoryMap.js"></script><script src="js/model/StoryLevels.js"></script><script src="js/model/LevelCheck.js"></script>
 <script src="js/view/PyceArt.js"></script><script src="js/view/Assets.js"></script><script src="js/view/GroundStyles.js"></script><script src="js/view/Sprites.js"></script><script src="js/view/BackgroundView.js"></script>
 <script src="js/view/Decorations.js"></script><script src="js/view/ParticlesView.js"></script><script src="js/view/WorldRenderer.js"></script><script src="js/view/HUDView.js"></script>
-<script src="js/view/SoundView.js"></script><script src="js/view/EditorView.js"></script><script src="js/view/MenuView.js"></script>
+<script src="js/view/SoundView.js"></script><script src="js/view/EditorView.js"></script><script src="js/view/MenuView.js"></script><script src="js/view/TouchControls.js"></script>
 <script src="js/controller/InputController.js"></script><script src="js/controller/GameController.js"></script><script src="js/controller/MapController.js"></script>
 <script src="js/controller/EditorController.js"></script><script src="js/controller/AppController.js"></script>
 <script>
@@ -36,6 +37,14 @@
           g.player.setForm(+(q.get('e') || 0), q.get('s') || null);
           g.t = 3;
           for (let i = 0; i < 120 * (+(q.get('sec') || 2)); i++) g.update(1 / 120, { right: true, run: false, jump: i % 90 < 40, jumpPressed: i % 90 === 0 });
+        } else if (what === 'lockgoal') {
+          const L = S.Model.Level.createDefault(); L.theme = 'vortex'; L.mode = 'corrupt';
+          L.win = S.Model.Level.normWin({ type: 'kills', n: 8, target: 'normal' });
+          const goal = L.objects.find((o) => o.type === 'goal'); goal.x = 14;
+          const st = L.objects.find((o) => o.type === 'start'); st.x = 6;
+          S.app.playLevel(L.toJSON(), {}); const g = S.app.game.model; g.t = 3;
+          for (let i = 0; i < 120 * 1.6; i++) g.update(1 / 120, { right: true });
+          window.__st = g.state;
         } else if (what === 'editor') { S.app.openEditor(S.Model.SampleLevels.build(q.get('t') || 'lake', q.get('m') || 'peace')); if (q.get('cat')) { S.app.editor.view.cat = q.get('cat'); S.app.editor.view.buildToolbar(S.app.editor.model, S.app.editor.handlers()); } }
         else if (what === 'arcade') {
           // muestra de suelo temático del casino: arcades de 1 y 2 de ancho, altos 1-4, y una masa 3x3

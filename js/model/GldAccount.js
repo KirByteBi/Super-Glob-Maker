@@ -231,11 +231,44 @@
       }
       return error ? { ok: false, error: /propio/.test(error.message) ? 'own' : error.message } : { ok: true };
     },
+    // ======================= ONLINE v3 (kiro/supabase_online_v3.sql) =======================
+    // Si el SQL v3 no está aplicado, estas funciones devuelven { ok:false, error:'no-v3' } y la UI lo avisa.
+    _v3err(e) { return e && /function|schema cache|column|does not exist/i.test(e.message || '') ? 'no-v3' : (e && e.message) || 'error'; },
+    async isAdmin() {
+      const c = await getClient(); if (!c || !(await Gld.user())) return false;
+      const { data, error } = await c.rpc('sgm_is_admin'); return !error && data === true;
+    },
+    async adminDelete(id) { const c = await getClient(); if (!c) return { ok: false, error: 'offline' }; const { error } = await c.rpc('sgm_admin_delete', { p_level: id }); return error ? { ok: false, error: Gld._v3err(error) } : { ok: true }; },
+    async adminGod(id, on) { const c = await getClient(); if (!c) return { ok: false, error: 'offline' }; const { error } = await c.rpc('sgm_admin_god', { p_level: id, p_god: !!on }); return error ? { ok: false, error: Gld._v3err(error) } : { ok: true }; },
+    // niveles GOD (destacados por el admin)
+    async gods() {
+      const c = await getClient(); if (!c) return [];
+      const { data, error } = await c.from('sgm_levels').select('id,name,user_id,plays,clears,likes,dislikes,score,author,published_at,god,theme:data->>theme,mode:data->>mode').eq('is_public', true).eq('god', true).order('published_at', { ascending: false }).limit(12);
+      return error ? [] : (data || []).map(norm);
+    },
+    // favoritos (máx. 7) de un autor, o los tuyos
+    async favorites(author) {
+      const c = await getClient(); if (!c) return [];
+      let r = c.from('sgm_levels').select('id,name,user_id,plays,clears,likes,dislikes,score,author,published_at,favorite,god,theme:data->>theme,mode:data->>mode').eq('is_public', true).eq('favorite', true);
+      if (author) r = r.eq('author', author);
+      const { data, error } = await r.limit(7); return error ? [] : (data || []).map(norm);
+    },
+    async setFavorite(id, on) {
+      const c = await getClient(); if (!c) return { ok: false, error: 'offline' };
+      const { error } = await c.from('sgm_levels').update({ favorite: !!on }).eq('id', id);
+      return error ? { ok: false, error: /7/.test(error.message) ? 'fav-limit' : Gld._v3err(error) } : { ok: true };
+    },
+    // amigos y "en línea"
+    async touch() { const c = await getClient(); if (c && (await Gld.user())) await c.rpc('sgm_touch').then(() => {}, () => {}); },
+    async friends() { const c = await getClient(); if (!c) return { ok: false, error: 'offline', rows: [] }; const { data, error } = await c.rpc('sgm_friends_list'); return error ? { ok: false, error: Gld._v3err(error), rows: [] } : { ok: true, rows: data || [] }; },
+    async addFriend(name) { const c = await getClient(); if (!c) return { ok: false, error: 'offline' }; const { data, error } = await c.rpc('sgm_friend_add', { p_username: name }); return error ? { ok: false, error: Gld._v3err(error) } : data === 'ok' ? { ok: true } : { ok: false, error: data }; },
+    async removeFriend(name) { const c = await getClient(); if (!c) return { ok: false, error: 'offline' }; const { error } = await c.rpc('sgm_friend_remove', { p_username: name }); return error ? { ok: false, error: Gld._v3err(error) } : { ok: true }; },
     // Mis niveles en la nube (publicados y no publicados) con sus números
     async mine() {
       const c = await getClient(); if (!c) return { ok: false, error: 'offline', rows: [] };
       const u = await Gld.user(); if (!u) return { ok: false, error: 'no-session', rows: [] };
-      let r = await c.from('sgm_levels').select('id,name,is_public,plays,clears,likes,dislikes,score,author,published_at,updated_at,theme:data->>theme,mode:data->>mode,local:data->>id').eq('user_id', u.id).order('updated_at', { ascending: false });
+      let r = await c.from('sgm_levels').select('id,name,is_public,plays,clears,likes,dislikes,score,author,published_at,updated_at,favorite,god,theme:data->>theme,mode:data->>mode,local:data->>id').eq('user_id', u.id).order('updated_at', { ascending: false });
+      if (r.error) r = await c.from('sgm_levels').select('id,name,is_public,plays,clears,likes,dislikes,score,author,published_at,updated_at,theme:data->>theme,mode:data->>mode,local:data->>id').eq('user_id', u.id).order('updated_at', { ascending: false });
       if (r.error) r = await c.from('sgm_levels').select('id,name,is_public,plays,clears,likes,updated_at,theme:data->>theme,mode:data->>mode,local:data->>id').eq('user_id', u.id).order('updated_at', { ascending: false });
       return r.error ? { ok: false, error: r.error.message, rows: [] } : { ok: true, rows: (r.data || []).map(norm), userId: u.id };
     }

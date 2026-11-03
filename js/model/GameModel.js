@@ -226,13 +226,13 @@
       if (this.goal && this.goalLocked && this.purpleCoins >= this.purpleNeed) { this.goalLocked = false; this.emit('goalAppear', { x: this.goal.x, y: this.goal.y + this.goal.h / 2 }); }
       if (this.goal && !this.goalLocked && this.state === 'play' && p.x + p.w > this.goal.x && p.x < this.goal.x + this.goal.w + 8 && p.y + p.h > this.goal.y) {
         if (this.winMet(false)) this.reachGoal(false);
-        else if (!this.winMsgT || this.t - this.winMsgT > 1.2) { this.winMsgT = this.t; this.emit('winLocked', { x: this.goal.x, y: this.goal.y, text: this.winText() }); }
+        else if (!this.winMsgT || this.t - this.winMsgT > 1.2) { this.winMsgT = this.t; this.emit('winLocked', { x: this.goal.x, y: p.y - 24, text: this.winText() }); }
       }
       // Meta OCULTA: pasa el nivel por salida secreta (también sujeta a la condición de victoria)
       const gh = this.goalHidden;
       if (gh && this.state === 'play' && p.x + p.w > gh.x && p.x < gh.x + gh.w + 8 && p.y + p.h > gh.y) {
         if (this.winMet(true)) this.reachGoal(true);
-        else if (!this.winMsgT || this.t - this.winMsgT > 1.2) { this.winMsgT = this.t; this.emit('winLocked', { x: gh.x, y: gh.y, text: this.winText() }); }
+        else if (!this.winMsgT || this.t - this.winMsgT > 1.2) { this.winMsgT = this.t; this.emit('winLocked', { x: gh.x, y: p.y - 24, text: this.winText() }); }
       }
 
       if (p.y > this.level.height * T + 40) this.die('fall');

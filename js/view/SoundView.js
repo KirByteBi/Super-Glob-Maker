@@ -76,6 +76,7 @@
     drip: () => tone({ f: 1400, f2: 600, d: 0.1, v: 0.12, wave: 'sine' }),
     enemyHop: () => tone({ f: 200, f2: 350, d: 0.1, v: 0.08, wave: 'sine' }),
     purpleCoin: () => tone({ f: 1320, f2: 1760, d: 0.07, v: 0.08, wave: 'triangle' }),
+    winLocked: () => { tone({ f: 220, d: 0.12, v: 0.16, wave: 'square' }); setTimeout(() => tone({ f: 165, d: 0.18, v: 0.16, wave: 'square' }), 130); },
     goalAppear: () => seq([60, 64, 67, 72, 76, 79, 84], 0.06, 'square', 0.14),
     pickCatch: () => tone({ f: 1200, f2: 1600, d: 0.08, v: 0.08, wave: 'triangle' }),
     squidPulse: () => tone({ f: 260, f2: 140, d: 0.14, v: 0.07, wave: 'sine' }),

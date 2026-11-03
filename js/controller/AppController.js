@@ -26,6 +26,11 @@
       this.menu.loading(0);
       S.View.Assets.loadAll((p) => this.menu.loading(p)).then(() => this.showTitle());
       requestAnimationFrame((ts) => this.loop(ts));
+      // "En línea" para tus amigos: avisa al servidor al abrir el juego y cada 3 minutos
+      const ping = () => { if (Storage.isLinked() && S.Model.Gld.configured()) S.Model.Gld.touch().catch(() => {}); };
+      setTimeout(ping, 3000); setInterval(ping, 180000);
+      // Controles táctiles (móvil/tablet)
+      if (S.View.TouchControls) S.View.TouchControls.init(this);
     }
 
     fit() {
@@ -69,6 +74,7 @@
         create: () => this.newLevel(),
         levels: () => this.showLevels(),
         online: () => this.showOnline('home'),
+        lang: () => { S.i18n.set(S.i18n.lang === 'es' ? 'en' : 'es'); this.showTitle(); },
         controls: () => this.menu.controls(),
         account: () => this.accountDialog()
       });
@@ -239,15 +245,26 @@
         profile: () => this.showOnline('me'),
         publish: (l) => this.publishLocal(l, () => this.showOnline('me')),
         setPublic: (m, on) => Gld.setPublic(m.id, on).then((r) => { this.menu.toast(r.ok ? (on ? '🌐 Publicado' : '🙈 Ahora es privado') : err(r.error)); this.showOnline('me'); }),
-        removeCloud: (m) => Gld.removeCloud(m.id).then((r) => { if (r.ok && m.local) Gld.setCloudId(m.local, null); this.menu.toast(r.ok ? 'Borrado de la nube' : err(r.error)); this.showOnline('me'); })
+        removeCloud: (m) => Gld.removeCloud(m.id).then((r) => { if (r.ok && m.local) Gld.setCloudId(m.local, null); this.menu.toast(r.ok ? 'Borrado de la nube' : err(r.error)); this.showOnline('me'); }),
+        // v3: favoritos, amigos y admin
+        favorite: (m, on) => Gld.setFavorite(m.id, on).then((r) => { this.menu.toast(r.ok ? (on ? '🦆 Añadido a favoritos' : 'Quitado de favoritos') : r.error === 'fav-limit' ? 'Máximo 7 favoritos' : err3(r.error)); this.showOnline('me'); }),
+        addFriend: (name) => Gld.addFriend(name).then((r) => { this.menu.toast(r.ok ? '👥 ' + name + ' añadido' : r.error === 'not-found' ? 'No existe ese usuario' : r.error === 'self' ? 'Ese eres tú 😅' : err3(r.error)); this.showOnline('friends'); }),
+        removeFriend: (name) => Gld.removeFriend(name).then(() => this.showOnline('friends')),
+        adminDelete: (row) => this.menu.confirm('ADMIN: ¿borrar "' + row.name + '" de @' + (row.author || '?') + ' para todos?', () => Gld.adminDelete(row.id).then((r) => { this.menu.toast(r.ok ? '🗑 Nivel borrado' : err3(r.error)); this.showOnline(tab, arg); })),
+        adminGod: (row, on) => Gld.adminGod(row.id, on).then((r) => { this.menu.toast(r.ok ? (on ? '👑 Nivel GOD' : 'Ya no es GOD') : err3(r.error)); this.showOnline(tab, arg); })
       };
+      const err3 = (e) => (e === 'no-v3' ? 'Falta aplicar kiro/supabase_online_v3.sql en el servidor' : err(e));
       const render = () => { if (tok === this.onlineTok && this.mode === 'menu') this.menu.online(st, h); };
       render();
       if (!Gld.configured()) { st.loading = false; st.error = 'offline'; render(); return; }
       const done = (r) => { st.loading = false; if (r && r.ok === false) st.error = r.error; st.v2 = Gld.v2; render(); };
       const userP = Storage.isLinked() ? Gld.username().catch(() => null) : Promise.resolve(null);
-      userP.then((u) => {
+      userP.then(async (u) => {
         st.user = u;
+        if (u) { Gld.touch(); st.admin = await Gld.isAdmin().catch(() => false); }
+        if (tab === 'friends') return u ? Gld.friends().then((r) => { st.friends = r.rows; done(r.ok ? r : { ok: false, error: r.error === 'no-v3' ? 'Falta aplicar kiro/supabase_online_v3.sql (amigos)' : r.error }); }) : done();
+        if (tab === 'author' && st.author) st.favs = await Gld.favorites(st.author).catch(() => []);
+        if (tab === 'home') st.gods = await Gld.gods().catch(() => []);
         if (tab === 'me') return st.user ? Gld.mine().then((r) => { st.mine = r.rows; done(r); }) : done();
         if (tab === 'search' && !st.search) return done();
         if (tab === 'home') {

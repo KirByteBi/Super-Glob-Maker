@@ -38,6 +38,8 @@
       on('bossLand', (d) => { this.dust(d.x, d.y, 12, '#ffffff'); this.shake = 5; });
       on('bossDown', (d) => { this.burst(d.x, d.y, 50, ['#ffd000', '#ff2fd6', '#00e5ff', '#ffffff'], 400, 'star'); this.flash = 0.6; this.flashColor = '#ffffff'; });
       on('goal', (d) => { this.burst(d.x, d.y, 30, ['#ffc400', '#ff3b6b', '#ffffff'], 300, 'star'); this.text(d.x, d.y - 30, '+' + d.bonus, '#ffe600', 2, 22); });
+      // Meta tocada sin cumplir la condición de victoria: aviso de lo que falta
+      on('winLocked', (d) => { this.burst(d.x, d.y + 10, 8, ['#ff4f4f', '#ffffff'], 140, 'ring'); this.text(d.x, d.y - 18, '🔒 ' + (S.tr ? S.tr('¡Aún no!') : '¡Aún no!'), '#ff6b6b', 1.4, 20); this.text(d.x, d.y + 6, S.tr ? S.tr(d.text) : d.text, '#ffe600', 1.4, 15); this.shake = 2; });
       on('cannon', (d) => this.dust(d.x, d.y, 5, '#888888'));
       S.events.on('render:sparkle', (d) => this.add({ x: d.x, y: d.y, vx: 0, vy: -30, g: 0, life: 0.4, max: 0.4, size: 3, color: `hsl(${Math.random() * 360},100%,70%)`, shape: 'star', rot: 0 }));
     }

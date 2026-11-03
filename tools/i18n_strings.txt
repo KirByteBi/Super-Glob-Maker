@@ -1,0 +1,871 @@
+use strict
+btn 
+; this.screen.className = 
+; this.screen.style.display = 
+ + (cls || 
+); this.screen.style.display = 
+; this.modal.style.display = 
+GLOB MAKER
+▶ Modo Historia
+✏ Crear nivel
+📁 Mis niveles
+🌐 Online
+🌌 Modo 3D (próximamente)
+big disabled
+El modo 3D estilo SM64 / Galaxy llegará en la próxima versión.
+🎮 Controles
+🔇 Sonido
+🔊 Sonido
+, () => { const m = S.View.SoundView.toggleMute(); row.children[1].textContent = m ? 
+Versión 2D · Los Globs y sus amigos
+Controles
+← → / A D
+Moverse
+Z / W / ↑
+Saltar (mantén para saltar más)
+X / Shift
+Correr
+Espacio / C
+Disparar (EVO3 y Glob Caca)
+↓ / S en el aire
+Culetazo (rompe bloques si eres grande)
+Esc / Enter
+Pausa
+Editor: clic
+Colocar
+Editor: clic derecho
+Borrar
+Editor: rueda / flechas
+Desplazar
+Editor: Ctrl+Z / Ctrl+Y
+Deshacer / rehacer
+Editor: P
+Probar nivel
+Probando: Esc / Ctrl+P
+Volver al editor al instante
+Editor: 1-5
+Categorías
+, k)); tr.appendChild(el(
+Cerrar
+Elige tu Glob
+ on
+, x.name + 
+Cancelar
+story 
+← Volver
+☠ Modo Corrupto
+☀ Modo Paz
+mode-toggle 
+btn char-btn
+, (it.index + 1) + 
+, it.theme.group + (mode === 
+ + it.theme.effectLabel : 
+Elige el mapa
+map-grid small
+, S.Model.Themes.name(t, mode))); card.appendChild(el(
+¿Cómo empieza tu nivel?
+🟩 Campo de Pruebas
+Suelo firme en todo el nivel (estándar)
+⛰ Clásico
+Solo hay tierra bajo el inicio; el resto está vacío
+☁ Aireado
+Sin suelo: construyes todo desde cero
+map-card start-card
+, name)); card.appendChild(el(
+Ajustes del nivel
+); l.appendChild(el(
+Nombre
+Ancho (32-400)
+Alto (18-40)
+Tiempo (10-500)
+Condición de victoria
+Cantidad
+Se aplica a
+; tgSel.parentNode.style.display = winSel.value === 
+Aplicar
+Nivel sin nombre
+Exportar
+Importar
+🗑 Vaciar
+¿Borrar todo el contenido del nivel?
+Cuenta Glob Defenders
+)); b.appendChild(button(
+ + (h.username || 
+Cerrar sesión (desvincular)
+Sesión cerrada
+Usuario de Glob Defenders
+Contraseña
+); msg.setAttribute(
+); msg.style.color = 
+Sin conexión con Glob Defenders.
+El usuario debe tener 3-24 caracteres: letras, números, puntos, guiones o guiones bajos.
+Ese nombre de usuario no está permitido.
+La contraseña debe tener al menos 6 caracteres.
+Ese usuario ya existe. Si es tuyo, inicia sesión.
+Demasiados registros seguidos. Espera un poco y vuelve a probar.
+La cuenta se creó, pero el servidor pide confirmar un correo (desactiva "Confirm email" en Supabase).
+No se pudo: 
+Iniciar sesión
+¡Vinculado como 
+Usuario o contraseña incorrectos.
+✨ Crear cuenta
+✨ ¡Cuenta 
+ creada! También vale en Glob Defenders
+Aceptar
+Entendido
+¿Seguro?
+Sí
+No
+levels online
+🔑 Iniciar sesión
+⭐ Destacados
+🏆 Top 10
+🆕 Recientes
+🔥 Más jugados
+💀 Más difíciles
+🔍 Buscar
+👥 Amigos
+👤 Mi perfil
+badge admin
+🛡 ADMIN
+Nombre del nivel o @autor
+; inp.maxLength = 40; inp.setAttribute(
+Enter
+Buscar
+, st.rows.length + 
+ + tl + 
+ + td + 
+ + tp + 
+, st.error === 
+👑 Niveles GOD
+🦆 Favoritos de @
+🌐 Todos sus niveles
+📅 Nivel del día
+🏆 Lo mejor ahora mismo
+, st.tab === 
+ ? (st.search ? 
+ + st.search + 
+level-row online-row
+ featured
+) + (rank >= 0 && rank < 3 ? 
+ + rank : 
+, (r.god ? 
+) + (r.favorite ? 
+ + r.author); a.onclick = () => { click(); h.author(r.author); }; by.appendChild(document.createTextNode(
+)); by.appendChild(a); by.appendChild(document.createTextNode(
+) + r.score + 
+ + (r.plays || 0) + 
+ + pct + 
+▶ Jugar
+, () => h.download(r))).title = 
+👑 Quitar GOD
+👑 GOD
+ADMIN: borrar para todos
+Usuario de tu amigo
+Añadir amigo
+➕ Añadir
+, (mins < 5 ? 
+) + fr.username + (fr.follows_me ? 
+ : fr.last_seen ? 
+ + (mins < 60 ? Math.round(mins) + 
+ : mins < 1440 ? Math.round(mins / 60) + 
+ : Math.round(mins / 1440) + 
+ + (fr.levels || 0) + 
+🌐 Sus niveles
+, () => this.confirm(
+ + fr.username + 
+, pub.length + 
+ + (tl - td) + 
+🌐 En la nube
+badge 
+☄ Público
+Oculto
+🦆 Favorito
+, () => h.favorite(m, !m.favorite)); fb.title = 
+🙈 Ocultar
+ + m.name + 
+¿Borrar "
+" de la nube? (tu copia local no se borra)
+📁 Niveles de este dispositivo sin publicar
+, l.name)); info.appendChild(el(
+🌐 Publicar
+row vote-row
+👍 Me gusta
+👎 No me gusta
+ (Glob Defenders)
+＋ Nuevo
+, S.Model.Themes.name(theme, l.mode) + 
+ + S.Model.Characters.get(l.character).name + 
+pub-tag dl-tag
+⬇ de @
+ · solo jugar
+🔒 Editar
+" de tus descargas?
+Publicado: no se puede volver a publicar
+Publicado
+📄 Copia de "
+otro nivel
+)).title = clears.n ? 
+slot secret
+)).title = clears.s ? 
+✏ Editar
+☄ Publicado
+📄 Copiar
+📤 Exportar
+ (la versión online no se borra)
+Continuar
+Reiniciar
+Volver al editor
+Salir al menú
+ + g.lives, 250, 32, 18, 
+ + String(g.coins).padStart(2, 
+), W / 2, 32, 22, 
+¡Medalla!
+ + g.purpleNeed, px0 + 40, 32, 18, done ? 
+★ Brillo 
+Jefe
+¡Medalla conseguida!
+¡Ups!
+Vidas: 
+ed-btn 
+), label); b.title = title; b.onclick = () => { S.events.emit(
+Probar el nivel (P)
+🗺 Mapa
+Cambiar mapa
+, handlers.mode, 
+🟢 Glob
+Personaje del nivel
+⚙ Ajustes
+Nombre, tamaño y tiempo
+💾 Guardar
+Guardar el nivel (Ctrl+S)
+✖ Salir
+Volver al menú
+Base
+Sub 1
+Sub 2
+); x.title = 
+ed-zone add
+); add.title = 
+; add.onclick = () => { S.events.emit(
+☠ Corrupto
+☀ Paz
+, L.name + (ed.dirty ? 
+, S.Model.Themes.name(theme, L.mode) + 
+ + ch.name + 
+ + L.width + 
+ + L.height + 
+Clic: colocar · Clic der.: borrar · Rueda / flechas: mover · Objeto sobre caja = contenido
+Herramienta: 
+Nivel importado
+Máximo de 
+ niveles alcanzado
+No se pudo importar
+No se pudo copiar
+📄 Copia creada. Para publicarla cambia el tema o el modo, o modifícala bastante.
+🔒 Nivel de @
+Este nivel lo descargaste de 🌐 Online y es de @
+Ya lo tienes en 📁 Mis niveles
+Descargando…
+No se pudo descargar
+⬇ Guardado en 📁 Mis niveles (de @
+ : r === 
+ + Storage.limit() + 
+Exportar "
+📋 Copiar al portapapeles
+Copiado
+Selecciona el texto y usa Ctrl+C
+💾 Descargar archivo
+); a.href = URL.createObjectURL(new Blob([txt], { type: 
+).trim() || 
+☄ Nivel ya publicado
+Este nivel ya está publicado y no se puede volver a publicar. Si quieres otra versión, haz una COPIA (📄) y cámbiale el tema, el modo o bastantes cosas.
+📄 Copia demasiado parecida
+Esta copia se parece demasiado a "
+su original
+" (solo un 
+% distinto). Para publicarla cámbiale el tema o el modo (por ejemplo, su versión Corrupta), o modifica al menos un 
+% del nivel.
+¿Publicar "
+"? Una vez publicado no podrás volver a publicarlo ni cambiar la versión online.
+Publicando…
+☄ ¡Publicado! Míralo en 🌐 Online
+Sin conexión
+Ya tienes 120 niveles publicados
+Ya hay un nivel publicado idéntico a este
+Este nivel ya está publicado
+No se pudo publicar
+Publicar
+, author: tab === 
+Ya tienes 120 niveles publicados (el máximo).
+Límite de 258 niveles en la nube.
+Inicia sesión primero.
+Sin conexión.
+No puedes votar tus propios niveles.
+Los "no me gusta" llegarán cuando se aplique el SQL online v2.
+Error: 
+ ? this.showOnline(
+, q.slice(1)) : this.showOnline(
+🌐 Publicado
+🙈 Ahora es privado
+Borrado de la nube
+🦆 Añadido a favoritos
+Quitado de favoritos
+Máximo 7 favoritos
+ añadido
+No existe ese usuario
+Ese eres tú 😅
+ADMIN: ¿borrar "
+" de @
+, () => Gld.adminDelete(row.id).then((r) => { this.menu.toast(r.ok ? 
+👑 Nivel GOD
+Ya no es GOD
+Falta aplicar kiro/supabase_online_v3.sql en el servidor
+Falta aplicar kiro/supabase_online_v3.sql (amigos)
+Cargando "
+No se pudo cargar el nivel
+Importar nivel (pega el texto)
+Ese texto no es un nivel válido
+Probando nivel · Esc: volver al editor · P: pausa
+ + lp.opts.story.mode] = Math.max(p[lp.opts.story.theme + 
+🏅 ¡Medalla por META OCULTA!
+🏅 ¡Has conseguido la Medalla!
+Puntos: 
+Globins: 
+Forma final: 
+⭐ Monedas Estrella: 
+ ¡todas!
+🔍 Este nivel esconde una META OCULTA y un interruptor "!"
+🔍 Este nivel esconde una META OCULTA
+🔍 Este nivel esconde un interruptor "!"
+Te has quedado sin vidas…
+ · por @
+Reintentar
+¡Nivel superado!
+Fin de la partida
+👍 ¡Te gusta!
+👎 Anotado
+Voto quitado
+No puedes votar tus propios niveles
+Los 👎 llegarán con el SQL online v2
+No se pudo votar
+subzonas (máx 2)
+Límite alcanzado para 
+Caja rellenada con 
+Usa un solo tipo de Moneda Estrella por nivel (mezclarlas sería muy confuso)
+Origen marcado. Clica el destino (puedes cambiar de zona).
+Enlazado a 
+Sub 
+Para enlazar, clica dos tuberías (o dos puertas).
+☠ Modo Corrupto: 
+Glob del nivel
+Exportar nivel (copia este texto)
+Hay cambios sin guardar. ¿Salir igualmente?
+¿Se puede superar?
+, chk.problems.join(
+Guardar igualmente
+▶ Probarlo
+💾 Nivel guardado (
+Has llegado al máximo de 
+ niveles. Borra alguno para guardar este.
+No se pudo guardar (almacenamiento del navegador lleno)
+Eso no se puede girar
+Space
+Arrow
+, 0, 3); ctx.textAlign = 
+; ctx.textBaseline = 
+, r - 4, -r + 5); ctx.textAlign = 
+Flechas: mover · Z/Enter: entrar · Esc: salir
+🏰 Castillo · 
+⚠ Palacio del interruptor "!"
+Salida
+800 18px "Trebuchet MS",sans-serif
+Rojo / Azul
+Verde / Amarillo
+Rosa / Cian
+Suelo
+Bloque Gel (rompible)
+Caja Sorpresa
+Bloque Duro
+Semisólido A
+Bloque Pincho
+Bloque Gelatina (rebota)
+Hielo
+Líquido peligroso
+Nube
+Globin (moneda)
+Caja Oculta
+Cinta ←
+Cinta →
+Agua (se nada)
+Semisólido B
+Rosquilla (cae)
+Bloque Nota
+Bloque A rojo
+Bloque B azul
+Bloque A verde
+Bloque B amarillo
+Bloque A rosa
+Bloque B cian
+Interruptor A/B rojo-azul
+Interruptor A/B verde-amarillo
+Interruptor A/B rosa-cian
+Pendiente empinada ↗
+Pendiente empinada ↘
+Pendiente suave ↗ (baja)
+Pendiente suave ↗ (alta)
+Pendiente suave ↘ (alta)
+Pendiente suave ↘ (baja)
+Interruptor P
+Bloque POW
+Tubería
+Bloque P (moneda → bloque)
+Bloque P (bloque → moneda)
+Moneda roja (8 = 1UP)
+Moneda azul
+Moneda verde (interruptor G)
+Moneda rosa (oculta)
+Interruptor G
+Moneda verde oculta
+Bloque de luz
+Bloque "!" amarillo
+Bloque "!" verde
+Bloque "!" rosa
+Tubería pequeña (decoración)
+Suelo temático (según el mapa)
+Raíl (pon encima plataformas, setas, Barras Estelares o Pyces y lo seguirán; las plataformas arrancan al subirte)
+Moneda púrpura (junta 100 y aparece la Medalla)
+Semisólido de fondo (pinta un bloque: arriba se pisa, el resto es fondo del mapa)
+Relleno de semisólido de fondo
+Fondo de cueva (sin colisión: para cuevas y túneles)
+Inicio
+Meta oculta
+Segunda meta secreta: pasa el nivel por meta oculta.
+Medalla (meta)
+Punto de control
+Stupid Pyce
+El más simple: camina y cae al pisarlo.
+SO Pyce
+Casi transparente. Se da la vuelta en los bordes.
+Symbol Pyce
+Borroso y saltarín.
+Pyce 2.0
+Necesita dos golpes. Al primero se enfada y acelera.
+Guest Pyce
+Atacante de espada sencillo.
+Noob Pyce
+Dispara con su pistola.
+Elf Pyce
+Brinca sin parar hacia ti.
+Umbrella Pyce
+Baja flotando con su paraguas.
+Lento, pero se levanta una vez tras pisarlo.
+Crystal Pyce
+Cristales en la cabeza: no se puede pisar.
+Knight Pyce
+Armadura inmune a los proyectiles.
+Rebel Pyce
+Su spray crea nubes de niebla.
+SkeleBone Pyce
+Se desmonta al pisarlo y se vuelve a montar. Lanza huesos.
+Builder Pyce
+Tipo Hammer Bro: va y viene, salta y te lanza martillos en arco (atraviesan paredes).
+Miner Pyce
+Tipo Boomerang Bro, poseído por cristales: lanza su pico de cristal, que vuelve a sus manos.
+SnowCapsule Pyce
+Al pisarlo se vuelve cápsula: ¡patéala!
+Festive Pyce
+Lanza regalos en parábola.
+Bomb Pyce
+Al pisarlo se enciende la mecha y explota.
+ToyBomb Pyce
+Juguete de cuerda que corre hacia ti y explota.
+Wingel Pyce
+Vuela a saltos. Al pisarlo pierde las alas.
+Strechy Pyce
+Se estira hacia arriba. Pisa su cabeza.
+Flower Pyce
+Planta fija que escupe pétalos. No se pisa.
+Cannon Pycer
+Cañón que dispara balas estelares.
+Ghost Pyce
+Se acerca cuando le das la espalda.
+Holograma: a ratos es intangible.
+4motions Pyce
+Cambia de emoción: feliz, enfadado, triste o asustado.
+1x1x1x1 Pyce
+Hacker: sus píxeles atraviesan paredes.
+Pysh
+Nada y salta fuera del agua o del líquido. En lava/veneno se vuelve ígneo/venenoso. Sin agua solo brinca.
+Clown Pysh
+Versión fuerte de Pysh: más rápido y salta más alto hacia ti. 2 golpes.
+Axolotl Pyce
+Nada y dispara burbujas. Fuera del agua es lento.
+Squid Pyce
+Calamar tipo Blooper: se hunde despacio y da tirones hacia ti. Suelta nubes de tinta. Solo se pisa fuera del líquido.
+Shark Pyce
+Te embiste en el agua. No se pisa. Fuera del agua se arrastra.
+Mimic Pyce
+RARO: cofre que muerde. 10 pisotones. Da 1UP.
+Dirty Pyce
+RARO: mimic sucio y rápido. 10 pisotones. Da 1UP.
+NOmic Pyce
+RARO: lanza ojos. 10 pisotones. Da 1UP.
+Golden MimicPyce
+RARO: vuela y suelta monedas. 10 pisotones. Da 3UP.
+NOeye Pyce (jefe)
+Mini-jefe: corre, gira y salta. 3 golpes.
+NOsense Pyce (jefe fantasma)
+Jefe fantasma. Se mueve sin sentido y lanza ojos. Písalo cuando se maree. 4 golpes.
+NOIRrupt Pyce (jefe fantasma)
+Versión fuerte de NOsense: se teletransporta, dispara en abanico e invoca Ghost Pyces. 6 golpes.
+MoonStar Pyce (jefe final)
+El gran jefe de los Pyces. 5 golpes.
+Gota Evo
+Champiñón: hace crecer tu Glob (EVO1 → EVO2).
+Flor Estelar
+Flor: lleva a tu Glob a su 3ª evolución (EVO2 → EVO3), la de la habilidad.
+Brillo Estelar
+Invencible un rato.
+Mini Glob (1UP)
+Vida extra.
+Gota Caca
+Te convierte en Glob Caca.
+Fragmento del Vacío
+Te convierte en Glob Vacío.
+Moneda Estrella
+Coleccionable del nivel (2×2).
+Gigamoneda rosada
+Moneda Estrella (reskin, 2×2).
+Moneda Lunar
+Coleccionable (versión Corrupto, 2×2).
+Estrella verde/roja
+Moneda Estrella con forma de estrella (2×2).
+Estrella mágica
+Estrella de la Traición
+¡Te daña al tocarla! Pero cuenta como coleccionable (2×2).
+Interruptor "!" amarillo
+Activa los bloques "!" amarillos (2×2). Cuenta como meta oculta.
+Interruptor "!" verde
+Activa los bloques "!" verdes (2×2). Cuenta como meta oculta.
+Interruptor "!" rosa
+Activa los bloques "!" rosas (2×2). Cuenta como meta oculta.
+Moneda ×10
+Da 10 monedas (2×2).
+Moneda ×30
+Da 30 monedas (2×2).
+Moneda ×50
+Da 50 monedas (2×2).
+Moneda ×100
+Da 100 monedas (2×2).
+Muelle
+Plataforma ↔
+Plataforma ↕
+Plataforma raíl ↗↙
+Recorre un raíl diagonal. Clic otra vez para cambiar el recorrido.
+Plataforma raíl ↘↖
+Seta móvil ↔
+Semisólido que solo se mueve con alguien encima. Clic otra vez para cambiar el recorrido.
+Seta móvil ↕
+Entrada de tubería
+Tubería 2×2. Se conecta con la siguiente (pulsa ↓).
+Puerta
+Puerta (1 ancho × 2 alto). Se conecta con la siguiente puerta (pulsa ↑).
+Llave
+Abre una puerta con llave o una tubería con tapa.
+Puerta con llave
+Necesita una llave. Una vez abierta queda abierta. Se conecta como una puerta normal.
+Tubería con tapa
+Tubería 2×2 con tapa. Necesita una llave para quitar la tapa.
+Barra Estelar
+Barra giratoria de estrellas. Clic otra vez para alargarla.
+Carámbano
+Cae cuando pasas por debajo.
+Decoración
+Adorno visual sin colisión (según el mapa).
+Cápsula 
+Te transforma en 
+Terreno
+Bloques
+Pyces
+Pyces raros
+Objetos
+Mecanismos
+Especial
+Bloque
+Borrador
+Enlazar tubería/puerta
+Gelatina loca: tras saltar sigues rebotando
+Apagón nocturno: solo tu Glob y los proyectiles dan luz
+Marejada: el agua y el líquido hacen olas que barren la orilla
+Noche espectral: los enemigos solo se ven de cerca
+Función acelerada: enemigos y obstáculos van más rápido
+Ventisca: todo resbala
+Gravedad del vacío: saltos lunares
+Abismo ingrávido: saltos altos, gravedad baja y enemigos que nadan
+Setas vivas: las setas se mueven
+Espejo: el nivel se invierte
+Lluvia de meteoritos
+Tormenta MadStars: las nubes se deshacen y lanzan rayos
+Gelatin Lake
+Gelatin Lake Corrupto
+Lago / Valle
+Gelatina tóxica
+Gelatina verde
+Urbanistic Road
+Urbanistic Road: Apagón
+Ciudad
+Petróleo
+Sunlight Seaside
+Sunlight Seaside: Marejada
+Playa / Puerto
+Agua venenosa
+Spooktacular Ruins
+Aridez Escalofriante
+Desierto / Ruinas
+Arenas movedizas
+Pumpkin Circus
+Pesadilla en el Circo
+Circo / Halloween
+Jarabe de feria
+Frosty Christmas
+Frosty Christmas: Ventisca
+Nieve / Navidad
+Agua helada
+Vórtice Oscuro
+Vórtice del Vacío
+Fortaleza aérea
+Vacío
+Abismo Gelatinoso
+Abismo sin Fondo
+Acuático
+Anémona urticante
+Darkness Forest
+Darkness Forest: Setas Alucinógenas
+Bosque
+Ciénaga venenosa
+Enredados Nublásticos
+Enredados Nublásticos: Espejo
+Cielo
+Algodón eléctrico
+Núcleo Fundido
+Erupción Total
+Volcán
+Lava
+Fábrica PixelStar
+Fábrica MadStars
+Castillo (Fábrica)
+Píxeles fundidos
+Gambling Gaming
+Gambling Gaming: Ruleta Loca
+Casino
+Ponche con premio
+Time Attack
+Time Attack: Paradoja
+Arena del tiempo
+Sound Discotech
+Sound Discotech: A Todo Volumen
+Discoteca
+Refresco burbujeante
+Event Hub
+Event Hub: Dimensión Sellada
+Interdimensional
+Energía dimensional
+Plataforma de hierba
+Puente de troncos
+Edificio con tejado
+Vigas de obra
+Muelle del puerto
+Toldo de playa
+Columna antigua
+Losa de tumba
+Tambor de circo
+Calabazas apiladas
+Casa nevada
+Pila de regalos
+Roca del vacío
+Cubierta de nave
+Coral
+Barco hundido
+Tocón de árbol
+Rama con hojas
+Pilar de algodón
+Puente arcoíris
+Roca volcánica
+Rejilla metálica
+Vigas en construcción
+Andamio
+Mesa de póker
+Pila de fichas
+Reloj de arena
+Engranaje
+Altavoz
+Teclado de piano
+Plataforma portal
+Cristal verde
+Glob Verde
+Glob Verde (EVO1).png
+Emerald Glob (EVO3).png
+Greenbow Glob (EVO4).png
+Glob Dorado
+Glob Arcoíris
+Equilibrado, no destaca en nada.
+Glob Rojo
+Red Glob (EVO1).png
+Molten Glob (EVO2).png
+Cyborg Glob (EVO3).png
+Glob Fundido
+Glob Ciborg
+Un pelín más rápido.
+Glob de Jabón
+Soap Glob (EVO1).png
+Cotton Glob (SK-EVO2).png
+ElectroClean Glob (EVO3).png
+Glob de Cotón
+Glob Electroclean
+Resbala al caminar; mientras resbala no le afectan cintas ni pinchos.
+Glob Ducky
+Ducky Glob (EVO1).png
+Golden Ducky Glob (EVO2).png
+Rich Ducky Glob (EVO3).png
+Glob Ducky Dorado
+Glob Ducky Rico
+Planea al caer unos segundos y suma +1 a cada moneda que coge.
+Glob Cometa
+BlackRewamp _SKIN
+Comet Glob (EVO1).png
+Dark Glob (EVO2).png
+Demonic Glob (EVO3).png
+Glob Oscuro
+Salta más alto y dispara con el power-up.
+Glob Antiguo
+Glob Pyce
+Glob Espía
+Pesado (su culetazo rompe bloques); dispara con el power-up y de especial nada más rápido.
+Glob Caca
+Globs/GreenRewamp-SKIN/Poop Glob (EVO2).png
+Lanza bolas de caca que rebotan y dejan charcos pegajosos que frenan a los enemigos.
+Glob Vacío
+Globs/BlackRewamp _SKIN/Void Glob (EVO4).png
+Doble salto estelar y caída lenta. Al aterrizar del doble salto lanza una onda de estrellas.
+Nivel
+ (copia)
+) + h2.toString(16).padStart(8, 
+ + x + 
+ + y)), kb = new Set(B.o.map(([t, x, y]) => t + 
+ + (x + dx) + 
+).map(Number); cb[(x + dx) + 
+Llegar a la Medalla
+Sin saltar
+Derrotar enemigos
+Juntar monedas
+Coger todas las monedas rojas
+Las dos metas
+Solo la Medalla normal
+Solo la meta oculta
+).map(Number); if (x < w && y + dy >= 0 && y + dy < h) nc[x + 
+).forEach((p) => { const [v, c] = p.split(
+ + i), type: seg.type || 
+, theme: seg.t, x: p.x, y: p.y, next: nxt.length ? [(seq[k + 1].type === 
+ + (k + 2)) : (
+Mundo 1 · Globland Isle
+Mundo 2 · Wildsand Leaf
+Mundo 3 · Wonders Circus
+Mundo 4 · Tormenta Volcánica
+Mundo 5 · Ruptura Dimensional
+ + (GY - 4)] = 
+Primeros pasos
+Bloques y cajas
+Plataformas
+Tuberías
+Muelles
+Plataformas móviles
+Monedas rojas
+Llaves y puertas
+Bloques Nota
+Raíles
+Cañones
+Rosquillas
+Nubes
+Bloques A/B
+Los Bros
+Monedas púrpura
+Cintas
+Agua
+Barras Estelares
+Palacio "!"
+Castillo
+) + S.Model.Themes.name(theme, mode) + 
+ + node.id + 
+).map(Number); for (let i = -1; i <= 1; i++) extra.add((x + i) + 
+ + (o.y + s - 1) : (o.x + s + i) + 
+ + (o.y - 1)); extra.add((o.x + 1) + 
+El nivel no tiene Medalla.
+No parece que se pueda llegar a la Medalla desde la salida.
+No parece que se pueda llegar a la meta oculta.
+Arbusto Glob
+Cartel roto
+Frutos
+Arbusto
+Farol
+Viga rota
+Palmera
+Sombrilla
+Concha
+Cactus
+Calavera
+Columna rota
+Globos
+Calabaza
+Banderines
+Árbol nevado
+Muñeco de nieve
+Regalo
+Cristal del vacío
+Runa flotante
+Alga
+Burbujas
+Estrella de mar
+Árbol
+Seta
+Helecho
+Nubecita
+Arcoíris
+Roca
+Cristal ígneo
+Tragaperras
+, px + T * 0.5, py + T * 0.63); ctx.textAlign = 
+Dados
+Neón
+★ CASINO ★
+Reloj
+Nota musical
+Portal
+Tubería industrial
+Estrella PixelStar
+Valla
+Árbol gelatina
+Banco
+Boca de riego
+Noray
+Red de pesca
+Muro en ruinas
+Taquilla
+Valla nevada
+Cadena rota
+Coral abanico
+Liana
+Globo aerostático
+Fumarola
+Cajas apiladas
+Engranajes
+Bola de discoteca
+Cartel dimensional
+(pointer: coarse)
+tc-btn 
+tc-dir 
+, left: 
+, right: 
+, down: 
+); hold(run, [
+Borrar (como el clic derecho)
