@@ -83,6 +83,27 @@
     if (p.star > 0 && Math.random() < 0.5 && game) S.events.emit('render:sparkle', { x: cx + U.rand(-15, 15), y: by - U.rand(0, p.h) });
   }
 
+  // Otro jugador (multijugador): se reconstruye un "jugador" mínimo para reutilizar drawPlayer
+  const GSIZE = [{ w: 28, h: 22, draw: 44 }, { w: 40, h: 32, draw: 62 }];
+  function drawGhost(ctx, gh, t) {
+    const Chars = S.Model.Characters, ch = Chars.get(gh.glob), big = (gh.evo | 0) > 0 || !!gh.special, s = GSIZE[big ? 1 : 0];
+    const fake = {
+      x: gh.x, y: gh.y, w: s.w, h: s.h, face: gh.face || 1, vx: gh.vx || 0, vy: gh.vy || 0, onGround: gh.onGround, swimming: gh.swimming,
+      dead: gh.dead, inv: 0, star: gh.star ? 1 : 0, squash: 0, anim: gh.anim || 0, pound: 0, poundWait: 0, changeT: 0, ch,
+      drawSize: () => s.draw, formPath: () => Chars.formPath(ch, Math.min(gh.evo | 0, ch.evos.length - 1), gh.special || null)
+    };
+    ctx.save(); ctx.globalAlpha = gh.done ? 0.35 : 0.7;
+    drawPlayer(ctx, fake, t, null);
+    ctx.restore();
+    // nombre
+    ctx.save();
+    ctx.font = '800 12px "Trebuchet MS",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    const label = (gh.done ? '🏁 ' : '') + gh.name, tx = fake.x + fake.w / 2, ty = fake.y - (big ? 34 : 24);
+    ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = '#000'; ctx.strokeText(label, tx, ty);
+    ctx.fillStyle = ch.color; ctx.fillText(label, tx, ty);
+    ctx.restore();
+  }
+
   class WorldRenderer {
     constructor(canvas) { this.canvas = canvas; this.ctx = canvas.getContext('2d'); this.snow = []; for (let i = 0; i < 120; i++) this.snow.push({ x: Math.random() * W, y: Math.random() * H, s: U.rand(1, 3.5), v: U.rand(40, 120) }); }
 
@@ -130,6 +151,8 @@
         S.View.Sprites.drawEntity(ctx, e, t, opt);
         ctx.globalAlpha = 1;
       });
+      // Multijugador: los demás Globs (semitransparentes y con su nombre encima)
+      if (g.ghosts && g.ghosts.length) g.ghosts.forEach((gh) => drawGhost(ctx, gh, t));
       drawPlayer(ctx, g.player, t, g);
       // Niebla (Rebel) y tinta (Squid) por ENCIMA de todo: su gracia es tapar la vista
       g.entities.forEach((e) => { if (e.type === 'sprayfog' && onCam(e)) S.View.Sprites.drawEntity(ctx, e, t, opt); });

@@ -23,6 +23,8 @@
       // Al probar un nivel: Esc o Ctrl+P vuelven al editor directamente (sin menú de pausa)
       if (this.opts.testMode && inp.editExitPressed && !this.finished) { this.app.backToEditor(); return; }
       if (inp.pausePressed && !this.finished) { this.togglePause(); return; }
+      // Multijugador: tras llegar a la meta sigues viendo a los demás (y mandando que has acabado)
+      if (this.finished && this.opts.mp) { this.opts.mp.tick(this.model, dt); this.particles.update(dt); return; }
       if (this.paused || this.finished) return;
       this.acc = Math.min(this.acc + dt, 0.1);
       let first = true;
@@ -32,6 +34,8 @@
         this.model.update(STEP, i);
         this.acc -= STEP; first = false;
       }
+      // Multijugador: manda tu posición y mueve a los demás Globs
+      if (this.opts.mp) this.opts.mp.tick(this.model, dt);
       this.particles.update(dt);
     }
     render(t) {
@@ -45,7 +49,9 @@
       this.paused = true;
       menu.pause({
         resume: () => { this.paused = false; menu.closeModal(); },
-        restart: () => { menu.closeModal(); this.paused = false; this.app.restartGame(); },
+        // en multijugador la carrera sigue: reiniciar vuelve a la salida pero el reloj no para
+        restart: () => { menu.closeModal(); this.paused = false; if (this.opts.mp) { this.model.checkpoint = null; this.model.reset(false); } else this.app.restartGame(); },
+        exitLabel: this.opts.mp ? '🚪 Salir de la sala' : null,
         edit: this.opts.testMode ? () => { menu.closeModal(); this.app.backToEditor(); } : null,
         exit: () => { menu.closeModal(); this.app.exitGame(); }
       });

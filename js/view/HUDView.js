@@ -59,6 +59,15 @@
       // potenciadores con tiempo
       if (p.star > 0) { pill(ctx, 12, 60, 150, 26); txt(ctx, '★ Brillo ' + Math.ceil(p.star) + 's', 22, 73, 13, '#ffe600'); }
       if (g.mode === 'corrupt') { pill(ctx, W - 300, 60, 288, 26); txt(ctx, '☠ ' + g.theme.effectLabel, W - 290, 73, 12, '#ff7af0'); }
+      // Multijugador: quién ha llegado ya (arriba a la derecha, debajo del resto)
+      if (g.mpHud && g.mpHud.length) {
+        const y0 = g.mode === 'corrupt' ? 92 : 60;
+        pill(ctx, W - 210, y0, 198, 12 + g.mpHud.length * 20);
+        g.mpHud.forEach((r, i) => {
+          const c = S.Model.Characters.get(r.glob);
+          txt(ctx, (r.done ? (r.dnf ? '✖ ' : '🏁 ') : '🏃 ') + r.name + (r.done && !r.dnf ? ' ' + r.time.toFixed(1) + 's' : ''), W - 200, y0 + 16 + i * 20, 13, r.me ? '#ffe600' : c.color);
+        });
+      }
       // jefe
       const boss = g.entities.find((e) => e.boss && e.active && !e.remove);
       if (boss) {

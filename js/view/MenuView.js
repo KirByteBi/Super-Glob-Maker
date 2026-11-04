@@ -40,6 +40,7 @@
       menu.appendChild(button('✏ Crear nivel', 'big', h.create));
       menu.appendChild(button('📁 Mis niveles', 'big', h.levels));
       if (h.online) menu.appendChild(button('🌐 Online', 'big', h.online));
+      if (h.multi) menu.appendChild(button('👥 Multijugador', 'big', h.multi));
       if (h.messages) menu.appendChild(button('✉ Mensajes', 'big', h.messages));
       const b3d = button('🌌 Modo 3D (próximamente)', 'big disabled', () => this.toast('El modo 3D estilo SM64 / Galaxy llegará en la próxima versión.'));
       menu.appendChild(b3d);
@@ -69,11 +70,14 @@
     }
 
     // ---------- selección de personaje ----------
-    characterPicker(current, onPick, onCancel, title) {
+    // taken = Globs que ya llevan otros jugadores (multijugador: nunca 2 iguales)
+    characterPicker(current, onPick, onCancel, title, taken) {
       const b = this.openModal(title || 'Elige tu Glob');
       const grid = el('div', 'char-grid');
       S.Model.Characters.list.forEach((c) => {
-        const card = el('button', 'char-card' + (c.id === current ? ' on' : ''));
+        const busy = !!(taken && taken.includes(c.id));
+        const card = el('button', 'char-card' + (c.id === current ? ' on' : '') + (busy ? ' taken' : ''));
+        if (busy) { card.disabled = true; card.setAttribute('aria-disabled', 'true'); card.appendChild(el('span', 'taken-tag', '🔒 Ya elegido')); }
         card.style.setProperty('--c', c.color);
         const evos = el('div', 'char-evos');
         c.paths.forEach((p, i) => { const w = el('div', 'evo-cell'); w.appendChild(globImg(p, i === 0 ? 'evo-main' : 'evo-small')); w.appendChild(el('small', '', c.evoNames[i])); evos.appendChild(w); });
@@ -411,6 +415,7 @@
         p.appendChild(el('b', '', '👤 ' + st.author));
         const tl = st.rows.reduce((a, r) => a + r.likes, 0), td = st.rows.reduce((a, r) => a + r.dislikes, 0), tp = st.rows.reduce((a, r) => a + (r.plays || 0), 0);
         p.appendChild(el('span', '', st.rows.length + ' niveles · 👍 ' + tl + ' · 👎 ' + td + ' · ▶ ' + tp + ' partidas'));
+        if (st.crowns > 0) p.appendChild(el('span', 'badge on', '👑 ×' + st.crowns + ' Torneos ganados'));
         // sanciones (Void Globs) del autor
         if (st.authorWarns > 0) p.appendChild(el('span', 'warns', '🕳 ' + st.authorWarns + ' ' + (st.authorWarns === 1 ? 'Void Glob (sanción)' : 'Void Globs (sanciones)') + (st.authorWarns >= 15 ? ' · 🚫 BLOQUEADO para publicar' : '')));
         // herramientas de ADMIN sobre el usuario
@@ -509,6 +514,7 @@
       const card = el('div', 'profile-card');
       card.appendChild(el('b', '', '👤 ' + st.user));
       card.appendChild(el('span', '', pub.length + ' / 120 publicados · 👍 ' + tl + ' · 👎 ' + td + ' · ⭐ ' + (tl - td) + ' · ▶ ' + tp + ' partidas'));
+      if (st.crowns > 0) card.appendChild(el('span', 'badge on', '👑 ×' + st.crowns + ' Torneos ganados'));
       wrap.appendChild(card);
       wrap.appendChild(el('h3', 'sec', '🌐 En la nube'));
       if (!mine.length) wrap.appendChild(el('p', 'empty compact', 'Aún no has publicado niveles. Ve a 📁 Mis niveles, impórtalos o créalos y pulsa 🌐 Publicar.'));
@@ -603,6 +609,151 @@
       s.appendChild(wrap);
     }
 
+    // ---------- 👥 MULTIJUGADOR ----------
+    // Entrada estilo Glob Defenders: ✨ Crear Seed / seed + Cargar
+    multiplayerEntry(h) {
+      const b = this.openModal('👥 Multijugador');
+      b.appendChild(el('p', 'note', 'Juega con 2-4 amigos. Crea una sala y pásales su SEED, o escribe la seed de una sala para entrar.'));
+      const menu = el('div', 'menu');
+      menu.appendChild(button('✨ Crear Seed', 'big primary', h.create));
+      const f = el('div', 'search-row');
+      const inp = document.createElement('input'); inp.type = 'text'; inp.maxLength = 14; inp.placeholder = S.tr ? S.tr('Ej: G123456') : 'Ej: G123456'; inp.setAttribute('aria-label', 'Seed de la sala'); inp.className = 'seed-input';
+      inp.onkeydown = (e) => { if (e.key === 'Enter') h.join(inp.value.trim()); };
+      f.appendChild(inp); f.appendChild(button('Cargar', 'primary', () => h.join(inp.value.trim())));
+      menu.appendChild(f);
+      b.appendChild(menu);
+      b.appendChild(el('small', 'note', 'Modos: 1 Nivel · Multimundo (varios niveles seguidos) · Torneo (gana quien más puntos tenga y se lleva una 👑 corona). Nunca hay 2 Globs iguales.'));
+      b.appendChild(button('Cerrar', '', () => this.closeModal()));
+      setTimeout(() => inp.focus(), 30);
+    }
+    // Sala: jugadores, modo, niveles. st = { seed, players, isHost, mode, levels, busy, canStart, why }
+    roomLobby(st, h) {
+      const s = this.open('levels room');
+      const head = el('div', 'head');
+      head.appendChild(button('🚪 Salir', 'danger', h.leave));
+      head.appendChild(el('h1', '', '👥 Sala'));
+      const sc = button('SEED: ' + st.seed + '  📋', 'seed-btn', h.copySeed); sc.title = S.tr ? S.tr('📋 Copiar seed') : '📋 Copiar seed';
+      head.appendChild(sc);
+      if (st.isHost) head.appendChild(button('✉ Invitar', '', h.invite));
+      s.appendChild(head);
+      const wrap = el('div', 'level-list');
+      s.appendChild(wrap);
+      if (st.busy) wrap.appendChild(el('p', 'note', '⏳ Hay una partida en curso: entrarás en la siguiente ronda.'));
+      // jugadores (4 huecos)
+      wrap.appendChild(el('h3', 'sec', '👥 Jugadores (' + st.players.length + '/4)'));
+      const grid = el('div', 'room-players');
+      for (let i = 0; i < 4; i++) {
+        const p = st.players[i], card = el('div', 'room-player' + (p ? '' : ' empty') + (p && p.me ? ' me' : ''));
+        if (p) {
+          const c = S.Model.Characters.get(p.glob); card.style.setProperty('--c', c.color);
+          card.appendChild(globImg(c.paths[0], 'evo-main'));
+          card.appendChild(el('b', '', (p.isHost ? '👑 ' : '') + p.username));
+          card.appendChild(el('small', '', c.name + (p.me ? ' · tú' : '')));
+          if (p.me) card.appendChild(button('Cambiar Glob', '', h.pickGlob));
+        } else card.appendChild(el('small', '', 'Esperando jugador…'));
+        grid.appendChild(card);
+      }
+      wrap.appendChild(grid);
+      // modo
+      wrap.appendChild(el('h3', 'sec', '🎮 Modo'));
+      const modes = el('div', 'tabs');
+      [['one', '1 Nivel'], ['multi', '🗺 Multimundo'], ['tour', '🏆 Torneo']].forEach(([id, label]) => {
+        const bt = button(label, 'tab' + (st.mode === id ? ' on' : '') + (st.isHost ? '' : ' disabled'), () => { if (st.isHost) h.setMode(id); });
+        modes.appendChild(bt);
+      });
+      wrap.appendChild(modes);
+      const desc = { one: 'Todos juegan el mismo nivel.', multi: 'Hasta 10 niveles seguidos, como un mundo.', tour: 'Compites: llegar primero da más puntos y suman enemigos, objetos y Monedas Estrella. Sin efectos especiales. El ganador se lleva una 👑 corona.' }[st.mode];
+      wrap.appendChild(el('small', 'note', desc));
+      // niveles
+      wrap.appendChild(el('h3', 'sec', '🗺 Niveles (' + st.levels.length + '/' + (st.mode === 'one' ? 1 : 10) + ')'));
+      if (!st.levels.length) wrap.appendChild(el('p', 'empty compact', st.isHost ? 'Añade un nivel de 📁 Mis niveles o por 🔢 código.' : 'El anfitrión está eligiendo los niveles…'));
+      st.levels.forEach((l, i) => {
+        const row = el('div', 'level-row');
+        const cv = document.createElement('canvas'); cv.width = 160; cv.height = 90; this.drawThemeThumb(cv, S.Model.Themes.get(l.theme || 'lake'), l.mode || 'peace'); row.appendChild(cv);
+        const info = el('div', 'info'); info.appendChild(el('b', '', (i + 1) + '. ' + l.name)); info.appendChild(el('small', '', S.Model.Themes.name(S.Model.Themes.get(l.theme || 'lake'), l.mode || 'peace'))); row.appendChild(info);
+        if (st.isHost) {
+          if (st.levels.length > 1) { row.appendChild(button('▲', '', () => h.moveLevel(i, -1))).setAttribute('aria-label', 'Subir'); row.appendChild(button('▼', '', () => h.moveLevel(i, 1))).setAttribute('aria-label', 'Bajar'); }
+          row.appendChild(button('✖', 'danger', () => h.removeLevel(i))).setAttribute('aria-label', 'Quitar');
+        }
+        wrap.appendChild(row);
+      });
+      const row = el('div', 'row');
+      if (st.isHost) {
+        row.appendChild(button('➕ Añadir nivel', '', h.addLevel));
+        const go = button('▶ Empezar', 'big ' + (st.canStart ? 'primary' : 'disabled'), h.start);
+        if (!st.canStart && st.why) go.title = S.tr ? S.tr(st.why) : st.why;
+        row.appendChild(go);
+      } else row.appendChild(el('p', 'small', '⏳ Esperando a que el anfitrión empiece…'));
+      wrap.appendChild(row);
+    }
+    mpLevelSource(h) {
+      const b = this.openModal('➕ Añadir nivel');
+      const m = el('div', 'menu');
+      m.appendChild(button('📁 De Mis niveles', 'big', () => { this.closeModal(); h.mine(); }));
+      m.appendChild(button('🔢 Por código', 'big', () => { this.closeModal(); h.code(); }));
+      m.appendChild(button('Cancelar', '', () => { this.closeModal(); h.cancel(); }));
+      b.appendChild(m);
+    }
+    mpPickLocal(list, onPick, onCancel) {
+      const b = this.openModal('📁 Elige un nivel');
+      const wrap = el('div', 'level-list compact');
+      if (!list.length) wrap.appendChild(el('p', 'empty compact', 'Aún no has guardado niveles. ¡Crea el primero!'));
+      list.forEach((l) => {
+        const row = el('div', 'level-row');
+        row.appendChild(el('div', 'info')).appendChild(el('b', '', l.name));
+        row.appendChild(button('➕', 'primary', () => { this.closeModal(); onPick(l); })).setAttribute('aria-label', 'Añadir ' + l.name);
+        wrap.appendChild(row);
+      });
+      b.appendChild(wrap);
+      b.appendChild(button('Cancelar', '', () => { this.closeModal(); onCancel(); }));
+    }
+    // Tabla de jugadores (llegada / puntos)
+    mpTable(rows, cols) {
+      const tbl = el('table', 'keys mp-table');
+      rows.forEach((r, i) => {
+        const tr = el('tr'); if (r.me) tr.className = 'me';
+        const td0 = el('td', 'k'); const c = S.Model.Characters.get(r.glob || 'green'); td0.appendChild(globImg(c.paths[0], 'mp-glob')); td0.appendChild(document.createTextNode(' ' + (cols.place ? (r.place ? '#' + r.place : '—') : (i + 1) + '.') + ' ' + r.name));
+        tr.appendChild(td0);
+        cols.cells(r).forEach((x) => tr.appendChild(el('td', '', x)));
+        tbl.appendChild(tr);
+      });
+      return tbl;
+    }
+    mpWaiting(rows, mine, h) {
+      const b = this.openModal(mine && !mine.dnf ? '🏁 ¡Has llegado!' : '⏳ Esperando…');
+      b.classList.add('mp-wait');
+      if (mine && !mine.dnf) b.appendChild(el('p', 'result-line', '⏱ ' + mine.time.toFixed(2) + ' s · ' + 'Puntos: ' + mine.score));
+      b.appendChild(el('p', 'small', 'Esperando a los demás jugadores (como mucho 45 s desde la primera llegada)…'));
+      b.appendChild(this.mpTable(rows, { cells: (r) => [r.done ? (r.dnf ? '✖' : '✓ ' + r.time.toFixed(1) + ' s') : '🏃 jugando'] }));
+      b.appendChild(button('🚪 Salir de la sala', 'danger', h.leave));
+    }
+    mpResults(d, h, myId) {
+      const s = this.open('levels room');
+      const b = el('div', 'modal-box mp-box'); s.appendChild(b);
+      b.appendChild(el('h2', '', (d.total > 1 ? 'Ronda ' + (d.round + 1) + '/' + d.total : 'Resultado') + (d.mode === 'tour' ? ' · 🏆 Torneo' : '')));
+      const rows = d.rows.map((r) => Object.assign({}, r, { me: r.id === myId }));
+      b.appendChild(this.mpTable(rows, { place: true, cells: (r) => [r.dnf ? 'No llegó' : '⏱ ' + r.time.toFixed(2) + ' s', '+' + r.points + ' pts', 'Total: ' + (d.totals[r.id] || 0)] }));
+      const row = el('div', 'row');
+      if (h.next) row.appendChild(button(d.last ? '🏁 Resultado final' : '▶ Siguiente nivel', 'primary', h.next));
+      else row.appendChild(el('p', 'small', '⏳ El anfitrión pasará a lo siguiente…'));
+      row.appendChild(button('🚪 Salir de la sala', 'danger', h.leave));
+      b.appendChild(row);
+    }
+    mpFinal(d, h, myId) {
+      const s = this.open('levels room');
+      const b = el('div', 'modal-box mp-box'); s.appendChild(b);
+      const win = d.rows[0];
+      b.appendChild(el('h2', '', d.mode === 'tour' ? '👑 ¡' + (win ? win.name : '?') + ' gana el Torneo!' : '🏁 Fin de la partida'));
+      if (win) b.appendChild(globImg(S.Model.Characters.get(win.glob).paths[2], 'result-glob'));
+      const rows = d.rows.map((r) => Object.assign({}, r, { me: r.id === myId }));
+      b.appendChild(this.mpTable(rows, { cells: (r) => [r.points + ' pts', r.id === d.winner && d.mode === 'tour' ? '👑' : ''] }));
+      const row = el('div', 'row');
+      if (h.lobby) row.appendChild(button('↩ Volver a la sala', 'primary', h.lobby));
+      else row.appendChild(el('p', 'small', '⏳ El anfitrión decidirá si jugáis otra…'));
+      row.appendChild(button('🚪 Salir de la sala', 'danger', h.leave));
+      b.appendChild(row);
+    }
+
     // ---------- partida ----------
     pause(h) {
       const b = this.openModal('Pausa');
@@ -610,7 +761,7 @@
       m.appendChild(button('Continuar', 'primary', h.resume));
       m.appendChild(button('Reiniciar', '', h.restart));
       if (h.edit) m.appendChild(button('Volver al editor', '', h.edit));
-      m.appendChild(button('Salir al menú', 'danger', h.exit));
+      m.appendChild(button(h.exitLabel || 'Salir al menú', 'danger', h.exit));
       b.appendChild(m);
     }
 

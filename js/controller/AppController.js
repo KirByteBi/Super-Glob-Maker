@@ -29,7 +29,12 @@
       // Lee tu usuario de GlD al arrancar (si hay sesión): así tu cuenta se ve en el menú
       // y tus niveles descargados se pueden editar sin tener que entrar antes a Online.
       if (Storage.isLinked() && S.Model.Gld.configured()) {
-        S.Model.Gld.username().then((u) => { if (u) { this._myUser = u; if (this.mode === 'menu') this.showTitle(); } }).catch(() => {});
+        S.Model.Gld.username().then((u) => {
+          if (!u) return;
+          this._myUser = u; if (this.mode === 'menu' && !this.mp) this.showTitle();
+          // invitaciones a salas del multijugador
+          if (S.Model.Room) S.Model.Room.Invites.listen(u, (p) => this.onInvite(p)).catch(() => {});
+        }).catch(() => {});
       }
       // "En línea" para tus amigos: avisa al servidor al abrir el juego y cada 3 minutos
       const ping = () => { if (Storage.isLinked() && S.Model.Gld.configured()) S.Model.Gld.touch().catch(() => {}); };
@@ -85,6 +90,7 @@
         create: () => this.newLevel(),
         levels: () => this.showLevels(),
         online: () => this.showOnline('home'),
+        multi: () => this.showMultiplayer(),
         messages: () => this.showMessages(),
         lang: () => { S.i18n.set(S.i18n.lang === 'es' ? 'en' : 'es'); this.showTitle(); },
         controls: () => this.menu.controls(),
@@ -393,6 +399,8 @@
         if (tab === 'mod' && !st.admin) { st.error = 'Solo para admin'; return done(); }
         if (tab === 'friends') return u ? Gld.friends().then((r) => { st.friends = r.rows; done(r.ok ? r : { ok: false, error: r.error === 'no-v3' ? 'Falta aplicar kiro/supabase_online_v3.sql (amigos)' : r.error }); }) : done();
         if (tab === 'author' && st.author) st.favs = await Gld.favorites(st.author).catch(() => []);
+        // 👑 coronas de Torneo del perfil que se mira
+        if ((tab === 'author' && st.author) || (tab === 'me' && u)) st.crowns = await Gld.crowns(tab === 'me' ? u : st.author).catch(() => 0);
         if (tab === 'home') st.gods = await Gld.gods().catch(() => []);
         if (tab === 'me') return st.user ? Gld.mine().then((r) => { st.mine = r.rows; done(r); }) : done();
         if (tab === 'search' && !st.search) return done();
@@ -508,6 +516,7 @@
     }
 
     exitGame() {
+      if (this.lastPlay && this.lastPlay.opts.mp) { this.mpLeave(); return; }
       if (this.suspendedEditor) { this.backToEditor(); return; }
       const online = this.lastPlay && this.lastPlay.opts.online;
       if (online && online.back) { online.back(); return; }
@@ -515,6 +524,96 @@
       if (story && story.world) this.showStoryMap(story.world); // vuelve al mapamundi
       else if (story) this.showStory();
       else this.showTitle();
+    }
+
+    // ---------- 👥 MULTIJUGADOR (planning 5d) ----------
+    // Entrada como en Glob Defenders: ✨ Crear Seed o escribir una seed y Cargar.
+    // Hace falta la cuenta de GlD (tu nombre es el que ven los demás).
+    showMultiplayer() {
+      const Gld = S.Model.Gld, Room = S.Model.Room;
+      if (!Gld.configured()) { this.menu.toast('Sin conexión con Glob Defenders.'); return; }
+      if (!Storage.isLinked()) { this.menu.toast('Inicia sesión con tu cuenta de Glob Defenders para jugar online', 2600); this.accountDialog(() => { if (Storage.isLinked()) this.showMultiplayer(); }); return; }
+      this.menu.multiplayerEntry({
+        create: () => this.mpJoin(Room.newSeed(), true),
+        join: (seed) => { if (!Room.isSeed(seed)) { this.menu.toast('Introduce una seed válida.'); return; } this.mpJoin(Room.cleanSeed(seed), false); }
+      });
+    }
+    async mpJoin(seed, created) {
+      const Gld = S.Model.Gld, Room = S.Model.Room;
+      if (this.mp) this.mpLeave(true);
+      this.menu.closeModal(); this.menu.toast('Conectando con la sala ' + seed + '…', 2500);
+      try {
+        const u = this._myUser || await Gld.username();
+        if (!u) { this.menu.toast('Inicia sesión primero.'); return; }
+        this._myUser = u;
+        const room = new Room(seed, u, this.prefs.character || 'green');
+        await room.connect();
+        // si al entrar tu Glob ya lo lleva otro, se te asigna uno libre (sync lo resuelve)
+        this.mp = new S.Controller.MultiController(this, room);
+        if (!created && room.players.length <= 1) this.menu.toast('No había nadie en la sala ' + seed + ': ahora eres el anfitrión', 3000);
+        this.showRoomLobby();
+      } catch (e) {
+        const m = String(e && e.message || e);
+        this.menu.toast(m === 'offline' ? 'Sin conexión con Glob Defenders.' : m === 'full' ? 'La sala ' + seed + ' está llena (máximo 4 jugadores).' : 'No se pudo conectar con la sala (' + m + ')', 3200);
+        this.mp = null;
+      }
+    }
+    showRoomLobby() {
+      const mp = this.mp; if (!mp) return;
+      if (this.mode !== 'menu' || !this.menu.screen.classList.contains('room')) this.clearAll();
+      const room = mp.room;
+      this.menu.roomLobby({ seed: room.seed, players: room.players, isHost: mp.isHost, mode: mp.mode, levels: mp.levels, busy: mp.phase === 'busy', canStart: !mp.canStart(), why: mp.canStart() }, {
+        copySeed: () => (navigator.clipboard ? navigator.clipboard.writeText(room.seed) : Promise.reject()).then(() => this.menu.toast('📋 Seed copiada: ' + room.seed), () => this.menu.toast('SEED: ' + room.seed, 4000)),
+        pickGlob: () => this.menu.characterPicker(room.me.glob, (id) => { if (!room.setGlob(id)) this.menu.toast('Ese Glob ya lo lleva otro jugador'); else { this.prefs.character = id; savePrefs(this.prefs); } this.showRoomLobby(); }, () => this.showRoomLobby(), 'Elige tu Glob (sin repetir)', room.takenGlobs()),
+        invite: () => this.menu.prompt('✉ Invitar a la sala', 'Usuario de Glob Defenders al que invitar. Le llegará la invitación en cuanto entre al juego, mientras la sala siga abierta y tú sigas dentro.', (name) => {
+          if (!name) { this.showRoomLobby(); return; }
+          S.Model.Room.Invites.invite(room, name); this.menu.toast('✉ Invitación enviada a ' + name.trim()); this.showRoomLobby();
+        }, 'Invitar'),
+        setMode: (m) => mp.setMode(m),
+        addLevel: () => this.menu.mpLevelSource({
+          mine: () => this.menu.mpPickLocal(Storage.list(), (l) => { mp.addLevel(l, l.name); }, () => this.showRoomLobby()),
+          code: () => this.menu.prompt('🔢 Nivel por código', 'Código del nivel publicado (ej: KX47-2B91-R3T8).', (c) => {
+            if (!c) { this.showRoomLobby(); return; }
+            if (!S.Model.LevelCode.isShort(c)) { this.menu.toast('Introduce un código válido.'); this.showRoomLobby(); return; }
+            this.seedLookup(S.Model.LevelCode.pretty(c), (row) => S.Model.Gld.getLevel(row.id).then((d) => { if (d) mp.addLevel(d, row.name); else this.menu.toast('No se pudo cargar el nivel'); }));
+          }, 'Añadir'),
+          cancel: () => this.showRoomLobby()
+        }),
+        removeLevel: (i) => mp.removeLevel(i),
+        moveLevel: (i, d) => mp.moveLevel(i, d),
+        start: () => mp.startMatch(),
+        leave: () => this.mpLeave()
+      });
+    }
+    mpWaiting(rows, mine, h) {
+      this.menu.mpWaiting(rows, mine, h);
+    }
+    mpRoundResults(d, h) {
+      if (this.game) { this.game.destroy(); this.game = null; }
+      this.clearAll();
+      this.menu.mpResults(d, h, this.mp ? this.mp.room.id : null);
+    }
+    mpFinal(d, h) {
+      if (this.game) { this.game.destroy(); this.game = null; }
+      this.clearAll();
+      this.menu.mpFinal(d, h, this.mp ? this.mp.room.id : null);
+    }
+    mpLeave(silent) {
+      const mp = this.mp; this.mp = null;
+      if (mp) mp.leave();
+      if (this.lastPlay && this.lastPlay.opts.mp) this.lastPlay = null;
+      if (!silent) this.showTitle();
+    }
+    mpClosed(reason) {
+      if (!this.mp) return;
+      this.mpLeave(true); this.showTitle();
+      this.menu.notice('👥 Sala cerrada', reason === 'full' ? 'La sala está llena (máximo 4 jugadores).' : reason === 'host' ? 'El anfitrión ha salido y la sala se ha cerrado.' : 'Se ha perdido la conexión con la sala.');
+    }
+    // Invitación recibida (canal sgm-invites)
+    onInvite(p) {
+      if (this.mp && this.mp.room.seed === p.seed) return;
+      if (this.mode === 'menu' && !this.mp) this.menu.confirm('✉ @' + p.from + ' te invita a su sala ' + p.seed + ' (' + (p.players || 1) + '/4). ¿Unirte?', () => this.mpJoin(p.seed, false), 'Unirme');
+      else this.menu.toast('✉ @' + p.from + ' te invita a su sala ' + p.seed + ' (👥 Multijugador → Cargar)', 5000);
     }
 
     progress() { try { return JSON.parse(localStorage.getItem(PROG) || '{}'); } catch (e) { return {}; } }
@@ -535,6 +634,8 @@
 
     onGameFinished(kind, g) {
       const lp = this.lastPlay, testing = !!this.suspendedEditor;
+      // Multijugador: la llegada la gestiona la sala (esperar a los demás, puntos, resultados)
+      if (lp && lp.opts.mp) { lp.opts.mp.onLocalFinished(kind, g); return; }
       // Mis niveles: recuerda con qué meta(s) has pasado cada nivel tuyo (los dos huecos)
       if (kind === 'clear' && !testing && !lp.opts.story && !lp.opts.online && lp.data && lp.data.id) {
         try { const m = JSON.parse(localStorage.getItem('sgm.myclears') || '{}'); const e = m[lp.data.id] || {}; if (g.secretClear) e.s = 1; else e.n = 1; m[lp.data.id] = e; localStorage.setItem('sgm.myclears', JSON.stringify(m)); } catch (e) { /* nada */ }

@@ -66,6 +66,19 @@
 
   const Gld = {
     configured() { return !!ANON_KEY; },
+    // cliente de Supabase (lo usa el multijugador para Realtime); null si no hay red
+    client() { return getClient(); },
+    // 👑 Coronas de Torneo (kiro/supabase_multiplayer.sql). Sin el SQL: { ok:false, error:'no-mp' }
+    async awardCrown(roomSeed) {
+      const c = await getClient(); if (!c) return { ok: false, error: 'offline' };
+      const { data, error } = await c.rpc('sgm_award_crown', { p_room: roomSeed });
+      return error ? { ok: false, error: /function|schema cache/i.test(error.message) ? 'no-mp' : error.message } : { ok: true, crowns: data };
+    },
+    async crowns(username) {
+      const c = await getClient(); if (!c || !username) return 0;
+      const { data, error } = await c.rpc('sgm_crowns', { p_username: username });
+      return error ? 0 : (data | 0);
+    },
     // ¿hay sesión guardada?
     async user() {
       const c = await getClient(); if (!c) return null;
