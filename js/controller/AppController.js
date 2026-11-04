@@ -26,6 +26,11 @@
       this.menu.loading(0);
       S.View.Assets.loadAll((p) => this.menu.loading(p)).then(() => this.showTitle());
       requestAnimationFrame((ts) => this.loop(ts));
+      // Lee tu usuario de GlD al arrancar (si hay sesión): así tu cuenta se ve en el menú
+      // y tus niveles descargados se pueden editar sin tener que entrar antes a Online.
+      if (Storage.isLinked() && S.Model.Gld.configured()) {
+        S.Model.Gld.username().then((u) => { if (u) { this._myUser = u; if (this.mode === 'menu') this.showTitle(); } }).catch(() => {});
+      }
       // "En línea" para tus amigos: avisa al servidor al abrir el juego y cada 3 minutos
       const ping = () => { if (Storage.isLinked() && S.Model.Gld.configured()) S.Model.Gld.touch().catch(() => {}); };
       setTimeout(ping, 3000); setInterval(ping, 180000);
@@ -195,6 +200,11 @@
         play: (l) => this.playLevel(l, {}),
         edit: (l) => { if (this.lockedDownload(l)) return; this.openEditor(new S.Model.Level(l)); },
         remove: (l) => { Storage.remove(l.id); this.showLevels(); },
+        // "Es mío": desbloquea un nivel descargado para editar/publicar.
+        //  - Admin (kirbytebi): reclama CUALQUIER nivel sin contraseña.
+        //  - Resto: pide la contraseña de la cuenta de GlD del AUTOR (la verifica sin tocar
+        //    tu sesión). Solo quien conoce la contraseña de @autor puede reclamarlo.
+        claim: (l) => this.claimLevel(l, () => this.showLevels()),
         // Publicar en la nube de Glob Defenders (una sola vez por nivel; requiere sesión)
         publish: (l) => this.publishLocal(l, () => this.showLevels()),
         // Copiar: nivel nuevo editable que recuerda de dónde viene
@@ -242,6 +252,29 @@
         const okMsg = mine ? '⬇ Recuperado en 📁 Mis niveles (tuyo, editable)' : '⬇ Guardado en 📁 Mis niveles (de @' + (row.author || 'desconocido') + ')';
         this.menu.toast(r === 'ok' ? okMsg : r === 'full' ? 'Máximo de ' + Storage.limit() + ' niveles alcanzado' : 'No se pudo guardar', 2600);
       }).catch(() => this.menu.toast('No se pudo descargar'));
+    }
+
+    // Reclamar un nivel descargado (quitar la marca 'downloaded' para poder editarlo/publicarlo).
+    // Admin: directo. Resto: pide la contraseña de GlD del autor y la verifica.
+    claimLevel(l, done) {
+      if (!l || !l.downloaded) return;
+      const Gld = S.Model.Gld, author = l.downloaded.author || '';
+      const unlock = () => { const d = Object.assign({}, l); delete d.downloaded; Storage.save(d); if (done) done(); this.menu.toast('🔓 Desbloqueado: ya puedes editarlo y publicarlo', 2600); };
+      const askPass = () => {
+        this.menu.prompt('🔓 Reclamar "' + l.name + '"', 'Escribe la contraseña de la cuenta de Glob Defenders de @' + author + ' para demostrar que es tuyo.', (pass) => {
+          if (pass == null) return; // cancelado
+          if (!pass) { this.menu.toast('Escribe la contraseña'); return; }
+          this.menu.toast('Comprobando…', 1200);
+          Gld.verifyPassword(author, pass).then((r) => {
+            if (r.ok) unlock();
+            else this.menu.toast(r.error === 'offline' ? 'Sin conexión con Glob Defenders' : 'Contraseña incorrecta', 2400);
+          });
+        }, 'Desbloquear', 'password');
+      };
+      // ¿soy admin? entonces reclamo cualquier nivel sin contraseña
+      if (Storage.isLinked() && Gld.configured()) {
+        Gld.isAdmin().then((admin) => { if (admin) { this.menu.confirm('ADMIN: ¿desbloquear "' + l.name + '" (de @' + author + ')?', unlock, 'Desbloquear'); } else askPass(); }).catch(askPass);
+      } else askPass();
     }
 
     exportLevel(l) {

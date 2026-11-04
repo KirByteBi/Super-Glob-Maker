@@ -273,6 +273,20 @@
       b.appendChild(row);
     }
 
+    // Modal con un campo de entrada (texto o password). onOk recibe el valor; cancelar -> null.
+    prompt(title, msg, onOk, okLabel, type) {
+      const b = this.openModal(title);
+      if (msg) b.appendChild(el('p', 'small', msg));
+      const inp = document.createElement('input'); inp.type = type === 'password' ? 'password' : 'text'; inp.className = 'mail-input'; inp.maxLength = 100;
+      b.appendChild(inp);
+      const row = el('div', 'row');
+      row.appendChild(button(okLabel || 'Aceptar', 'primary', () => { const v = inp.value; this.closeModal(); onOk(v); }));
+      row.appendChild(button('Cancelar', '', () => { this.closeModal(); onOk(null); }));
+      b.appendChild(row);
+      inp.onkeydown = (e) => { if (e.key === 'Enter') { const v = inp.value; this.closeModal(); onOk(v); } };
+      setTimeout(() => inp.focus(), 30);
+    }
+
     // ---------- ✉ MENSAJES ----------
     // st = { user, loading, error, rows:[{id,kind,title,body,reply,...}], admin, blocked }
     // h  = { apologize(mail, text), news(title, body) (admin), close }
@@ -512,6 +526,9 @@
           info.insertBefore(el('span', 'pub-tag dl-tag', '⬇ de @' + l.downloaded.author + ' · solo jugar'), info.firstChild);
           row.appendChild(button('▶ Jugar', 'primary', () => h.play(l)));
           row.appendChild(button('🔒 Editar', 'disabled', () => h.edit(l)));
+          // "Es mío": quita la marca de descarga para poder editarlo/publicarlo (para recuperar
+          // niveles propios). Confirma, porque si NO es tuyo estarías saltándote la restricción.
+          if (h.claim) row.appendChild(button('🔓 Es mío', '', () => this.confirm('¿Este nivel es TUYO? Se desbloqueará para editarlo y publicarlo.\n(Autor marcado: @' + l.downloaded.author + ')', () => h.claim(l), 'Sí, es mío')));
           row.appendChild(button('🗑', 'danger', () => this.confirm('¿Borrar "' + l.name + '" de tus descargas?', () => h.remove(l))));
           wrap.appendChild(row); return;
         }

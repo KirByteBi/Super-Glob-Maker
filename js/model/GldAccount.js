@@ -88,6 +88,19 @@
       S.Model.LevelStorage.setLinked(true);
       emit('login', { username }); return { ok: true, username };
     },
+    // Verifica una contraseña de una cuenta de GlD SIN tocar la sesion actual (usa un cliente
+    // temporal aislado). Se usa para "reclamar" un nivel descargado: demuestra que la cuenta
+    // del autor es tuya. Devuelve { ok } o { ok:false, error }.
+    async verifyPassword(username, password) {
+      const lib = await loadLib(); if (!lib) return { ok: false, error: 'offline' };
+      if (!USER_RE.test(String(username).trim().toLowerCase())) return { ok: false, error: 'bad-name' };
+      // cliente aparte, sin persistir sesion, para no desloguear al usuario actual
+      const tmp = lib.createClient(URL, ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false, storageKey: 'sgm.gld.verify' } });
+      const email = String(username).trim().toLowerCase() + EMAIL_DOMAIN;
+      const { error } = await tmp.auth.signInWithPassword({ email, password });
+      try { await tmp.auth.signOut(); } catch (e) { /* nada */ }
+      return error ? { ok: false, error: 'bad-pass' } : { ok: true };
+    },
     // ¿Nombre válido para una cuenta? null = sí; si no, código de error
     checkUsername(username) {
       const u = String(username || '').trim().toLowerCase();
