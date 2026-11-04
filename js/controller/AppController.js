@@ -105,7 +105,13 @@
       const errTxt = (e) => (e === 'no-v4' ? 'no-v4' : e === 'offline' ? 'Sin conexión.' : e === 'no-session' ? 'Inicia sesión primero.' : 'Error: ' + e);
       const h = {
         apologize: (mail, text) => Gld.apologize(mail.id, text).then((r) => { this.menu.toast(r.ok ? '📨 Disculpa enviada. Espera la revisión de KirByte_Bi.' : errTxt(r.error)); this.showMessages(); }),
-        news: (title, body, category) => Gld.adminNews(title, body, category).then((r) => { this.menu.toast(r.ok ? '📣 Noticia publicada para todos' : errTxt(r.error)); this.showMessages(); })
+        news: (title, body, category) => Gld.adminNews(title, body, category).then((r) => { this.menu.toast(r.ok ? '📣 Noticia publicada para todos' : errTxt(r.error)); this.showMessages(); }),
+        // formato rico: @usuario abre su perfil; las tarjetas de nivel dejan jugar / descargar
+        rich: {
+          author: (name) => this.showOnline('author', name),
+          play: (row) => { this.menu.closeModal(); this.playOnline(row, () => this.showMessages()); },
+          download: (row) => this.downloadOnline(row)
+        }
       };
       const render = () => this.menu.messages(st, h);
       render();

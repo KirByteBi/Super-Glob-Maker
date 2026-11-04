@@ -15,8 +15,11 @@
     L.ex = opt.ex || L.ex || [0, 0, 0];
     const blk = (t) => [TT.BOX, TT.BRICK, TT.NOTE, TT.HIDDEN, TT.DONUT, TT.PSW, TT.SW0, TT.SW1, TT.SW2, TT.SWG, TT.POW].includes(t);
     const ab = (t) => t >= TT.A0 && t <= TT.B2;
-    const solid = (x, y) => { const t = L.get(x, y); return C.isSolid(t, L) || C.isSemi(t) || C.isSlope(t) || blk(t) || t === TT.PBLK || t === TT.PCOIN || ab(t); };
-    const free = (x, y) => { if (y < 0) return true; const t = L.get(x, y); return !C.isSolid(t, L) && !blk(t) && t !== TT.LIQUID && t !== TT.SPIKE && !(ab(t) && C.isSolid(t, L)); };
+    // casillas ocupadas por tuberías enlazables (boca + cuerpo): sólidas como en la partida
+    const Pipe = S.Model.Pipe, pipeCell = new Set();
+    if (Pipe) L.objects.forEach((o) => { if (Pipe.isPipe(o.type)) Pipe.cells(o).forEach(([x, y]) => pipeCell.add(x + ',' + y)); });
+    const solid = (x, y) => { const t = L.get(x, y); return pipeCell.has(x + ',' + y) || C.isSolid(t, L) || C.isSemi(t) || C.isSlope(t) || blk(t) || t === TT.PBLK || t === TT.PCOIN || ab(t); };
+    const free = (x, y) => { if (y < 0) return true; if (pipeCell.has(x + ',' + y)) return false; const t = L.get(x, y); return !C.isSolid(t, L) && !blk(t) && t !== TT.LIQUID && t !== TT.SPIKE && !(ab(t) && C.isSolid(t, L)); };
     const extra = new Set();
     L.objects.forEach((o) => {
       if (/^platform|^shroom/.test(o.type)) {
@@ -26,11 +29,19 @@
           seen.forEach((k) => { const [x, y] = k.split(',').map(Number); for (let i = -1; i <= 1; i++) extra.add((x + i) + ',' + (y - 1)); });
         } else { const r = o.r != null ? o.r : 3, v = /V$/.test(o.type); for (let s = -r; s <= r; s++) for (let i = -1; i <= 1; i++) extra.add(v ? (o.x + i) + ',' + (o.y + s - 1) : (o.x + s + i) + ',' + (o.y - 1)); }
       }
-      if (o.type === 'warp' || o.type === 'lockwarp') { extra.add(o.x + ',' + (o.y - 1)); extra.add((o.x + 1) + ',' + (o.y - 1)); }
+
       if (o.type === 'spring') for (let k = 1; k <= 9; k++) extra.add(o.x + ',' + (o.y - k));
     });
     const stand = (x, y) => x >= 0 && x < W && y >= 0 && y < H - 1 && free(x, y) && free(x, y - 1) && (solid(x, y + 1) || extra.has(x + ',' + y) || (swim && y > 2));
     const warps = L.objects.filter((o) => o.type === 'warp' || o.type === 'lockwarp');
+    // casillas desde las que se entra / a las que se sale de una tubería (fuera de su boca)
+    const mouthSpots = (o) => {
+      const pd = Pipe ? Pipe.dirOf(o) : 0;
+      if (pd === 0) return [[o.x, o.y - 1], [o.x + 1, o.y - 1]];
+      if (pd === 2) return [[o.x, o.y + 2], [o.x + 1, o.y + 2]];
+      if (pd === 3) return [[o.x - 1, o.y + 1]];
+      return [[o.x + 2, o.y + 1]];
+    };
     // sin enlace manual, cada tubería lleva a la siguiente (como en el juego)
     const dest = (i) => { const w = warps[i]; if (w.to) return w.to.z === 0 ? warps[w.to.i] : null; return warps.length > 1 ? warps[(i + 1) % warps.length] : null; };
     const doors = L.objects.filter((o) => o.type === 'door' || o.type === 'lockdoor');
@@ -42,7 +53,8 @@
     const UP = swim ? 8 : 4, FAR = swim ? 7 : 6;
     while (q.length) {
       const [x, y] = q.shift();
-      warps.forEach((wp, i) => { if ((x === wp.x || x === wp.x + 1) && Math.abs(y - (wp.y - 1)) <= 2) { const d = dest(i); if (d) { push(d.x, d.y - 1); push(d.x + 1, d.y - 1); } } });
+      // entrar por la boca (según hacia dónde mire) y salir por la boca del destino
+      warps.forEach((wp, i) => { if (mouthSpots(wp).some(([mx, my]) => Math.abs(x - mx) <= 1 && Math.abs(y - my) <= 2)) { const d = dest(i); if (d) mouthSpots(d).forEach(([mx, my]) => { push(mx, my); const ly = land(mx, my); if (ly != null) push(mx, ly); }); } });
       doors.forEach((dr, i) => { if (x === dr.x && Math.abs(y - dr.y) <= 1) { const d = doors[dr.to && dr.to.z === 0 ? dr.to.i : (i + 1) % doors.length]; if (d && d !== dr) push(d.x, d.y); } });
       for (let dx = -FAR; dx <= FAR; dx++) for (let up = 0; up <= UP; up++) {
         if (Math.abs(dx) > (up >= 3 && !swim ? 4 : FAR)) continue;

@@ -38,8 +38,14 @@
         if (o.to && typeof o.to.z === 'number' && typeof o.to.i === 'number') ob.to = { z: o.to.z | 0, i: o.to.i | 0 };
         // color de la tubería (0-3)
         if (o.col != null) ob.col = o.col | 0;
-        // orientación de la tubería: 1 = horizontal (0/ausente = vertical)
-        if (o.hdir) ob.hdir = 1;
+        // tubería estilo SMM: pd = hacia dónde mira la boca (0-3), len = largo del cuerpo.
+        // (hdir = 1 de los niveles antiguos = boca a la izquierda)
+        if (S.Model.Pipe && S.Model.Pipe.isPipe(ob.type)) {
+          const pd = S.Model.Pipe.dirOf(o), len = S.Model.Pipe.lenOf(o);
+          if (pd) ob.pd = pd;
+          if (len) ob.len = len;
+          if (pd % 2) ob.hdir = 1;
+        } else if (o.hdir) ob.hdir = 1;
         // decoración visual (sin colisión): cuál es el adorno
         if (o.deco) ob.deco = o.deco;
         return ob;
@@ -236,6 +242,8 @@
           if (o.to) j.to = { z: o.to.z, i: o.to.i };
           if (o.col != null) j.col = o.col;
           if (o.hdir) j.hdir = 1;
+          if (o.pd) j.pd = o.pd;
+          if (o.len) j.len = o.len;
           if (o.deco) j.deco = o.deco;
           return j;
         }), contents: Object.assign({}, this.contents),

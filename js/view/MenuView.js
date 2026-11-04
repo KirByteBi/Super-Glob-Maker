@@ -330,6 +330,16 @@
       setTimeout(() => inp.focus(), 30);
     }
 
+    // Vista previa en directo del formato rico debajo de un textarea + chuleta
+    richPreview(parent, ta, rich) {
+      if (!S.View.RichText) return;
+      parent.appendChild(el('small', 'rt-help', '✍ ' + S.View.RichText.HELP));
+      const pv = el('div', 'rt-preview'); pv.setAttribute('aria-live', 'polite'); parent.appendChild(pv);
+      let tm = null;
+      const upd = () => { pv.innerHTML = ''; if (ta.value.trim()) { pv.appendChild(el('small', 'rt-help', '👁 Vista previa:')); pv.appendChild(S.View.RichText.render(ta.value, rich)); } };
+      ta.addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(upd, 350); });
+    }
+
     // ---------- ✉ MENSAJES ----------
     // st = { user, loading, error, rows:[{id,kind,title,body,reply,...}], admin, blocked }
     // h  = { apologize(mail, text), news(title, body) (admin), close }
@@ -349,6 +359,7 @@
         const sel = document.createElement('select'); sel.className = 'mail-input';
         [['update', '🔧 Actualización'], ['warn', '⚠ Aviso (rojo)'], ['event', '🎉 Evento (verde)']].forEach(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o); });
         b.appendChild(tin); b.appendChild(sel); b.appendChild(bta);
+        this.richPreview(b, bta, h.rich);
         b.appendChild(button('📣 Enviar a todos', 'primary', () => { if (tin.value.trim() && bta.value.trim()) h.news(tin.value.trim(), bta.value.trim(), sel.value); }));
       }
       const list = el('div', 'level-list mail-list');
@@ -360,7 +371,9 @@
         const info = el('div', 'info');
         const icon = apology ? '🕳 ' : cat === 'warn' ? '⚠ ' : cat === 'event' ? '🎉 ' : '📣 ';
         info.appendChild(el('b', '', icon + m.title));
-        info.appendChild(el('small', 'mail-body', m.body));
+        // cuerpo con formato rico (negrita, enlaces, @usuarios, tarjetas de nivel...) sin HTML crudo
+        if (S.View.RichText) { const body = S.View.RichText.render(m.body, h.rich); body.classList.add('mail-body'); info.appendChild(body); }
+        else info.appendChild(el('small', 'mail-body', m.body));
         // Nota de idioma de ORIGEN: frase en el idioma del LECTOR, color por el origen
         // (español = rojo, inglés = azul). Global, como los Globs.
         const srcLang = m.lang === 'en' ? 'en' : 'es';
@@ -372,6 +385,7 @@
           info.appendChild(el('small', 'mail-note', m.reply ? '✔ Disculpa enviada: ' + m.reply : 'Tu cuenta no puede publicar. Pide perdón aquí abajo.'));
           if (!m.reply) {
             const ta = document.createElement('textarea'); ta.className = 'code'; ta.placeholder = 'Escribe tu disculpa…'; ta.rows = 2; info.appendChild(ta);
+            this.richPreview(info, ta, h.rich);
             info.appendChild(button('Enviar disculpa', 'primary', () => { if (ta.value.trim()) h.apologize(m, ta.value.trim()); }));
           }
         }
@@ -522,6 +536,8 @@
         const row = this.onlineRow(m, -1, Object.assign({}, h, { download: null }));
         row.lastChild.remove(); // el botón Jugar se sustituye por los de gestión
         row.appendChild(el('span', 'badge ' + (m.is_public ? 'on' : 'off'), m.is_public ? '☄ Público' : 'Oculto'));
+        // recuperar tu propio nivel en este dispositivo (se guarda EDITABLE, porque es tuyo)
+        if (h.download) { const db = button('⬇', '', () => h.download(Object.assign({ author: st.user }, m))); db.title = S.tr ? S.tr('Descargar a Mis niveles (tuyo, editable)') : 'Descargar a Mis niveles (tuyo, editable)'; db.setAttribute('aria-label', db.title); row.appendChild(db); }
         // un nivel publicado se puede ocultar, pero no volver a publicar
         if (m.is_public && h.favorite) { const fb = button(m.favorite ? '🦆 Favorito' : '🦆', m.favorite ? 'primary' : '', () => h.favorite(m, !m.favorite)); fb.title = 'Favoritos (máx. 7): salen destacados en tu perfil'; row.appendChild(fb); }
         if (m.is_public) row.appendChild(button('🙈 Ocultar', '', () => this.confirm('¿Ocultar "' + m.name + '"? Ya no podrás volver a publicarlo.', () => h.setPublic(m, false))));

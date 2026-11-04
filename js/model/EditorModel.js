@@ -64,8 +64,14 @@
     setLevel(l) { this.base = l; this.activeZone = 0; this.level = l; this.undoStack = []; this.redoStack = []; this.dirty = false; this.camX = 0; this.camY = Math.max(0, l.height * S.TILE - S.VIEW_H); this.emit('level'); }
 
     snapshot() { return JSON.stringify(this.level.toJSON()); }
-    beginStroke() { this.stroke = this.snapshot(); this.changed = false; }
+    beginStroke() { this.stroke = this.snapshot(); this.changed = false; this.pipeDrag = null; }
     endStroke() {
+      // Clic (sin arrastrar) sobre una tubería del mismo tipo: cambia su color (0-3)
+      const pdg = this.pipeDrag; this.pipeDrag = null;
+      if (pdg && !pdg.moved && pdg.color) {
+        if (pdg.o.to) this.emit('tubeLinked', {}); // enlazada: el color lo manda el enlace
+        else { pdg.o.col = ((pdg.o.col | 0) + 1) % 4; this.changed = true; this.emit('tubeColor', { col: pdg.o.col }); }
+      }
       if (this.stroke && this.changed) { this.undoStack.push(this.stroke); if (this.undoStack.length > 80) this.undoStack.shift(); this.redoStack = []; this.dirty = true; this.emit('change'); }
       this.stroke = null;
     }
@@ -84,6 +90,14 @@
       const tile = L.get(x, y);
       if (tool.kind === 'link') { this.linkObjectAt(x, y); return; }
       if (tool.kind === 'erase') {
+        // Tubería: borrar su BOCA la quita entera; borrar el CUERPO la recorta hasta ahí
+        const pipe = !L.objectAt(x, y) && S.Model.Pipe.at(L, x, y);
+        if (pipe) {
+          const n = S.Model.Pipe.reach(pipe, x, y);
+          if (S.Model.Pipe.inMouth(pipe, x, y) || n == null) L.removeObjectAt(pipe.x, pipe.y);
+          else if (n - 1 > 0) pipe.len = n - 1; else delete pipe.len;
+          this.changed = true; return;
+        }
         const o = L.objectAt(x, y);
         if (o && o.type !== 'start' && o.type !== 'goal') { L.removeObjectAt(x, y); this.changed = true; return; }
         if (!o && tile) { L.set(x, y, 0); delete L.contents[key]; if (tile === C.T.SEMIBG || tile === C.T.BGFILL) EditorModel.fixSemiBg(L, x, y + 1); this.changed = true; }
@@ -126,12 +140,23 @@
           this.changed = true; return;
         }
         const def = C.OBJECTS[type] || {};
-        // Clic de nuevo sobre una tubería del mismo tipo (sin enlazar): cicla su color (0-3)
-        const exTube = L.objectAt(x, y);
-        if (exTube && exTube.type === type && (type === 'warp' || type === 'lockwarp')) {
-          if (exTube.to) { this.emit('tubeLinked', {}); return; } // enlazada: el color lo manda el enlace
-          exTube.col = ((exTube.col | 0) + 1) % 4; this.changed = true; this.emit('tubeColor', { col: exTube.col }); return;
-        }
+        const P = S.Model.Pipe;
+        // Tuberías estilo SMM: pinchar una tubería y ARRASTRAR a lo largo de su eje la alarga o
+        // la acorta. Un clic sin arrastrar (mismo tipo) cambia su color (ver endStroke).
+        if (P.isPipe(type)) {
+          if (this.pipeDrag) {
+            const pg = this.pipeDrag.o, n = P.reach(pg, x, y);
+            if (n != null && n !== P.lenOf(pg)) {
+              if (n) pg.len = n; else delete pg.len;
+              this.pipeDrag.moved = true; this.changed = true; this.emit('pipeLen', { len: n });
+            }
+            return;
+          }
+          const hit = P.at(L, x, y);
+          if (hit) { this.pipeDrag = { o: hit, moved: false, color: hit.type === type }; return; }
+          // tubería nueva: su boca 2×2 no puede pisar otra tubería
+          if ([[0, 0], [1, 0], [0, 1], [1, 1]].some(([dx, dy]) => P.at(L, x + dx, y + dy))) return;
+        } else if (P.at(L, x, y)) return; // nada dentro de una tubería
         // Clic de nuevo sobre un objeto con recorrido del mismo tipo: cambia su tamaño (cicla r)
         const existing = L.objectAt(x, y);
         if (existing && existing.type === type && def.range) {
@@ -155,6 +180,8 @@
         if (type === 'deco' && tool.deco) no.deco = tool.deco; // qué adorno es
         L.objects.push(no);
         this.changed = true;
+        // recién puesta: si sigues arrastrando, se alarga (como en SMM)
+        if (P.isPipe(type)) this.pipeDrag = { o: no, moved: true, color: false };
       }
     }
 
@@ -180,12 +207,15 @@
     // Rotar el objeto de una casilla. axis: 'h' (R, izq/der) | 'v' (E, arriba/abajo).
     // Solo si el objeto admite esa rotación. Devuelve true si rotó.
     rotateObjectAt(x, y, axis) {
-      const o = this.level.objectAt(x, y);
+      const o = this.level.objectAt(x, y) || S.Model.Pipe.at(this.level, x, y);
       if (!o || !C.canRotate(o.type, axis)) return false;
       this.beginStroke();
-      // Tuberías: R alterna entre vertical (hdir 0) y horizontal (hdir 1)
-      if ((o.type === 'warp' || o.type === 'lockwarp') && axis === 'h') o.hdir = o.hdir ? 0 : 1;
-      else if (axis === 'v') o.fv = o.fv ? 0 : 1;
+      // Tuberías (como en SMM): R gira la boca ↑ → ↓ ← (conserva su largo)
+      if (S.Model.Pipe.isPipe(o.type)) {
+        const pd = (S.Model.Pipe.dirOf(o) + 1) % 4;
+        if (pd) o.pd = pd; else delete o.pd;
+        if (pd % 2) o.hdir = 1; else delete o.hdir;
+      } else if (axis === 'v') o.fv = o.fv ? 0 : 1;
       else o.dir = o.dir === 1 ? -1 : 1;
       this.changed = true; this.endStroke();
       this.emit('rotate', { x, y, axis });
@@ -196,6 +226,9 @@
     // Devuelve 'from' | 'done' | 'bad' | null.
     linkObjectAt(x, y) {
       const famOf = (t) => (t === 'warp' || t === 'lockwarp') ? 'pipe' : (t === 'door' || t === 'lockdoor') ? 'door' : null;
+      // una tubería se puede pinchar en cualquier casilla suya (boca o cuerpo)
+      const hitPipe = !this.level.objectAt(x, y) && S.Model.Pipe.at(this.level, x, y);
+      if (hitPipe) { x = hitPipe.x; y = hitPipe.y; }
       const o = this.level.objectAt(x, y);
       if (!o || !famOf(o.type)) { if (this.linkFrom) { this.linkFrom = null; } this.emit('linkBad', {}); return 'bad'; }
       // 1er clic: marcar origen (zona + coords + familia)

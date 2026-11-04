@@ -448,7 +448,35 @@
   // Colores de tubería (el índice 0 es el verde clásico). El color debe coincidir con su destino.
   const PIPE_COL = [['#2fa84a', '#34b852', '#1e7a33'], ['#e8323f', '#ff5a5a', '#b0282a'], ['#3b8bff', '#6aa8ff', '#245fb0'], ['#ffd000', '#ffe066', '#c99a00']];
   // Entrada de tubería (y con tapa). e.col = índice de color (0-3)
+  // Tubería estilo SMM: se dibuja SIEMPRE como una tubería vertical con la boca arriba (en un
+  // marco local de 2 casillas de ancho × (2 + len) de alto) y se gira hacia su dirección pd.
+  function pipeArt(ctx, e, locked) {
+    const c = PIPE_COL[(e.col | 0) % 4] || PIPE_COL[0];
+    const pd = e.pd | 0, len = e.len | 0, W = 2 * T, H = (2 + len) * T;
+    const bx = e.tx * T - (pd === 1 ? len * T : 0), by = e.ty * T - (pd === 2 ? len * T : 0);
+    ctx.save();
+    if (pd === 0) ctx.translate(bx, by);
+    else if (pd === 2) { ctx.translate(bx + W, by + H); ctx.rotate(Math.PI); }
+    else if (pd === 3) { ctx.translate(bx, by + W); ctx.rotate(-Math.PI / 2); }
+    else { ctx.translate(bx + H, by); ctx.rotate(Math.PI / 2); }
+    // cuerpo
+    rr(ctx, 4, 10, W - 8, H - 10, 3); fillStroke(ctx, c[0], 3.5);
+    ctx.fillStyle = c[1]; ctx.fillRect(9, 14, 5, H - 18);
+    ctx.fillStyle = c[2]; ctx.fillRect(W - 15, 14, 7, H - 18);
+    // boca (collar)
+    rr(ctx, 0, 0, W, 16, 4); fillStroke(ctx, c[0], 3.5);
+    ctx.fillStyle = c[1]; ctx.fillRect(5, 3, 5, 10);
+    ctx.fillStyle = c[2]; ctx.fillRect(W - 12, 3, 7, 10);
+    ctx.fillStyle = 'rgba(0,0,0,0.28)'; ctx.fillRect(4, 16, W - 8, 4);
+    if (locked) {
+      rr(ctx, W / 2 - 8, 24, 16, 14, 3); fillStroke(ctx, '#ffd000', 2.5);
+      ctx.strokeStyle = INK; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(W / 2, 24, 5, Math.PI, 0); ctx.stroke();
+      ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(W / 2, 31, 2, 0, 7); ctx.fill();
+    }
+    ctx.restore();
+  }
   function pipeMouth(ctx, e, locked) {
+    if (e.tx != null && e.pd != null) { pipeArt(ctx, e, locked); return; }
     const x = e.x, y = e.y, w = e.w, h = e.h, c = PIPE_COL[(e.col | 0) % 4] || PIPE_COL[0];
     if (e.hdir) {
       // Tubería HORIZONTAL: cuerpo tumbado + boca (collar) en el lado izquierdo

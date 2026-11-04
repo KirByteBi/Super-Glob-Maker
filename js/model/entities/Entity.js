@@ -159,6 +159,8 @@
       if (o && o.col != null) e.col = o.col | 0;
       // orientación de la tubería: 0 = vertical, 1 = horizontal (girada en el editor con R)
       if (o && o.hdir) e.hdir = 1;
+      // tubería estilo SMM: boca hacia pd (0 arriba, 1 der, 2 abajo, 3 izq) y len casillas de cuerpo
+      if (o && S.Model.Pipe && S.Model.Pipe.isPipe(type)) { e.pd = S.Model.Pipe.dirOf(o); e.len = S.Model.Pipe.lenOf(o); e.hdir = e.pd % 2 ? 1 : 0; }
       if (e.init) e.init(o || {});
       return e;
     },

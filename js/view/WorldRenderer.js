@@ -38,7 +38,7 @@
     for (let pass = 0; pass < 2; pass++) {
       for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
         const tt = level.get(x, y);
-        if (!tt) continue;
+        if (!tt || tt === TT.PIPEX) continue; // cuerpo invisible de tubería: la dibuja la tubería
         // agua, raíles y fondos (cueva, cuerpo de semisólido de fondo) van por detrás
         const back = tt === TT.WATER || tt === TT.WATERCOIN || tt === TT.RAIL || tt === TT.BGFILL || tt === TT.CAVEBG || tt === TT.SEMIBG;
         if ((pass === 0) !== back) continue;

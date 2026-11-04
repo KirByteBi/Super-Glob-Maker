@@ -30,10 +30,13 @@
     SEMIBG: 56, BGFILL: 57, CAVEBG: 58,
     // Moneda DENTRO del agua: agua + moneda conviven. Al recogerla queda WATER (no vacio).
     // Se crea al pintar moneda sobre agua (o agua sobre moneda) en el editor.
-    WATERCOIN: 59, WALL: 99
+    WATERCOIN: 59,
+    // Cuerpo SÓLIDO e invisible de una tubería enlazable (lo pone la partida en las casillas de
+    // su boca + cuerpo; el dibujo lo hace la propia tubería). Nunca se guarda en el nivel.
+    PIPEX: 60, WALL: 99
   };
   const EXCLAIM = [{ c: '#ffd000', name: 'amarillo' }, { c: '#2fd46a', name: 'verde' }, { c: '#ff4fd8', name: 'rosa' }];
-  const SOLID = new Set([T.GROUND, T.GROUND2, T.BRICK, T.BOX, T.HARD, T.SPIKE, T.BOUNCE, T.ICE, T.USED, T.CONV_L, T.CONV_R, T.DONUT, T.NOTE, T.SW0, T.SW1, T.SW2, T.SWG, T.PSW, T.POW, T.PIPE, T.LIGHT, T.WALL]);
+  const SOLID = new Set([T.GROUND, T.GROUND2, T.BRICK, T.BOX, T.HARD, T.SPIKE, T.BOUNCE, T.ICE, T.USED, T.CONV_L, T.CONV_R, T.DONUT, T.NOTE, T.SW0, T.SW1, T.SW2, T.SWG, T.PSW, T.POW, T.PIPE, T.LIGHT, T.WALL, T.PIPEX]);
   const SEMI = new Set([T.SEMI, T.SEMI2, T.CLOUD, T.SEMIBG]);
   const CONTAINERS = new Set([T.BOX, T.BRICK, T.HIDDEN, T.NOTE]);
   const SLOPES = new Set([T.S45U, T.S45D, T.G1U, T.G2U, T.G1D, T.G2D]);

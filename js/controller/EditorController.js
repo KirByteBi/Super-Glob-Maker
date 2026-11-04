@@ -176,7 +176,8 @@
       this.model.changed = this.model.changed || before;
       this.lastCell = c;
       // los objetos (enemigos, etc.) y el enlace se aplican de uno en uno
-      if ((this.model.tool.kind === 'obj' || this.model.tool.kind === 'link') && !this.erasing) this.painting = false;
+      // (salvo al arrastrar una tubería: así se alarga / acorta siguiendo el ratón)
+      if ((this.model.tool.kind === 'obj' || this.model.tool.kind === 'link') && !this.erasing && !this.model.pipeDrag) this.painting = false;
     }
 
     update(dt) {

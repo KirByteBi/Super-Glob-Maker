@@ -75,6 +75,7 @@
           } else { e.link = list.length > 1 ? list[(i + 1) % list.length] : null; e.toZone = null; }
         });
       });
+      this.stampPipes();
       this.keys = 0; this.unlocked = this.unlocked || {};
       // Monedas rojas: set de 8 -> 1UP (estilo SM64). redTotal = cuántas hay en el nivel.
       this.redTotal = 0;
@@ -376,6 +377,7 @@
           else { e.link = list.length > 1 ? list[(i + 1) % list.length] : null; e.toZone = null; }
         });
       });
+      this.stampPipes();
       // contadores que dependen de la zona
       this.redTotal = 0; for (let i = 0; i < this.level.tiles.length; i++) if (this.level.tiles[i] === TT.RCOIN) this.redTotal++;
       this.starTotal = this.level.objects.filter((o) => (C.OBJECTS[o.type] || {}).collect).length;
@@ -399,26 +401,39 @@
     }
 
     // ---------------------------------------------------------------- tuberías y puertas
+    // Tuberías enlazables: su boca + cuerpo son sólidos (casillas invisibles PIPEX donde no haya
+    // ya algo). Solo en la copia del nivel de la partida: el nivel guardado no cambia.
+    stampPipes() {
+      const L = this.level;
+      L.objects.forEach((o) => {
+        if (!S.Model.Pipe.isPipe(o.type)) return;
+        S.Model.Pipe.cells(o).forEach(([x, y]) => { if (L.inBounds(x, y) && !L.get(x, y)) L.set(x, y, TT.PIPEX); });
+      });
+    }
+    // Caja en píxeles de la BOCA (2×2) de una tubería
+    mouthBox(e) { return { x: e.tx * T, y: e.ty * T, w: 2 * T, h: 2 * T }; }
     tryWarp(p, inp) {
       // (antes había un corte global por onGround; ahora cada rama exige lo suyo, porque
       //  la tubería horizontal se puede tomar también en el aire, a la altura de su boca)
       for (const e of this.entities) {
         if (!e.gizmo || !e.active) continue;
         if (e.family === 'pipe') {
-          if (e.hdir) {
-            // tubería HORIZONTAL: a la altura del tubo y caminando hacia él (→ o ←)
-            const py = p.y + p.h / 2;
-            if (py < e.y + 4 || py > e.y + e.h - 4) continue;             // alineado en vertical con el tubo
-            const toRight = inp.right && p.x + p.w >= e.x - 2 && p.x + p.w < e.x + e.w; // entra por su lado izquierdo yendo →
-            const toLeft = inp.left && p.x <= e.x + e.w + 2 && p.x > e.x;              // entra por su lado derecho yendo ←
-            if (!toRight && !toLeft) continue;
-          } else {
-            // tubería VERTICAL: de pie encima y pulsando abajo
+          // Se entra por la BOCA según hacia dónde mire (como en SMM)
+          const m = this.mouthBox(e), cx = p.x + p.w / 2, cy = p.y + p.h / 2, pd = e.pd | 0;
+          if (pd === 0) {
+            // boca ARRIBA: de pie encima y pulsando ↓
             if (!inp.down || !p.onGround) continue;
-            const cx = p.x + p.w / 2;
-            // de pie en cualquier punto de la boca: encima de la entrada o sobre los tiles de tubería que la alargan
             const feet = p.y + p.h;
-            if (cx < e.x + 4 || cx > e.x + e.w - 4 || feet < e.y - 6 || feet > e.y + e.h + 6) continue;
+            if (cx < m.x + 6 || cx > m.x + m.w - 6 || feet < m.y - 6 || feet > m.y + 6) continue;
+          } else if (pd === 2) {
+            // boca ABAJO: debajo, con la cabeza en la boca y pulsando ↑ (saltando o de pie)
+            if (!inp.up) continue;
+            if (cx < m.x + 6 || cx > m.x + m.w - 6 || p.y > m.y + m.h + 6 || p.y < m.y + m.h - 8) continue;
+          } else {
+            // boca a un LADO: a la altura de la boca y caminando hacia ella
+            if (cy < m.y + 2 || cy > m.y + m.h - 2) continue;
+            if (pd === 3 && !(inp.right && p.x + p.w >= m.x - 3 && p.x + p.w <= m.x + 8)) continue; // boca a la izquierda: yendo →
+            if (pd === 1 && !(inp.left && p.x <= m.x + m.w + 3 && p.x >= m.x + m.w - 8)) continue;   // boca a la derecha: yendo ←
           }
         } else {
           // delante de la puerta y pulsando arriba
@@ -442,15 +457,22 @@
       w.t += dt;
       const pipe = w.from.family === 'pipe';
       // coloca al jugador en la boca de la tubería destino d (según su orientación)
+      // coloca al jugador FUERA de la boca de la tubería destino d (según hacia dónde mire)
       const placeAtPipe = (d) => {
-        if (d.hdir) { p.x = d.cx() - p.w / 2; p.y = d.cy() - p.h / 2; } // horizontal: centrado en el tubo
-        else { p.x = d.cx() - p.w / 2; p.y = d.y - p.h; }               // vertical: encima
+        const m = this.mouthBox(d), pd = d.pd | 0;
+        if (pd === 0) { p.x = m.x + m.w / 2 - p.w / 2; p.y = m.y - p.h; }            // arriba: encima
+        else if (pd === 2) { p.x = m.x + m.w / 2 - p.w / 2; p.y = m.y + m.h + 1; }   // abajo: debajo (cae)
+        else if (pd === 3) { p.x = m.x - p.w - 1; p.y = m.y + m.h - p.h - 1; }       // izquierda: a su lado
+        else { p.x = m.x + m.w + 1; p.y = m.y + m.h - p.h - 1; }                     // derecha: a su lado
+        p.vx = 0; p.vy = 0;
       };
       if (w.phase === 'in') {
         if (pipe) {
-          // entrada: horizontal se desliza hacia el centro en X; vertical cae hacia dentro en Y
-          if (w.from.hdir) { p.y = U.approach(p.y, w.from.cy() - p.h / 2, 160 * dt); p.x = U.approach(p.x, w.from.cx() - p.w / 2, 120 * dt); }
-          else { p.y += 60 * dt; p.x = U.approach(p.x, w.from.cx() - p.w / 2, 200 * dt); }
+          // entrada: el Glob se mete por la boca (hacia dentro según la orientación)
+          const m = this.mouthBox(w.from), pd = w.from.pd | 0;
+          if (pd === 0) { p.y += 60 * dt; p.x = U.approach(p.x, m.x + m.w / 2 - p.w / 2, 200 * dt); }
+          else if (pd === 2) { p.y -= 60 * dt; p.x = U.approach(p.x, m.x + m.w / 2 - p.w / 2, 200 * dt); }
+          else { p.x += (pd === 3 ? 1 : -1) * 70 * dt; p.y = U.approach(p.y, m.y + m.h - p.h - 4, 160 * dt); }
         }
         p.warpAlpha = pipe ? 1 : Math.max(0, 1 - w.t / 0.4);
         if (w.t > 0.55) {

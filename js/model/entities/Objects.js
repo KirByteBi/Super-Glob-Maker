@@ -97,8 +97,9 @@
     // Ocupa EXACTAMENTE las casillas tx..tx+1 (antes se centraba en tx y quedaba media casilla
     // desplazada de los tiles de tubería que lleva debajo). Es sólida: te puedes subir encima.
     constructor(tx, ty, o, type) { super(type || 'warp', tx, ty); this.x = tx * T + (2 * T - this.w) / 2; this.spawnX = this.x; this.gravity = 0; this.tiles = false; this.gizmo = true; this.family = 'pipe'; this.locked = false; this.hdir = 0;
-      // Se pisa por arriba como una plataforma quieta (así no empuja de lado si va sobre tiles de tubería)
-      this.platform = true; this.dx = 0; this.dy = 0; }
+      // La colisión la ponen casillas sólidas invisibles (T.PIPEX) en su boca + cuerpo
+      // (GameModel.stampPipes), así es sólida por todos los lados como en SMM y no empuja raro.
+      this.platform = false; this.dx = 0; this.dy = 0; }
     think() { this.dx = 0; this.dy = 0; }
     physics() {}
   }
