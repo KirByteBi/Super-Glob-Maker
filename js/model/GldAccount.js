@@ -164,7 +164,7 @@
       const row = { user_id: u.id, name: String(levelJSON.name || 'Nivel sin nombre').slice(0, 40), data, is_public: true, updated_at: new Date().toISOString(), content_sig: Lv.signature(levelJSON) };
       let { data: out, error } = await c.from('sgm_levels').insert(row).select('id').maybeSingle();
       if (error && /content_sig/.test(error.message)) { delete row.content_sig; ({ data: out, error } = await c.from('sgm_levels').insert(row).select('id').maybeSingle()); } // sin SQL v2
-      if (error) return { ok: false, error: /120/.test(error.message) ? 'pub-limit' : /258/.test(error.message) ? 'limit' : /duplicate|unique|sgm_levels_sig/i.test(error.message) ? 'duplicate' : error.message };
+      if (error) return { ok: false, error: /PUB_BLOCKED/.test(error.message) ? 'pub-blocked' : /120/.test(error.message) ? 'pub-limit' : /258/.test(error.message) ? 'limit' : /duplicate|unique|sgm_levels_sig/i.test(error.message) ? 'duplicate' : error.message };
       if (out && out.id) Gld.setCloudId(levelJSON.id, out.id);
       return { ok: true, id: out && out.id };
     },
@@ -271,7 +271,73 @@
       if (r.error) r = await c.from('sgm_levels').select('id,name,is_public,plays,clears,likes,dislikes,score,author,published_at,updated_at,theme:data->>theme,mode:data->>mode,local:data->>id').eq('user_id', u.id).order('updated_at', { ascending: false });
       if (r.error) r = await c.from('sgm_levels').select('id,name,is_public,plays,clears,likes,updated_at,theme:data->>theme,mode:data->>mode,local:data->>id').eq('user_id', u.id).order('updated_at', { ascending: false });
       return r.error ? { ok: false, error: r.error.message, rows: [] } : { ok: true, rows: (r.data || []).map(norm), userId: u.id };
-    }
+    },
+
+    // ======================= MODERACIÓN y MENSAJES v4 (kiro/supabase_online_v4.sql) =======================
+    // Si el SQL v4 no está aplicado, estas funciones devuelven error 'no-v4' y la UI lo avisa.
+    _v4err(e) { return e && /function|schema cache|column|does not exist|relation/i.test(e.message || '') ? 'no-v4' : (e && e.message) || 'error'; },
+    // nº de Void Globs (sanciones) de un usuario por nombre (público, para el perfil)
+    async warnCount(username) {
+      const c = await getClient(); if (!c) return 0;
+      const { data, error } = await c.rpc('sgm_warn_count', { p_username: username });
+      return error ? 0 : (data | 0);
+    },
+    // ¿estoy bloqueado para publicar?
+    async amIBlocked() {
+      const c = await getClient(); if (!c || !(await Gld.user())) return false;
+      const { data, error } = await c.rpc('sgm_am_i_blocked'); return !error && data === true;
+    },
+    // ADMIN: sancionar a un usuario (aviso = 1 Void Glob). Devuelve { ok, blocked } o error.
+    async adminWarn(username, reason) {
+      const c = await getClient(); if (!c) return { ok: false, error: 'offline' };
+      const lang = (S.i18n && S.i18n.lang === 'en') ? 'en' : 'es';
+      const { data, error } = await c.rpc('sgm_admin_warn', { p_username: username, p_reason: reason || '', p_lang: lang });
+      if (error) return { ok: false, error: Gld._v4err(error) };
+      if (data === 'not-found') return { ok: false, error: 'not-found' };
+      return { ok: true, blocked: data === 'blocked' };
+    },
+    // ADMIN: quitar el bloqueo de publicación (desbaneo manual)
+    async adminUnblock(username) {
+      const c = await getClient(); if (!c) return { ok: false, error: 'offline' };
+      const { data, error } = await c.rpc('sgm_admin_unblock', { p_username: username });
+      if (error) return { ok: false, error: Gld._v4err(error) };
+      return data === 'not-found' ? { ok: false, error: 'not-found' } : { ok: true };
+    },
+    // ADMIN: publicar una noticia global (✉ para todos)
+    async adminNews(title, body, category) {
+      const c = await getClient(); if (!c) return { ok: false, error: 'offline' };
+      const lang = (S.i18n && S.i18n.lang === 'en') ? 'en' : 'es';
+      const cat = (category === 'warn' || category === 'event') ? category : 'update';
+      const { error } = await c.rpc('sgm_admin_news', { p_title: title, p_body: body, p_lang: lang, p_category: cat });
+      return error ? { ok: false, error: Gld._v4err(error) } : { ok: true };
+    },
+    // ADMIN: disculpas pendientes (apology con respuesta, sin resolver)
+    async adminApologies() {
+      const c = await getClient(); if (!c) return { ok: false, error: 'offline', rows: [] };
+      const { data, error } = await c.rpc('sgm_admin_apologies');
+      return error ? { ok: false, error: Gld._v4err(error), rows: [] } : { ok: true, rows: data || [] };
+    },
+    // mi bandeja de ✉ (noticias globales + mis correos)
+    async mailInbox() {
+      const c = await getClient(); if (!c) return { ok: false, error: 'offline', rows: [] };
+      if (!(await Gld.user())) return { ok: false, error: 'no-session', rows: [] };
+      const { data, error } = await c.rpc('sgm_mail_inbox');
+      return error ? { ok: false, error: Gld._v4err(error), rows: [] } : { ok: true, rows: data || [] };
+    },
+    // USUARIO: responder a mi correo rojo de disculpa
+    async apologize(mailId, text) {
+      const c = await getClient(); if (!c) return { ok: false, error: 'offline' };
+      const { data, error } = await c.rpc('sgm_mail_apologize', { p_id: mailId, p_text: text });
+      if (error) return { ok: false, error: Gld._v4err(error) };
+      return data === 'not-found' ? { ok: false, error: 'not-found' } : { ok: true };
+    },
+    // avisos míos sin ver (para mostrarlos al conectarse); y marcarlos vistos
+    async unseenWarnings() {
+      const c = await getClient(); if (!c || !(await Gld.user())) return [];
+      const { data, error } = await c.rpc('sgm_my_unseen_warnings');
+      return error ? [] : (data || []);
+    },
+    async markWarningsSeen() { const c = await getClient(); if (c) await c.rpc('sgm_warnings_seen').then(() => {}, () => {}); }
   };
   // fila de la nube -> objeto uniforme para la vista
   function norm(r) {

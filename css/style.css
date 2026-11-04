@@ -163,6 +163,25 @@ textarea.code { width: 640px; height: 260px; font-family: Consolas, monospace; f
 .slot.secret.on { background: #c48bff; }
 .badge.admin { background: #ff4f6b; color: #fff; }
 
+/* ---------- moderación y ✉ mensajes ---------- */
+.profile-card .warns { color: #ff6b6b; font-size: 13px; }
+.mail-list { max-height: 50vh; }
+.level-row.mail { background: #f4f0ff; align-items: flex-start; }
+.level-row.mail.apology { background: #ffe3e3; border-color: #7a0000; }
+/* tipos de noticia: aviso (rojo) y evento (verde); actualización = estándar */
+.level-row.mail.warn { background: #ffe3e3; border-color: #c0282f; }
+.level-row.mail.warn b { color: #c0282f; }
+.level-row.mail.event { background: #e3ffe8; border-color: #1f9e44; }
+.level-row.mail.event b { color: #1f7a34; }
+.level-row.mail .info { gap: 4px; }
+.level-row.mail .mail-body { white-space: pre-wrap; color: #333; font-weight: 600; }
+.level-row.mail .mail-note { color: #7a0000; font-weight: 900; }
+.level-row.mail .mail-lang { font-size: 11px; font-weight: 700; font-style: italic; opacity: 0.85; margin-top: 2px; }
+.level-row.mail .mail-lang.es { color: #d23030; }
+.level-row.mail .mail-lang.en { color: #2f7bff; }
+.level-row.mail textarea.code { min-height: 44px; }
+.mail-input { width: 100%; font: inherit; font-size: 16px; padding: 6px 10px; border: 3px solid #000; border-radius: 10px; margin-bottom: 6px; box-sizing: border-box; }
+
 /* ---------- controles táctiles (móvil) ---------- */
 body.touch { touch-action: none; overscroll-behavior: none; -webkit-user-select: none; }
 #touch { position: absolute; inset: 0; pointer-events: none; z-index: 30; }

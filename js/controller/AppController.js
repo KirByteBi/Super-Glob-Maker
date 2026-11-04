@@ -78,10 +78,47 @@
         create: () => this.newLevel(),
         levels: () => this.showLevels(),
         online: () => this.showOnline('home'),
+        messages: () => this.showMessages(),
         lang: () => { S.i18n.set(S.i18n.lang === 'es' ? 'en' : 'es'); this.showTitle(); },
         controls: () => this.menu.controls(),
         account: () => this.accountDialog()
       });
+    }
+
+    // Bandeja de ✉ Mensajes: noticias globales + (si estás sancionado) el correo rojo de disculpa.
+    showMessages() {
+      const Gld = S.Model.Gld, Storage = S.Model.LevelStorage;
+      const st = { loading: true, rows: [], user: null, admin: false };
+      const errTxt = (e) => (e === 'no-v4' ? 'no-v4' : e === 'offline' ? 'Sin conexión.' : e === 'no-session' ? 'Inicia sesión primero.' : 'Error: ' + e);
+      const h = {
+        apologize: (mail, text) => Gld.apologize(mail.id, text).then((r) => { this.menu.toast(r.ok ? '📨 Disculpa enviada. Espera la revisión de KirByte_Bi.' : errTxt(r.error)); this.showMessages(); }),
+        news: (title, body, category) => Gld.adminNews(title, body, category).then((r) => { this.menu.toast(r.ok ? '📣 Noticia publicada para todos' : errTxt(r.error)); this.showMessages(); })
+      };
+      const render = () => this.menu.messages(st, h);
+      render();
+      if (!Gld.configured()) { st.loading = false; st.error = 'offline'; render(); return; }
+      if (!Storage.isLinked()) { st.loading = false; render(); return; }
+      Gld.username().then(async (u) => {
+        st.user = u;
+        if (u) st.admin = await Gld.isAdmin().catch(() => false);
+        const r = await Gld.mailInbox();
+        st.loading = false; st.rows = r.rows || []; if (!r.ok) st.error = r.error;
+        render();
+      }).catch((e) => { st.loading = false; st.error = String(e && e.message || e); render(); });
+    }
+
+    // Muestra (una vez por sesión) los avisos de moderación sin ver: un modal con un Void Glob
+    // y el texto del admin. Al cerrarlo, los marca como vistos. Seguro si falta el SQL v4.
+    checkModerationWarning() {
+      if (this._warnShown) return; const Gld = S.Model.Gld;
+      Gld.unseenWarnings().then((ws) => {
+        if (!ws || !ws.length || this._warnShown) return;
+        this._warnShown = true;
+        const txt = ws.map((w) => '• ' + w.reason).join('\n');
+        const msg = (ws.length === 1 ? 'Has recibido un aviso de moderación:' : 'Has recibido ' + ws.length + ' avisos de moderación:') + '\n' + txt + '\n\nSi acumulas 15 sanciones no podrás publicar. Revisa ✉ Mensajes.';
+        this.menu.notice('🕳 Aviso de moderación', msg, 'Globs/BlackRewamp _SKIN/Void Glob (EVO4).png');
+        Gld.markWarningsSeen();
+      }).catch(() => {});
     }
 
     accountDialog(onDone) {
@@ -117,8 +154,21 @@
     // Mapamundi del Modo Historia
     showStoryMap(worldId) {
       this.clearAll();
-      this.worldmap = new S.Controller.MapController(this, worldId || 'w1', this.prefs.storyMode);
+      const SM = S.Model.StoryMap;
+      let wid = worldId || 'w1';
+      // no entrar a un mundo bloqueado (por si acaso): caer al primero disponible
+      if (SM && !SM.isWorldUnlocked(wid)) wid = 'w1';
+      this.worldmap = new S.Controller.MapController(this, wid, this.prefs.storyMode);
       this.mode = 'map';
+      // ¿se acaba de desbloquear un mundo nuevo? avisar y ofrecer ir
+      if (SM && this._worldUnlocked) {
+        const nx = this._worldUnlocked; this._worldUnlocked = null;
+        const w = SM.world(nx);
+        setTimeout(() => {
+          this.menu.confirm('🏰 ¡Mundo superado! Has desbloqueado:\n' + (S.tr ? S.tr(w.name) : w.name) + '\n\n¿Viajar al nuevo mundo?',
+            () => this.showStoryMap(nx), '¡Vamos!');
+        }, 400);
+      }
     }
 
     // Lanzar el nivel de un nodo del mapamundi
@@ -221,7 +271,8 @@
               Storage.save(Object.assign({}, cur, { publishedAt: Date.now(), cloudId: r.id }));
               this.menu.toast('☄ ¡Publicado! Míralo en 🌐 Online', 2600);
               if (done) done();
-            } else this.menu.toast(r.error === 'offline' ? 'Sin conexión' : r.error === 'pub-limit' ? 'Ya tienes 120 niveles publicados' : r.error === 'duplicate' ? 'Ya hay un nivel publicado idéntico a este' : r.error === 'already' ? 'Este nivel ya está publicado' : 'No se pudo publicar');
+            } else if (r.error === 'pub-blocked') { this.menu.notice('🚫 No puedes publicar', 'Tu cuenta está bloqueada para publicar niveles por sanciones de moderación. Pide perdón desde ✉ Mensajes (el correo rojo con el Void Glob).', S.Model.Characters.get('black').paths[0]); }
+            else this.menu.toast(r.error === 'offline' ? 'Sin conexión' : r.error === 'pub-limit' ? 'Ya tienes 120 niveles publicados' : r.error === 'duplicate' ? 'Ya hay un nivel publicado idéntico a este' : r.error === 'already' ? 'Este nivel ya está publicado' : 'No se pudo publicar');
           });
         }, 'Publicar');
       };
@@ -255,8 +306,12 @@
         addFriend: (name) => Gld.addFriend(name).then((r) => { this.menu.toast(r.ok ? '👥 ' + name + ' añadido' : r.error === 'not-found' ? 'No existe ese usuario' : r.error === 'self' ? 'Ese eres tú 😅' : err3(r.error)); this.showOnline('friends'); }),
         removeFriend: (name) => Gld.removeFriend(name).then(() => this.showOnline('friends')),
         adminDelete: (row) => this.menu.confirm('ADMIN: ¿borrar "' + row.name + '" de @' + (row.author || '?') + ' para todos?', () => Gld.adminDelete(row.id).then((r) => { this.menu.toast(r.ok ? '🗑 Nivel borrado' : err3(r.error)); this.showOnline(tab, arg); })),
-        adminGod: (row, on) => Gld.adminGod(row.id, on).then((r) => { this.menu.toast(r.ok ? (on ? '👑 Nivel GOD' : 'Ya no es GOD') : err3(r.error)); this.showOnline(tab, arg); })
+        adminGod: (row, on) => Gld.adminGod(row.id, on).then((r) => { this.menu.toast(r.ok ? (on ? '👑 Nivel GOD' : 'Ya no es GOD') : err3(r.error)); this.showOnline(tab, arg); }),
+        // moderación de USUARIO: sancionar (Void Glob) / quitar bloqueo de publicación
+        warn: (name) => this.menu.textBox('⚠ Sancionar a @' + name + ' (motivo del aviso)', '', (reason) => Gld.adminWarn(name, reason).then((r) => { this.menu.toast(r.ok ? (r.blocked ? '🕳 Aviso enviado · 🚫 ' + name + ' llegó a 15 y queda BLOQUEADO' : '🕳 Aviso enviado a ' + name) : r.error === 'not-found' ? 'No existe ese usuario' : err4(r.error)); this.showOnline('author', name); }), 'Sancionar'),
+        unblock: (name) => this.menu.confirm('ADMIN: ¿quitar el bloqueo de publicación de @' + name + '?', () => Gld.adminUnblock(name).then((r) => { this.menu.toast(r.ok ? '🔓 Bloqueo retirado a ' + name : r.error === 'not-found' ? 'No existe ese usuario' : err4(r.error)); this.showOnline('author', name); }))
       };
+      const err4 = (e) => (e === 'no-v4' ? 'Falta aplicar kiro/supabase_online_v4.sql en el servidor' : err3(e));
       const err3 = (e) => (e === 'no-v3' ? 'Falta aplicar kiro/supabase_online_v3.sql en el servidor' : err(e));
       const render = () => { if (tok === this.onlineTok && this.mode === 'menu') this.menu.online(st, h); };
       render();
@@ -269,7 +324,9 @@
           Gld.touch(); st.admin = await Gld.isAdmin().catch(() => false);
           // kirbytebi sin permisos: el servidor no lo tiene como admin todavía
           if (!st.admin && String(u).toLowerCase() === 'kirbytebi' && !this._adminWarned) { this._adminWarned = true; this.menu.toast('🛡 El servidor aún no te reconoce como admin: ejecuta kiro/supabase_admin_fix.sql en Supabase', 6000); }
+          this.checkModerationWarning(); // avisa si hay sanción nueva (Void Glob)
         }
+        if (tab === 'author' && st.author) st.authorWarns = await Gld.warnCount(st.author).catch(() => 0);
         if (tab === 'mod' && !st.admin) { st.error = 'Solo para admin'; return done(); }
         if (tab === 'friends') return u ? Gld.friends().then((r) => { st.friends = r.rows; done(r.ok ? r : { ok: false, error: r.error === 'no-v3' ? 'Falta aplicar kiro/supabase_online_v3.sql (amigos)' : r.error }); }) : done();
         if (tab === 'author' && st.author) st.favs = await Gld.favorites(st.author).catch(() => []);
@@ -399,7 +456,10 @@
         try { localStorage.setItem(PROG, JSON.stringify(p)); } catch (e) { /* nada */ }
         // Mapamundi: marca el nodo como completado (y por meta oculta si aplica) para desbloquear
         if (lp.opts.story.world && lp.opts.story.node && S.Model.StoryMap) {
-          S.Model.StoryMap.markCleared(lp.opts.story.world, lp.opts.story.node, !!g.secretClear);
+          const SM = S.Model.StoryMap;
+          SM.markCleared(lp.opts.story.world, lp.opts.story.node, !!g.secretClear);
+          // ¿era el castillo final? -> desbloquea el mundo siguiente (se avisa al volver al mapa)
+          this._worldUnlocked = SM.onNodeCleared(lp.opts.story.world, lp.opts.story.node);
         }
       }
       const img = g.player.formPath();

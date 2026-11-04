@@ -718,8 +718,15 @@
         }
         break;
       }
-      // Semisólido de fondo: borde de arriba (se pisa) + cuerpo, con el estilo del mapa
-      case TT.SEMIBG: case TT.BGFILL: drawSemiBg(ctx, level, x, y, t === TT.SEMIBG, pal, o.theme, time); break;
+      // Semisólido de fondo: borde de arriba (se pisa) + cuerpo, con el estilo del mapa.
+      // Estilo propio por mapa en el módulo aislado BgStyles; si falla o el mapa no tiene
+      // estilo, cae al dibujo genérico drawSemiBg. Protegido para no romper el render.
+      case TT.SEMIBG: case TT.BGFILL: {
+        if (o.theme && S.View.BgStyles) {
+          try { if (S.View.BgStyles.draw(ctx, level, x, y, t === TT.SEMIBG, pal, time, o.theme)) break; } catch (e) { /* cae al genérico */ }
+        }
+        drawSemiBg(ctx, level, x, y, t === TT.SEMIBG, pal, o.theme, time); break;
+      }
       // Pared de cueva de fondo (sin colisión)
       case TT.CAVEBG: {
         const base = U.shade(pal.groundDark || pal.ground || '#444', -0.35);

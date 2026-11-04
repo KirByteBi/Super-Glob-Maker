@@ -40,6 +40,7 @@
       menu.appendChild(button('✏ Crear nivel', 'big', h.create));
       menu.appendChild(button('📁 Mis niveles', 'big', h.levels));
       if (h.online) menu.appendChild(button('🌐 Online', 'big', h.online));
+      if (h.messages) menu.appendChild(button('✉ Mensajes', 'big', h.messages));
       const b3d = button('🌌 Modo 3D (próximamente)', 'big disabled', () => this.toast('El modo 3D estilo SM64 / Galaxy llegará en la próxima versión.'));
       menu.appendChild(b3d);
       const row = el('div', 'row');
@@ -186,9 +187,11 @@
       const scrollSpeed = field('Velocidad del scroll (15-120)', inp('number', level.scrollSpeed || 40, { min: 15, max: 120 }));
       const syncScroll = () => { scrollSpeed.parentNode.style.display = scroll.checked ? '' : 'none'; };
       scroll.addEventListener('change', syncScroll); syncScroll();
+      // Norma "sin efectos especiales": todos los Globs juegan como el verde (sin poderes)
+      const noPowers = field('Sin efectos especiales (todos juegan como el verde)', inp('checkbox', '', { checked: !!level.noPowers }));
       b.appendChild(form);
       const row = el('div', 'row');
-      row.appendChild(button('Aplicar', 'primary', () => { this.closeModal(); onApply({ name: name.value.trim() || 'Nivel sin nombre', width: +width.value, height: +height.value, time: +time.value, win: { type: winSel.value, n: +winN.value, target: tgSel.value }, scroll: scroll.checked ? 1 : 0, scrollSpeed: +scrollSpeed.value }); }));
+      row.appendChild(button('Aplicar', 'primary', () => { this.closeModal(); onApply({ name: name.value.trim() || 'Nivel sin nombre', width: +width.value, height: +height.value, time: +time.value, win: { type: winSel.value, n: +winN.value, target: tgSel.value }, scroll: scroll.checked ? 1 : 0, scrollSpeed: +scrollSpeed.value, noPowers: noPowers.checked ? 1 : 0 }); }));
       row.appendChild(button('Exportar', '', h.exportLevel));
       row.appendChild(button('Importar', '', h.importLevel));
       row.appendChild(button('🗑 Vaciar', 'danger', () => { this.confirm('¿Borrar todo el contenido del nivel?', h.clearLevel); }));
@@ -270,6 +273,58 @@
       b.appendChild(row);
     }
 
+    // ---------- ✉ MENSAJES ----------
+    // st = { user, loading, error, rows:[{id,kind,title,body,reply,...}], admin, blocked }
+    // h  = { apologize(mail, text), news(title, body) (admin), close }
+    messages(st, h) {
+      const b = this.openModal('✉ Mensajes');
+      if (!S.Model.Gld.configured()) { b.appendChild(el('p', '', 'La conexión con Glob Defenders no está disponible ahora mismo.')); b.appendChild(button('Cerrar', '', () => this.closeModal())); return; }
+      if (!st.user) { b.appendChild(el('p', '', 'Inicia sesión en 🌐 Online para ver tus mensajes.')); b.appendChild(button('Cerrar', 'primary', () => this.closeModal())); return; }
+      if (st.loading) { b.appendChild(el('p', 'empty', 'Cargando…')); return; }
+      if (st.error === 'no-v4') { b.appendChild(el('p', 'note', '⚠ Falta aplicar kiro/supabase_online_v4.sql en el servidor para activar los mensajes.')); b.appendChild(button('Cerrar', '', () => this.closeModal())); return; }
+      if (st.error) { b.appendChild(el('p', 'empty', 'No se pudo cargar: ' + st.error)); b.appendChild(button('Cerrar', '', () => this.closeModal())); return; }
+      // ADMIN: redactar una noticia global
+      if (st.admin && h.news) {
+        b.appendChild(el('h3', 'sec', '📣 Publicar noticia (admin)'));
+        const tin = document.createElement('input'); tin.type = 'text'; tin.placeholder = 'Título'; tin.maxLength = 60; tin.className = 'mail-input';
+        const bta = document.createElement('textarea'); bta.className = 'code'; bta.placeholder = 'Texto de la noticia…'; bta.rows = 2;
+        // tipo de noticia: Actualización (estándar) / Aviso (rojo) / Evento (verde)
+        const sel = document.createElement('select'); sel.className = 'mail-input';
+        [['update', '🔧 Actualización'], ['warn', '⚠ Aviso (rojo)'], ['event', '🎉 Evento (verde)']].forEach(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o); });
+        b.appendChild(tin); b.appendChild(sel); b.appendChild(bta);
+        b.appendChild(button('📣 Enviar a todos', 'primary', () => { if (tin.value.trim() && bta.value.trim()) h.news(tin.value.trim(), bta.value.trim(), sel.value); }));
+      }
+      const list = el('div', 'level-list mail-list');
+      if (!st.rows.length) list.appendChild(el('p', 'empty', 'No tienes mensajes.'));
+      st.rows.forEach((m) => {
+        const apology = m.kind === 'apology';
+        const cat = apology ? 'apology' : (m.category === 'warn' || m.category === 'event' ? m.category : 'update');
+        const row = el('div', 'level-row mail ' + cat);
+        const info = el('div', 'info');
+        const icon = apology ? '🕳 ' : cat === 'warn' ? '⚠ ' : cat === 'event' ? '🎉 ' : '📣 ';
+        info.appendChild(el('b', '', icon + m.title));
+        info.appendChild(el('small', 'mail-body', m.body));
+        // Nota de idioma de ORIGEN: frase en el idioma del LECTOR, color por el origen
+        // (español = rojo, inglés = azul). Global, como los Globs.
+        const srcLang = m.lang === 'en' ? 'en' : 'es';
+        const reader = (S.i18n && S.i18n.lang === 'en') ? 'en' : 'es';
+        const origin = reader === 'en' ? (srcLang === 'en' ? 'English' : 'Spanish') : (srcLang === 'en' ? 'inglés' : 'español');
+        const note = el('small', 'mail-lang ' + srcLang, (reader === 'en' ? 'This message was written in ' : 'Este mensaje se creó en ') + origin);
+        info.appendChild(note);
+        if (apology) {
+          info.appendChild(el('small', 'mail-note', m.reply ? '✔ Disculpa enviada: ' + m.reply : 'Tu cuenta no puede publicar. Pide perdón aquí abajo.'));
+          if (!m.reply) {
+            const ta = document.createElement('textarea'); ta.className = 'code'; ta.placeholder = 'Escribe tu disculpa…'; ta.rows = 2; info.appendChild(ta);
+            info.appendChild(button('Enviar disculpa', 'primary', () => { if (ta.value.trim()) h.apologize(m, ta.value.trim()); }));
+          }
+        }
+        row.appendChild(info);
+        list.appendChild(row);
+      });
+      b.appendChild(list);
+      b.appendChild(button('Cerrar', '', () => this.closeModal()));
+    }
+
     // ---------- ONLINE (🌐) ----------
     // st = { tab, user, loading, error, rows, featured, author, search, v2, mine, localLevels }
     // h  = { back, tab(id), play(row), author(name), search(text), account, publish(local), setPublic(row,on), removeCloud(row) }
@@ -303,6 +358,15 @@
         p.appendChild(el('b', '', '👤 ' + st.author));
         const tl = st.rows.reduce((a, r) => a + r.likes, 0), td = st.rows.reduce((a, r) => a + r.dislikes, 0), tp = st.rows.reduce((a, r) => a + (r.plays || 0), 0);
         p.appendChild(el('span', '', st.rows.length + ' niveles · 👍 ' + tl + ' · 👎 ' + td + ' · ▶ ' + tp + ' partidas'));
+        // sanciones (Void Globs) del autor
+        if (st.authorWarns > 0) p.appendChild(el('span', 'warns', '🕳 ' + st.authorWarns + ' ' + (st.authorWarns === 1 ? 'Void Glob (sanción)' : 'Void Globs (sanciones)') + (st.authorWarns >= 15 ? ' · 🚫 BLOQUEADO para publicar' : '')));
+        // herramientas de ADMIN sobre el usuario
+        if (st.admin && h.warn) {
+          const ar = el('div', 'row');
+          ar.appendChild(button('⚠ Sancionar', 'danger', () => h.warn(st.author)));
+          ar.appendChild(button('🔓 Quitar bloqueo', '', () => h.unblock(st.author)));
+          p.appendChild(ar);
+        }
         wrap.appendChild(p);
       }
       if (st.loading) { wrap.appendChild(el('p', 'empty', 'Cargando…')); return; }

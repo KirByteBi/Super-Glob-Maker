@@ -106,7 +106,8 @@
       this.goalHidden = gh ? { x: gh.x * T + T / 2 - 4, y: (gh.y + 1) * T - 192, w: 8, h: 192, medalY: 0, tx: gh.x, ty: gh.y, hidden: true } : null;
       this.secretClear = false;
       const sp = this.checkpoint || start;
-      this.player = new S.Model.Player(this.charId, sp.x, sp.y);
+      // Norma "sin efectos especiales": si el nivel la tiene, el Glob juega como el verde.
+      this.player = new S.Model.Player(this.charId, sp.x, sp.y, !!this.level.noPowers);
       // Al reaparecer tras morir: 2 s de invulnerabilidad para que nada te mate en bucle
       if (!first) this.player.inv = 2;
       this.time = this.level.time; this.state = 'play'; this.stateT = 0; this.t = 0;

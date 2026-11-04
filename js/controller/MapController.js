@@ -37,12 +37,20 @@
     update(dt, inp) {
       this.t += dt; this.moveCd = Math.max(0, this.moveCd - dt);
       if (inp.editExitPressed) { this.app.showTitle(); return; }      // Esc vuelve al titulo
+      // cambiar de mundo (entre los desbloqueados) con correr: Shift/X
+      if (inp.runPressed && this.moveCd <= 0) { this.cycleWorld(); this.moveCd = 0.25; return; }
       // mover el cursor al vecino en la direccion pulsada
       let dir = null;
       if (inp.left) dir = 'left'; else if (inp.right) dir = 'right'; else if (inp.up) dir = 'up'; else if (inp.down) dir = 'down';
       if (dir && this.moveCd <= 0) { this.moveCursor(dir); this.moveCd = 0.18; }
       // entrar al nodo con salto/disparo, solo si NO se esta moviendo (evita que ↑ entre sin querer)
       if (!dir && (inp.jumpPressed || inp.shootPressed)) this.enter();
+    }
+    // pasa al siguiente mundo DESBLOQUEADO (ciclico). Si solo hay 1, no hace nada.
+    cycleWorld() {
+      const ids = SM.unlockedWorlds(); if (ids.length < 2) return;
+      const i = ids.indexOf(this.worldId); const nx = ids[(i + 1) % ids.length];
+      if (nx && nx !== this.worldId) this.app.showStoryMap(nx);
     }
     moveCursor(dir) {
       const cur = this.world.map[this.cursor], cp = this.nodePos(cur);
@@ -203,7 +211,8 @@
       const tr = S.tr || ((s) => s);
       ctx.fillText(tr(this.world.name), 16, 20);
       ctx.font = '600 13px "Trebuchet MS",sans-serif'; ctx.textAlign = 'right';
-      ctx.fillText(tr('Flechas: mover · Z/Enter: entrar · Esc: salir'), W - 16, 20);
+      const multi = SM.unlockedWorlds().length > 1;
+      ctx.fillText(tr('Flechas: mover · Z/Enter: entrar' + (multi ? ' · X/Shift: cambiar de mundo' : '') + ' · Esc: salir'), W - 16, 20);
       // cartel inferior con el nombre del nodo seleccionado (estilo SMM2)
       let label = '';
       if (cur.type === 'castle') label = '🏰 ' + tr('Castillo') + ' · ' + S.Model.Themes.name(S.Model.Themes.get(cur.theme), this.mode);

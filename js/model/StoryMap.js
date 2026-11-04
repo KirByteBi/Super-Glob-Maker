@@ -138,6 +138,38 @@
       // coloca el cursor en el primer nodo jugable no completado, o en el inicio
       for (const n of w.nodes) { if (n.type !== 'start' && this.isUnlocked(worldId, n.id) && !this.isCleared(worldId, n.id)) return n.id; }
       return w.nodes[0].next[0] || 'start';
-    }
+    },
+
+    // ---- mundos (desbloqueo entre mundos) ----
+    // El mundo 1 siempre esta disponible; los demas se abren al superar el CASTILLO FINAL
+    // del mundo anterior.
+    worldIndex(worldId) { return WORLDS.findIndex((w) => w.id === worldId); },
+    nextWorldId(worldId) { const i = this.worldIndex(worldId); return (i >= 0 && i + 1 < WORLDS.length) ? WORLDS[i + 1].id : null; },
+    // El castillo final de un mundo = el ultimo nodo tipo 'castle' del array.
+    finalCastleId(worldId) {
+      const w = this.world(worldId); let id = null;
+      w.nodes.forEach((n) => { if (n.type === 'castle') id = n.id; });
+      return id;
+    },
+    isWorldUnlocked(worldId) {
+      if (this.worldIndex(worldId) <= 0) return true; // el primero siempre
+      const p = read(); return !!(p.worlds && p.worlds[worldId]);
+    },
+    unlockWorld(worldId) {
+      if (!worldId) return; const p = read(); p.worlds = p.worlds || {}; p.worlds[worldId] = true; write(p);
+    },
+    // ¿El mundo esta completado (su castillo final superado)? Abre el siguiente.
+    isWorldComplete(worldId) {
+      const fc = this.finalCastleId(worldId); return fc ? this.isCleared(worldId, fc) : false;
+    },
+    // Llamar tras superar un nodo: si era el castillo final, desbloquea el mundo siguiente.
+    // Devuelve el id del mundo recien desbloqueado (o null).
+    onNodeCleared(worldId, nodeId) {
+      if (nodeId !== this.finalCastleId(worldId)) return null;
+      const nx = this.nextWorldId(worldId);
+      if (nx && !this.isWorldUnlocked(nx)) { this.unlockWorld(nx); return nx; }
+      return null;
+    },
+    unlockedWorlds() { return WORLDS.filter((w) => this.isWorldUnlocked(w.id)).map((w) => w.id); }
   };
 })(window.SGM);

@@ -19,6 +19,8 @@
       // atras del borde izquierdo, mueres. Velocidad en 'scrollSpeed' (px/s).
       this.scroll = d.scroll ? 1 : 0;
       this.scrollSpeed = U.clamp(d.scrollSpeed | 0 || 40, 15, 120);
+      // Norma "sin efectos especiales": 1 = los Globs juegan todos como el verde (sin poderes).
+      this.noPowers = d.noPowers ? 1 : 0;
       const n = this.width * this.height;
       if (Array.isArray(d.tiles)) this.tiles = d.tiles.slice(0, n);
       else if (typeof d.tiles === 'string') this.tiles = Level.decode(d.tiles, n);
@@ -225,7 +227,7 @@
 
     toJSON() {
       return { v: 1, id: this.id, name: this.name, theme: this.theme, mode: this.mode, character: this.character,
-        width: this.width, height: this.height, time: this.time, scroll: this.scroll || undefined, scrollSpeed: this.scroll ? this.scrollSpeed : undefined, tiles: Level.encode(this.tiles),
+        width: this.width, height: this.height, time: this.time, scroll: this.scroll || undefined, scrollSpeed: this.scroll ? this.scrollSpeed : undefined, noPowers: this.noPowers || undefined, tiles: Level.encode(this.tiles),
         objects: this.objects.map((o) => {
           const j = { type: o.type, x: o.x, y: o.y };
           if (o.r != null) j.r = o.r;

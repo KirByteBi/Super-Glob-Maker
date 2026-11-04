@@ -1,0 +1,30 @@
+# --- Temporales de pruebas (no afectan al juego) ---
+.tmp_test/
+
+# --- Sistema operativo ---
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# --- Editores / IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-workspace
+*.sublime-project
+
+# --- Logs y basura ---
+*.log
+npm-debug.log*
+*.tmp
+*.bak
+*.orig
+
+# --- Dependencias (por si algún día se añaden) ---
+node_modules/

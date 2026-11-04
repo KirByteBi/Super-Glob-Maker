@@ -40,9 +40,20 @@
       desc: 'Doble salto estelar y caída lenta. Al aterrizar del doble salto lanza una onda de estrellas.' }
   };
 
+  // Stats "base" (las del Glob verde): todos juegan igual con la norma "sin efectos especiales".
+  const BASE_STATS = { speed: 1, jump: 1, traction: 1, float: 0, swim: 1 };
+
   S.Model.Characters = {
     list, specials,
     get(id) { return list.find((c) => c.id === id) || list[0]; },
+    // Versión NEUTRALIZADA de un Glob: conserva su apariencia (id, nombre, sprites,
+    // colores, evos) pero juega EXACTAMENTE como el verde: sin habilidad de disparo,
+    // sin resbalar, sin planeo, sin bonus de monedas, sin nado especial ni peso.
+    // Se usa cuando el nivel tiene la norma "sin efectos especiales" (y en multijugador).
+    neutralized(id) {
+      const c = this.get(id);
+      return Object.assign({}, c, { stats: Object.assign({}, BASE_STATS), ability: 'none', slippery: false, coinBonus: 0, swimSpecial: 0, _neutral: true });
+    },
     // Nombre de la forma actual del jugador
     formName(ch, evo, special) { return special ? specials[special].name : ch.evoNames[evo]; },
     formPath(ch, evo, special) { return special ? specials[special].path : ch.paths[evo]; },

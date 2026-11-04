@@ -197,12 +197,23 @@ Reglas generales
       Playa .... muelle del puerto / toldo
       Fabrica .. vigas en construccion / andamio
       (el resto de mapas ya estan definidos en Themes.js)
-[ ] Semisolidos DE FONDO (con relleno detras, estilo SMM):
+[X] Semisolidos DE FONDO (con relleno detras, estilo SMM):
     sirven para hacer cuevas o niveles aereos sin depender del
     tema de cielo, y para montar escenarios enteros con la
-    tematica del mapa (ciudades en UR, palmeras/sombrillas en
-    SS, carpas/atracciones en el circo...). Se comportan como
-    semisolido pero ademas pintan su fondo.
+    tematica del mapa. Se comportan como semisolido pero ademas
+    pintan su fondo. AHORA cada uno de los 16 mapas tiene su
+    propio estilo (modulo aislado js/view/BgStyles.js, gancho
+    protegido en Sprites case SEMIBG/BGFILL; si falla cae al
+    generico drawSemiBg). Destacados:
+      - Circo: carpa a franjas, las NO blancas ciclan de color.
+      - Casino: ruleta de fondo que gira (verde/rojo/negro/oro).
+      - Ciudad: edificio con ventanas que se encienden/parpadean.
+      - Fabrica: placa metalica con remaches + tira luminosa.
+      - Disco: ecualizador de barras de colores.
+      - Reloj: engranajes que giran. Hub: cristal con rejilla.
+      - Volcan/Vortice/Ruinas/Cielo/Agua/Lago/Nieve/Bosque/Playa:
+        cada uno con su material propio.
+    Verificado (16/16 mapas, 0 fallos en paz y corrupto).
 [ ] Decoraciones de terreno (solo VISUAL, sin colision, como la
     tuberia decorativa 1x1). Dos familias por tamano/forma:
     1x1, 2x1, 1x2, 3x1 y 1x3 (la 1x3 reservada a vallas y
@@ -438,11 +449,133 @@ Para Super Glob Maker hace falta en el Supabase de GlD:
 
 
 --------------------------------------------------------------
+ 5c. MODERACION, SANCIONES Y CORREOS   (online; pendiente)
+--------------------------------------------------------------
+Politica ya escrita en el LICENSE (seccion 7). CODIGO YA HECHO
+(cliente + UI + SQL v4). Falta APLICAR el SQL en Supabase de GlD.
+Todo a criterio de KirByte_Bi.
+
+[X] Reglas de publicacion: prohibido publicar niveles obscenos,
+    ofensivos, de odio o inapropiados. Niveles asi se BORRAN sin
+    aviso. (politica en LICENSE; borrado admin ya existia)
+[X] Cuenta ADMIN (solo KirByte_Bi): buscar a un usuario por su
+    nombre (perfil de autor en Online) y gestionarlo.
+[X] AVISO / sancion: el admin manda un aviso a un usuario.
+    - Aparece en su perfil como "Void Glob" (contador visible).
+    - El usuario recibe un mensaje (texto del admin) la PRIMERA
+      vez que se conecte despues del aviso (modal con Void Glob).
+[X] Contador de sanciones. Con 15 sanciones la cuenta NO puede
+    publicar niveles (bloqueo, con trigger en el servidor) hasta
+    pedir perdon.
+[X] Levantar el bloqueo de dos formas:
+    - El usuario se disculpa por el correo ROJO de "disculpa"; o
+    - KirByte_Bi lo desbanea con un boton (🔓 Quitar bloqueo).
+[X] MENSAJES (✉, para todos): canal de NOTICIAS de un solo
+    sentido (SOLO KirByte_Bi escribe); excepcion: el correo rojo
+    de disculpa SI permite responder.
+  >> IMPLEMENTADO: js/model/GldAccount.js (warnCount, amIBlocked,
+     adminWarn, adminUnblock, adminNews, adminApologies, mailInbox,
+     apologize, unseenWarnings), UI en MenuView.messages + boton ✉
+     del menu + botones ⚠/🔓 en el perfil de autor + aviso al
+     conectar. SQL en kiro/supabase_online_v4.sql.
+[X] NOTA DE IDIOMA de cada correo: se guarda el idioma de ORIGEN
+    (columna sgm_mail.lang). La nota "este mensaje se creo en X"
+    sale en el idioma del LECTOR, pero el COLOR va por el origen
+    (español = rojo, inglés = azul). Global, como los Globs.
+[X] TIPOS DE NOTICIA (columna sgm_mail.category, solo admin):
+    - Actualizacion (estandar), Aviso (ROJO: normas nuevas/bugs),
+      Evento (VERDE: contenido de temporada, p.ej. tandas de
+      niveles navidenos de KiroDEV). Selector al redactar + color
+      por tipo en la bandeja.
+[ ] FORMATO RICO en los mensajes (estilo Discord): markdown basico
+    (negrita, cursiva, enlaces con texto) y sobre todo EMBEBER
+    NIVELES visualmente pegando su LINK o ID (tarjeta con
+    miniatura + nombre + autor + boton jugar, como onlineRow).
+    Pendiente: parser de texto -> DOM seguro (sin HTML crudo) y
+    resolver IDs de nivel contra sgm_levels para la tarjeta.
+  !! PENDIENTE: aplicar kiro/supabase_online_v4.sql en el Supabase
+     de GlD (PRODUCCION). Incluye columnas lang y category en
+     sgm_mail. Hasta entonces la UI avisa con 'no-v4'.
+
+
+--------------------------------------------------------------
+ 5d. MULTIJUGADOR ONLINE   (online; pendiente, feature GRANDE)
+--------------------------------------------------------------
+Jugar niveles online entre 2 y 4 jugadores (max 4, min 2).
+Requiere sincronizacion en tiempo real (Supabase Realtime o
+similar) en el Supabase de GlD. Es la feature mas grande que
+queda; conviene hacerla por fases (ver 5d-fases abajo).
+
+COMO SE ENTRA A UNA PARTIDA:
+[ ] Por SEED especial (basada en GlD): un codigo de sala para
+    unirse (estilo las seeds de Glob Defenders).
+[ ] Por INVITACION: invitas a los usuarios que quieras; reciben
+    un mensaje de invitacion (via ✉ Mensajes) cuando entren al
+    online, SIEMPRE que la sala siga en pie Y el jugador que
+    invito siga dentro. Si la partida ya acabo o el anfitrion se
+    fue, la invitacion caduca.
+
+MODOS DE JUEGO:
+[ ] 1 NIVEL: todos juegan un mismo nivel elegido.
+[ ] MULTIMUNDO: se eligen hasta 5 niveles para jugarlos seguidos
+    como un "mundo" (ampliable a 10 si hay niveles suficientes).
+    OJO: el nombre "Supermundos" queda RESERVADO para un modo
+    futuro aparte (guino a SMM2 UPD3), NO usar aqui.
+[ ] TORNEO: como Multimundo, pero compites. Gana quien llega
+    PRIMERO a la meta; ademas se suman PUNTOS por derrotar
+    enemigos, recoger items, coger Monedas Estrella, etc. Quien
+    mas puntos tenga al final GANA y recibe una CORONA en su
+    perfil.
+
+REGLA BASE (siempre en multijugador):
+[ ] Nunca puede haber 2 Globs IGUALES en la misma partida (cada
+    jugador elige un Glob distinto).
+
+NUEVA NORMA DE NIVEL: "SIN EFECTOS ESPECIALES"
+[ ] Desactiva las habilidades especiales de cada Glob: todos
+    juegan IGUAL que el Glob verde (base), para que nadie abuse
+    de sus poderes.
+    - Obligatoria en los modos que lo necesiten (p. ej. Torneo,
+      para que sea justo).
+    - Opcional como AJUSTE del nivel en el editor: el autor puede
+      activarla para que su nivel se juegue sin poderes especiales
+      (tambien en 1 jugador).
+
+FASES SUGERIDAS (de menos a mas riesgo):
+  1. La NORMA "sin efectos especiales" en el modelo + ajuste en el
+     editor + que el jugador use las mecanicas del verde. Esto es
+     LOCAL, no necesita red: se puede hacer ya y es util solo.
+  2. Infra de salas: seeds, invitaciones (via ✉), lista de
+     jugadores, lobby. Necesita SQL + Realtime en GlD (PRODUCCION).
+  3. Sincronizacion en vivo de posiciones/acciones de los Globs
+     (lo mas dificil; definir autoridad/anfitrion, interpolacion).
+  4. Modos 1 Nivel / Multimundo / Torneo + puntuacion + corona.
+  !! Realtime y salas necesitan tablas + RLS + canales nuevos en
+     el Supabase de GlD (PRODUCCION): preparo el SQL/diseno y te lo
+     enseno antes de aplicarlo. La corona en el perfil reusa el
+     patron de los Void Globs / GOD.
+
+
+--------------------------------------------------------------
  6. PULIDO Y PRUEBAS
 --------------------------------------------------------------
 [ ] Prueba automatica: todos los mapas x personajes x modos
 [ ] Capturas de cada mapa y modo en miniaturas/
-[ ] Modo Historia con 16 mapas en orden de dificultad
+[~] Modo Historia (mapamundi SMW): 5 mundos, niveles generados
+    por nodo (lecciones), metas ocultas, interruptores "!",
+    desbloqueo de nodos y progreso persistido. FUNCIONAL.
+    [X] Transicion entre mundos: superar el CASTILLO FINAL de un
+        mundo desbloquea el siguiente (p.worlds en sgm.story.v1);
+        aviso + opcion de viajar al volver al mapa; cambiar de
+        mundo desbloqueado con X/Shift en el mapamundi.
+        Verificado (w1->w2, nodos normales no desbloquean).
+    [ ] Pulir: jefe por castillo en w5 (los 3 ponen MoonStar por
+        usar BOSS[plan.d]); deberia reservar MoonStar al ultimo.
+    [ ] UI de los dos huecos (meta normal + oculta) tambien en
+        Mis niveles.
+    [ ] Limpiar doble sistema: SampleLevels.js (grid 16 temas) y
+        sgm.progress.v1 por tema son legado solapado con el
+        mapamundi; unificar en sgm.story.v1.
 [ ] Balance de enemigos y power-ups
 [ ] MOVIL: comprobar que el scroll de camara al EDITAR funciona
     (arrastre/desplazamiento tactil) y el resto de funciones del

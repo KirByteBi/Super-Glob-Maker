@@ -11,8 +11,10 @@
   const SIZES = [{ w: 28, h: 22, draw: 44 }, { w: 40, h: 32, draw: 62 }];
 
   class Player {
-    constructor(charId, x, y) {
-      this.ch = Chars.get(charId);
+    constructor(charId, x, y, noPowers) {
+      // Norma "sin efectos especiales": el Glob conserva su aspecto pero juega como el verde.
+      this.noPowers = !!noPowers;
+      this.ch = this.noPowers ? Chars.neutralized(charId) : Chars.get(charId);
       this.evo = 0; this.special = null;
       const s = SIZES[0];
       this.w = s.w; this.h = s.h;
@@ -44,7 +46,7 @@
     // Cápsula de personaje: cambia de Glob manteniendo la evolución (los especiales se pierden)
     setCharacter(id) {
       this.prevForm = this.formPath();
-      this.ch = Chars.get(id);
+      this.ch = this.noPowers ? Chars.neutralized(id) : Chars.get(id);
       this.evo = Math.min(this.evo, this.ch.evos.length - 1);
       this.special = null; this.changeT = 0.6;
       this.resizeTo(this.big);
