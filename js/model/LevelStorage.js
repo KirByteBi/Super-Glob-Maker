@@ -13,7 +13,8 @@
     // La vinculación real con Glob Defenders está pendiente; de momento solo se guarda el estado
     isLinked() { return read(LINK, false) === true; },
     setLinked(v) { write(LINK, !!v); },
-    limit() { return Storage.isLinked() ? Math.floor(BASE_LIMIT * 1.25) : BASE_LIMIT; },
+    // Admin (kirbytebi): sin tope de niveles (el único límite es el espacio del navegador)
+    limit() { return (S.Model.Gld && S.Model.Gld._admin) ? 9999 : Storage.isLinked() ? Math.floor(BASE_LIMIT * 1.25) : BASE_LIMIT; },
     count() { return read(KEY, []).length; },
     list() { return read(KEY, []).sort((a, b) => (b.updated || 0) - (a.updated || 0)); },
     get(id) { return read(KEY, []).find((l) => l.id === id) || null; },

@@ -592,7 +592,9 @@
         info.appendChild(slots);
         row.appendChild(button('▶ Jugar', 'primary', () => h.play(l)));
         row.appendChild(button('✏ Editar', '', () => h.edit(l)));
-        if (h.publish) row.appendChild(button(pub ? '☄ Publicado' : '🌐 Publicar', pub ? 'disabled' : '', () => h.publish(l)));
+        // admin: un nivel publicado se puede volver a subir (actualiza su versión online)
+      const adm = !!(S.Model.Gld && S.Model.Gld._admin);
+      if (h.publish) row.appendChild(button(pub ? (adm ? '🛡 Actualizar online' : '☄ Publicado') : '🌐 Publicar', pub && !adm ? 'disabled' : '', () => h.publish(l)));
         if (h.copy) row.appendChild(button('📄 Copiar', '', () => h.copy(l)));
         if (h.exportLevel) row.appendChild(button('📋 Seed', '', () => h.exportLevel(l))).title = S.tr ? S.tr('Opciones de seed') : 'Opciones de seed';
         row.appendChild(button('🗑', 'danger', () => this.confirm('¿Borrar "' + l.name + '"?' + (pub ? ' (la versión online no se borra)' : ''), () => h.remove(l))));

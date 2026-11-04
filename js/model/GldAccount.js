@@ -161,7 +161,12 @@
     // ¿Se puede publicar este nivel local? { ok } o { ok:false, error:'already'|'too-similar', ... }
     //  - Un nivel ya publicado NO se puede volver a publicar (queda marcado con el Glob Cometa).
     //  - Una copia solo se publica si cambia el tema/modo o es bastante distinta del original.
+    // Admin (kirbytebi, comprobado por el servidor): sin reglas. Si el nivel ya estaba publicado,
+    // se ACTUALIZA su versión online (update = id en la nube) en vez de bloquearlo.
+    _admin: false,
+    isAdminCached() { return Gld._admin === true; },
     canPublish(levelJSON) {
+      if (Gld._admin) return { ok: true, admin: true, update: levelJSON.cloudId || Gld.cloudIdOf(levelJSON.id) || null };
       if (levelJSON.downloaded) return { ok: false, error: 'downloaded', author: levelJSON.downloaded.author };
       if (levelJSON.publishedAt || levelJSON.cloudId || Gld.cloudIdOf(levelJSON.id)) return { ok: false, error: 'already' };
       const chk = S.Model.Level.copyCheck(levelJSON);
@@ -175,8 +180,15 @@
       const u = await Gld.user(); if (!u) return { ok: false, error: 'no-session' };
       const Lv = S.Model.Level, data = Lv.content(levelJSON); // sin copyOf ni marcas
       const row = { user_id: u.id, name: String(levelJSON.name || 'Nivel sin nombre').slice(0, 40), data, is_public: true, updated_at: new Date().toISOString(), content_sig: Lv.signature(levelJSON) };
+      // admin: actualizar la versión online de un nivel ya publicado (si sigue existiendo)
+      if (can.update) {
+        const { data: up, error: ue } = await c.from('sgm_levels').update(row).eq('id', can.update).select('id').maybeSingle();
+        if (!ue && up && up.id) return { ok: true, id: up.id, updated: true };
+        if (ue && !/0 rows|no rows/i.test(ue.message)) return { ok: false, error: /modificar|volver a publicar/i.test(ue.message) ? 'no-bypass' : ue.message };
+      }
       let { data: out, error } = await c.from('sgm_levels').insert(row).select('id').maybeSingle();
       if (error && /content_sig/.test(error.message)) { delete row.content_sig; ({ data: out, error } = await c.from('sgm_levels').insert(row).select('id').maybeSingle()); } // sin SQL v2
+      if (error && Gld._admin && /PUB_BLOCKED|120|258|duplicate|unique|sgm_levels_sig/i.test(error.message)) return { ok: false, error: 'no-bypass' }; // falta el SQL de admin
       if (error) return { ok: false, error: /PUB_BLOCKED/.test(error.message) ? 'pub-blocked' : /120/.test(error.message) ? 'pub-limit' : /258/.test(error.message) ? 'limit' : /duplicate|unique|sgm_levels_sig/i.test(error.message) ? 'duplicate' : error.message };
       if (out && out.id) Gld.setCloudId(levelJSON.id, out.id);
       return { ok: true, id: out && out.id };
@@ -257,7 +269,9 @@
     _v3err(e) { return e && /function|schema cache|column|does not exist/i.test(e.message || '') ? 'no-v3' : (e && e.message) || 'error'; },
     async isAdmin() {
       const c = await getClient(); if (!c || !(await Gld.user())) return false;
-      const { data, error } = await c.rpc('sgm_is_admin'); return !error && data === true;
+      const { data, error } = await c.rpc('sgm_is_admin');
+      Gld._admin = !error && data === true; // caché para las reglas del cliente (el servidor decide de verdad)
+      return Gld._admin;
     },
     async adminDelete(id) { const c = await getClient(); if (!c) return { ok: false, error: 'offline' }; const { error } = await c.rpc('sgm_admin_delete', { p_level: id }); return error ? { ok: false, error: Gld._v3err(error) } : { ok: true }; },
     async adminGod(id, on) { const c = await getClient(); if (!c) return { ok: false, error: 'offline' }; const { error } = await c.rpc('sgm_admin_god', { p_level: id, p_god: !!on }); return error ? { ok: false, error: Gld._v3err(error) } : { ok: true }; },

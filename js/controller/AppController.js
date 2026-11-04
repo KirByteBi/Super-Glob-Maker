@@ -33,6 +33,8 @@
       }
       // "En línea" para tus amigos: avisa al servidor al abrir el juego y cada 3 minutos
       const ping = () => { if (Storage.isLinked() && S.Model.Gld.configured()) S.Model.Gld.touch().catch(() => {}); };
+      // ¿eres admin? (lo decide el servidor) -> sin límites en el editor, Mis niveles y al publicar
+      if (Storage.isLinked() && S.Model.Gld.configured()) S.Model.Gld.isAdmin().catch(() => false);
       setTimeout(ping, 3000); setInterval(ping, 180000);
       // Controles táctiles (móvil/tablet)
       if (S.View.TouchControls) S.View.TouchControls.init(this);
@@ -224,6 +226,7 @@
     // Niveles descargados de Online: solo se juegan. Devuelve true (y avisa) si está bloqueado.
     lockedDownload(l) {
       if (!l || !l.downloaded) return false;
+      if (S.Model.Gld && S.Model.Gld._admin) return false; // admin: puede editar/copiar/exportar cualquiera
       // Si el nivel descargado es TUYO (tu usuario == autor), no se bloquea: puedes editarlo,
       // copiarlo y exportarlo. Util para recuperar tus propios niveles publicados en otro
       // dispositivo. _myUser lo cachea el perfil/online al leer tu nombre.
@@ -315,15 +318,21 @@
         return;
       }
       const go = () => {
-        this.menu.confirm('¿Publicar "' + l.name + '"? Una vez publicado no podrás volver a publicarlo ni cambiar la versión online.', () => {
-          this.menu.toast('Publicando…', 1200);
+        const upd = can.ok && can.admin && can.update;
+        const ask = can.admin
+          ? (upd ? '🛡 ADMIN: ¿actualizar la versión online de "' + l.name + '" con lo que tienes ahora?' : '🛡 ADMIN: ¿publicar "' + l.name + '"? (sin límites: podrás volver a publicarlo y actualizarlo)')
+          : '¿Publicar "' + l.name + '"? Una vez publicado no podrás volver a publicarlo ni cambiar la versión online.';
+        this.menu.confirm(ask, () => {
+          this.menu.toast(upd ? 'Actualizando…' : 'Publicando…', 1200);
           Gld.publish(l).then((r) => {
             if (r.ok) {
               const cur = Storage.get(l.id) || l;
               Storage.save(Object.assign({}, cur, { publishedAt: Date.now(), cloudId: r.id }));
-              this.menu.toast('☄ ¡Publicado! Míralo en 🌐 Online', 2600);
+              Gld.setCloudId(l.id, r.id);
+              this.menu.toast(r.updated ? '🛡 Versión online actualizada' : '☄ ¡Publicado! Míralo en 🌐 Online', 2600);
               if (done) done();
-            } else if (r.error === 'pub-blocked') { this.menu.notice('🚫 No puedes publicar', 'Tu cuenta está bloqueada para publicar niveles por sanciones de moderación. Pide perdón desde ✉ Mensajes (el correo rojo con el Void Glob).', S.Model.Characters.get('black').paths[0]); }
+            } else if (r.error === 'no-bypass') { this.menu.notice('🛡 Falta el SQL de admin', 'El servidor todavía aplica las reglas normales a tu cuenta. Ejecuta kiro/supabase_admin_bypass.sql en Supabase (SQL Editor) y vuelve a intentarlo.'); }
+            else if (r.error === 'pub-blocked') { this.menu.notice('🚫 No puedes publicar', 'Tu cuenta está bloqueada para publicar niveles por sanciones de moderación. Pide perdón desde ✉ Mensajes (el correo rojo con el Void Glob).', S.Model.Characters.get('black').paths[0]); }
             else this.menu.toast(r.error === 'offline' ? 'Sin conexión' : r.error === 'pub-limit' ? 'Ya tienes 120 niveles publicados' : r.error === 'duplicate' ? 'Ya hay un nivel publicado idéntico a este' : r.error === 'already' ? 'Este nivel ya está publicado' : 'No se pudo publicar');
           });
         }, 'Publicar');

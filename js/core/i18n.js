@@ -56,7 +56,8 @@
     'Aún no has publicado niveles. Ve a 📁 Mis niveles, impórtalos o créalos y pulsa 🌐 Publicar.': "You haven't published any levels. Go to 📁 My levels, import or create them and press 🌐 Publish.",
     '🙈 Ocultar': '🙈 Hide', 'Oculto': 'Hidden', '☄ Público': '☄ Public', '🦆 Favorito': '🦆 Favorite', '➕ Añadir': '➕ Add', 'Usuario de tu amigo': "Your friend's username", 'Aún no tienes amigos añadidos.': "You haven't added any friends yet.", 'Inicia sesión para tener amigos.': 'Log in to have friends.',
     'En línea ahora': 'Online now', 'Nunca visto': 'Never seen', '🌐 Sus niveles': '🌐 Their levels', '👍 Me gusta': '👍 Like', '👎 No me gusta': '👎 Dislike', 'Inicia sesión en 🌐 Online para votar este nivel.': 'Log in on 🌐 Online to vote for this level.',
-    '👑 GOD': '👑 GOD',
+    '👑 GOD': '👑 GOD', '🛡 Actualizar online': '🛡 Update online', '🛡 Versión online actualizada': '🛡 Online version updated', 'Actualizando…': 'Updating…', '🛡 Falta el SQL de admin': '🛡 Admin SQL missing',
+    'El servidor todavía aplica las reglas normales a tu cuenta. Ejecuta kiro/supabase_admin_bypass.sql en Supabase (SQL Editor) y vuelve a intentarlo.': 'The server still applies the normal rules to your account. Run kiro/supabase_admin_bypass.sql in Supabase (SQL Editor) and try again.',
     // ---- seeds (mismos términos que Glob Defenders)
     '🌱 Opciones de seed': '🌱 Seed options', 'Opciones de seed': 'Seed options', '📋 Copiar seed': '📋 Copy seed', '📋 Copiar seed completa': '📋 Copy full seed', '⬇ Descargar seed': '⬇ Download seed',
     '🌱 Cargar seed': '🌱 Load seed', 'Cargar': 'Load', '📋 Seed': '📋 Seed', '📂 Abrir archivo': '📂 Open file', 'Introduce una seed válida.': 'Enter a valid seed.', 'Ej: G123456': 'E.g. G123456',

@@ -141,12 +141,14 @@
         }
         if (L.objectAt(x, y) || C.isSolid(tile)) return;
         // Monedas Estrella (coleccionables): máximo 3 por nivel y TODAS del mismo tipo
-        if (def.collect) {
+        // Admin (kirbytebi): sin límites de colocación
+        const admin = !!(S.Model.Gld && S.Model.Gld._admin);
+        if (def.collect && !admin) {
           const others = L.objects.filter((o) => (C.OBJECTS[o.type] || {}).collect);
           if (others.some((o) => o.type !== type)) { this.emit('collectMix', { type }); return; }
           if (others.length >= 3) { this.emit('limit', { type }); return; }
         }
-        const limit = def.boss ? 1 : 200;
+        const limit = admin ? Infinity : def.boss ? 1 : 200;
         if (L.objects.filter((o) => o.type === type).length >= limit) { this.emit('limit', { type }); return; }
         const no = { type, x, y };
         if (def.range) no.r = 3;
