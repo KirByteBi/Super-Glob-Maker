@@ -214,20 +214,33 @@
     // Niveles descargados de Online: solo se juegan. Devuelve true (y avisa) si está bloqueado.
     lockedDownload(l) {
       if (!l || !l.downloaded) return false;
+      // Si el nivel descargado es TUYO (tu usuario == autor), no se bloquea: puedes editarlo,
+      // copiarlo y exportarlo. Util para recuperar tus propios niveles publicados en otro
+      // dispositivo. _myUser lo cachea el perfil/online al leer tu nombre.
+      const me = (this._myUser || '').toLowerCase();
+      if (me && String(l.downloaded.author || '').toLowerCase() === me) return false;
       this.menu.notice('🔒 Nivel de @' + l.downloaded.author, 'Este nivel lo descargaste de 🌐 Online y es de @' + l.downloaded.author + '. Puedes jugarlo, pero no editarlo, copiarlo ni exportarlo. Si quieres editarlo, su creador tiene que darte el nivel (desde 📤 Exportar) para que lo importes.');
       return true;
     }
-    // Descarga un nivel publicado a "Mis niveles" (bloqueado: solo para jugar)
+    // Descarga un nivel publicado a "Mis niveles". Si es de otro autor queda bloqueado
+    // (solo jugar); si es TUYO, se guarda como nivel normal EDITABLE (para recuperarlo en
+    // otro dispositivo). Decide mirando tu usuario de GlD contra el autor del nivel.
     downloadOnline(row) {
       const Gld = S.Model.Gld, id = 'dl-' + row.id;
       if (Storage.get(id)) { this.menu.toast('Ya lo tienes en 📁 Mis niveles'); return; }
       this.menu.toast('Descargando…', 1200);
-      Gld.getLevel(row.id).then((data) => {
+      const userP = (Storage.isLinked() && Gld.configured()) ? Gld.username().catch(() => null) : Promise.resolve(null);
+      Promise.all([Gld.getLevel(row.id), userP]).then(([data, me]) => {
         if (!data) { this.menu.toast('No se pudo descargar'); return; }
-        const L = new S.Model.Level(Object.assign({}, S.Model.Level.content(data), { id, name: row.name }));
-        L.downloaded = { author: row.author || 'desconocido', cloudId: row.id, at: Date.now() };
+        if (me) this._myUser = me;
+        const mine = me && String(row.author || '').toLowerCase() === String(me).toLowerCase();
+        const base = Object.assign({}, S.Model.Level.content(data), { id, name: row.name });
+        const L = new S.Model.Level(base);
+        // los niveles AJENOS quedan marcados (bloqueados); los TUYOS no, para poder editarlos
+        if (!mine) L.downloaded = { author: row.author || 'desconocido', cloudId: row.id, at: Date.now() };
         const r = Storage.save(L.toJSON());
-        this.menu.toast(r === 'ok' ? '⬇ Guardado en 📁 Mis niveles (de @' + L.downloaded.author + ')' : r === 'full' ? 'Máximo de ' + Storage.limit() + ' niveles alcanzado' : 'No se pudo guardar', 2600);
+        const okMsg = mine ? '⬇ Recuperado en 📁 Mis niveles (tuyo, editable)' : '⬇ Guardado en 📁 Mis niveles (de @' + (row.author || 'desconocido') + ')';
+        this.menu.toast(r === 'ok' ? okMsg : r === 'full' ? 'Máximo de ' + Storage.limit() + ' niveles alcanzado' : 'No se pudo guardar', 2600);
       }).catch(() => this.menu.toast('No se pudo descargar'));
     }
 
@@ -320,6 +333,7 @@
       const userP = Storage.isLinked() ? Gld.username().catch(() => null) : Promise.resolve(null);
       userP.then(async (u) => {
         st.user = u;
+        if (u) this._myUser = u; // cachea tu usuario (para desbloquear tus niveles descargados)
         if (u) {
           Gld.touch(); st.admin = await Gld.isAdmin().catch(() => false);
           // kirbytebi sin permisos: el servidor no lo tiene como admin todavía
