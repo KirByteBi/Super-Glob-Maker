@@ -38,7 +38,7 @@
     for (let pass = 0; pass < 2; pass++) {
       for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
         const tt = level.get(x, y);
-        if (!tt || tt === TT.PIPEX) continue; // cuerpo invisible de tubería: la dibuja la tubería
+        if (!tt || tt === TT.PIPEX || tt === TT.SEMIX) continue; // partes invisibles: las dibuja su objeto (tubería / seta-árbol)
         // agua, raíles y fondos (cueva, cuerpo de semisólido de fondo) van por detrás
         const back = tt === TT.WATER || tt === TT.WATERCOIN || tt === TT.RAIL || tt === TT.BGFILL || tt === TT.CAVEBG || tt === TT.SEMIBG;
         if ((pass === 0) !== back) continue;
@@ -135,6 +135,8 @@
         tileOpt.liquidCol = col;
         tileOpt.liquidTopCol = U.mix(col, '#ffffff', 0.45);
       }
+      // semisólidos del mapa (seta / árbol / cadena): detrás del terreno, así el tronco "entra" en el suelo
+      if (S.View.MapPlats) g.level.objects.forEach((o) => { if (o.type === 'treeplat' && o.x * T < cam.x + cam.w + 64 && (o.x + S.Model.Plat.width(o)) * T > cam.x - 64) S.View.MapPlats.draw(ctx, o, g.level, g.theme, g.mode, g.pal, t); });
       drawTiles(ctx, g.level, g.pal, cam, t, tileOpt);
       // Medalla bloqueada por monedas púrpura: solo se ve su silueta punteada
       if (g.goal && g.goalLocked) {

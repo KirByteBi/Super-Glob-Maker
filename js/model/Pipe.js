@@ -34,4 +34,19 @@
   const at = (L, cx, cy) => (L.objects || []).find((o) => isPipe(o.type) && contains(o, cx, cy)) || null;
 
   S.Model.Pipe = { MAX_LEN, isPipe, dirOf, lenOf, bbox, inMouth, contains, cells, reach, at };
+
+  // Semisólido del mapa (objeto 'treeplat': seta / árbol / cadena). (x, y) = casilla izquierda
+  // de su BASE (la parte que se pisa); w = ancho de la base (2-24). El tronco / la cadena son
+  // solo dibujo. Se ensancha arrastrando hacia la derecha en el editor.
+  const Plat = {
+    MIN: 2, MAX: 24,
+    is: (t) => t === 'treeplat',
+    width: (o) => Math.max(2, Math.min(24, (o && o.w) | 0 || 3)),
+    contains(o, cx, cy) { return cy === o.y && cx >= o.x && cx < o.x + Plat.width(o); },
+    at: (L, cx, cy) => (L.objects || []).find((o) => o.type === 'treeplat' && Plat.contains(o, cx, cy)) || null,
+    cells(o) { const out = []; for (let i = 0; i < Plat.width(o); i++) out.push([o.x + i, o.y]); return out; },
+    // ancho que hace falta para que la base llegue hasta cx (o null si no es su fila)
+    reach(o, cx, cy) { if (cy !== o.y) return null; return Math.max(2, Math.min(24, cx - o.x + 1)); }
+  };
+  S.Model.Plat = Plat;
 })(window.SGM);

@@ -33,11 +33,14 @@
     WATERCOIN: 59,
     // Cuerpo SÓLIDO e invisible de una tubería enlazable (lo pone la partida en las casillas de
     // su boca + cuerpo; el dibujo lo hace la propia tubería). Nunca se guarda en el nivel.
-    PIPEX: 60, WALL: 99
+    PIPEX: 60,
+    // Parte de ARRIBA (pisable, semisólida) del "semisólido del mapa" (seta / árbol / cadena):
+    // invisible, la pone la partida; el dibujo lo hace el objeto 'treeplat'.
+    SEMIX: 61, WALL: 99
   };
   const EXCLAIM = [{ c: '#ffd000', name: 'amarillo' }, { c: '#2fd46a', name: 'verde' }, { c: '#ff4fd8', name: 'rosa' }];
   const SOLID = new Set([T.GROUND, T.GROUND2, T.BRICK, T.BOX, T.HARD, T.SPIKE, T.BOUNCE, T.ICE, T.USED, T.CONV_L, T.CONV_R, T.DONUT, T.NOTE, T.SW0, T.SW1, T.SW2, T.SWG, T.PSW, T.POW, T.PIPE, T.LIGHT, T.WALL, T.PIPEX]);
-  const SEMI = new Set([T.SEMI, T.SEMI2, T.CLOUD, T.SEMIBG]);
+  const SEMI = new Set([T.SEMI, T.SEMI2, T.CLOUD, T.SEMIBG, T.SEMIX]);
   const CONTAINERS = new Set([T.BOX, T.BRICK, T.HIDDEN, T.NOTE]);
   const SLOPES = new Set([T.S45U, T.S45D, T.G1U, T.G2U, T.G1D, T.G2D]);
   // Monedas de valor (se recogen al tocarlas). RCOIN se cuenta aparte (8 = 1UP).
@@ -164,6 +167,9 @@
     // Decoración visual (SIN colisión). El adorno concreto va en o.deco; el set es por mapa
     // (ver js/view/Decorations.js). No tiene clase de entidad: el modelo la ignora.
     deco: { name: 'Decoración', cat: 'deco', w: 24, h: 24, decoration: true, desc: 'Adorno visual sin colisión (según el mapa).' },
+    // Semisólido estilo seta de SMM / árbol de SMW. Según el mapa: seta, árbol, palmera, pino,
+    // pilar, farola o plataforma colgada con cadenas (mapas de interior). Arrastra para ensancharlo.
+    treeplat: { name: 'Semisólido del mapa (seta / árbol / cadena)', cat: 'terrain', w: 96, h: 64, desc: 'Solo se pisa la parte de arriba. Según el mapa es una seta, un árbol o una plataforma con cadenas; el tallo o las cadenas llegan solos hasta el suelo o el techo. Arrastra hacia los lados para cambiar su ancho.' },
     // ----- solo en tiempo de juego -----
     starbullet: { w: 28, h: 22, anchor: 'center' }, eshot: { w: 14, h: 10, anchor: 'center' }, shot: { w: 14, h: 14, anchor: 'center' }, coinpop: { w: 20, h: 20, anchor: 'center' },
     poop: { w: 16, h: 16, anchor: 'center' }, goo: { w: 32, h: 6 }, starwave: { w: 18, h: 18, anchor: 'center' },
@@ -195,7 +201,7 @@
   const tiles = (ids) => ids.map((id) => ({ kind: 'tile', id }));
   const objs = (ids) => ids.map((type) => ({ kind: 'obj', type }));
   const PALETTE = [
-    { id: 'terrain', name: 'Terreno', items: tiles([1, 53, 5, 17, 56, 58, 11, 29, 30, 31, 32, 33, 34, 37, 52, 8, 6, 9, 16, 14, 15, 48]) },
+    { id: 'terrain', name: 'Terreno', items: tiles([1, 53, 5, 17]).concat(objs(['treeplat'])).concat(tiles([56, 58, 11, 29, 30, 31, 32, 33, 34, 37, 52, 8, 6, 9, 16, 14, 15, 48])) },
     { id: 'blocks', name: 'Bloques', items: tiles([2, 3, 13, 4, 7, 19, 18, 36, 12, 38, 55, 39, 41, 40, 47, 46, 20, 21, 22, 23, 24, 25, 26, 27, 28, 49, 50, 51, 35, 42, 43]) },
     { id: 'pyces', name: 'Pyces', items: objs(['stupid', 'so', 'symbol', 'pyce2', 'guest', 'noob', 'elf', 'umbrella', 'zom', 'crystal', 'knight', 'rebel', 'skelebone', 'builder', 'miner', 'snowcap', 'festive', 'bomb', 'toybomb', 'wingel', 'strechy', 'flower', 'cannon']) },
     { id: 'pyces2', name: 'Pyces raros', items: objs(['ghost', 'holo', 'motions', 'hacker', 'pysh', 'clownpysh', 'axolotl', 'squid', 'shark', 'mimic', 'dirty', 'nomic', 'goldmimic', 'noeye', 'nosense', 'noir', 'moonstar']) },

@@ -942,6 +942,8 @@
       ink(ctx, 3); ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(13, 16); ctx.lineTo(19, 16); ctx.stroke(); ctx.setLineDash([]);
     } else {
       const def = S.Model.Catalog.OBJECTS[item.type];
+      // semisólido del mapa: el icono muestra la seta / árbol / cadena del mapa actual
+      if (item.type === 'treeplat' && S.View.MapPlats) { S.View.MapPlats.icon(ctx, size, theme, theme && pal === theme.corruptPal ? 'corrupt' : 'peace', pal); ctx.restore(); return; }
       const w = def.w, h = Math.min(def.h, 64);
       const sc = Math.min(size / (Math.max(w, h) + 10), 1.4);
       ctx.translate(size / 2, size / 2); ctx.scale(sc, sc);

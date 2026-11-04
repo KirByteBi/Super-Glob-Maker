@@ -90,6 +90,9 @@
       const tile = L.get(x, y);
       if (tool.kind === 'link') { this.linkObjectAt(x, y); return; }
       if (tool.kind === 'erase') {
+        // Semisólido del mapa: borrar en cualquier casilla de su base lo quita
+        const plat = !L.objectAt(x, y) && S.Model.Plat.at(L, x, y);
+        if (plat) { L.removeObjectAt(plat.x, plat.y); this.changed = true; return; }
         // Tubería: borrar su BOCA la quita entera; borrar el CUERPO la recorta hasta ahí
         const pipe = !L.objectAt(x, y) && S.Model.Pipe.at(L, x, y);
         if (pipe) {
@@ -140,7 +143,25 @@
           this.changed = true; return;
         }
         const def = C.OBJECTS[type] || {};
-        const P = S.Model.Pipe;
+        const P = S.Model.Pipe, PL = S.Model.Plat;
+        // Semisólido del mapa (seta / árbol / cadena): arrastrar hacia los lados cambia su ancho
+        if (PL.is(type)) {
+          if (this.pipeDrag) {
+            const pg = this.pipeDrag.o, n = PL.reach(pg, x, y);
+            if (n != null && n !== PL.width(pg)) { pg.w = n; this.pipeDrag.moved = true; this.changed = true; }
+            return;
+          }
+          const hit = PL.at(L, x, y);
+          if (hit) { this.pipeDrag = { o: hit, moved: false, color: false }; return; }
+          if (L.objectAt(x, y) || PL.at(L, x + 1, y) || P.at(L, x, y) || C.isSolid(tile)) return;
+          const no = { type, x, y, w: 3 };
+          // que no pise otro semisólido del mapa
+          while (no.w > 2 && PL.cells(no).some(([cx, cy]) => PL.at(L, cx, cy))) no.w--;
+          L.objects.push(no); this.changed = true;
+          this.pipeDrag = { o: no, moved: true, color: false }; // si sigues arrastrando, se ensancha
+          return;
+        }
+        if (PL.at(L, x, y)) return; // nada encima de su base (sí delante del tronco)
         // Tuberías estilo SMM: pinchar una tubería y ARRASTRAR a lo largo de su eje la alarga o
         // la acorta. Un clic sin arrastrar (mismo tipo) cambia su color (ver endStroke).
         if (P.isPipe(type)) {

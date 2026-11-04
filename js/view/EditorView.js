@@ -32,9 +32,11 @@
       ctx.stroke();
       // Decoraciones (sin colisión): detrás del terreno
       if (S.View.Decorations) { try { L.objects.forEach((o) => { if (o.type === 'deco') S.View.Decorations.drawObject(ctx, o, t, L.mode); }); } catch (e) { /* no romper el editor */ } }
+      // semisólidos del mapa (seta / árbol / cadena): detrás del terreno, como en la partida
+      if (S.View.MapPlats) { const th = S.Model.Themes.get(L.theme); L.objects.forEach((o) => { if (o.type === 'treeplat') S.View.MapPlats.draw(ctx, o, L, th, L.mode, pal, t); }); }
       S.View.WorldRenderer.drawTiles(ctx, L, pal, cam, t, { editor: true, contents: L.contents, ch });
-      // objetos (las decoraciones ya se pintaron detrás del terreno)
-      L.objects.forEach((o) => { if (o.type !== 'deco') this.drawObject(ctx, o, pal, ch, t); });
+      // objetos (las decoraciones y los semisólidos del mapa ya se pintaron detrás del terreno)
+      L.objects.forEach((o) => { if (o.type !== 'deco' && o.type !== 'treeplat') this.drawObject(ctx, o, pal, ch, t); });
       // cursor
       if (this.hover && L.inBounds(this.hover.x, this.hover.y)) {
         const hx = this.hover.x * T, hy = this.hover.y * T;

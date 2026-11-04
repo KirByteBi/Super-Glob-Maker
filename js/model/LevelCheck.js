@@ -18,7 +18,10 @@
     // casillas ocupadas por tuberías enlazables (boca + cuerpo): sólidas como en la partida
     const Pipe = S.Model.Pipe, pipeCell = new Set();
     if (Pipe) L.objects.forEach((o) => { if (Pipe.isPipe(o.type)) Pipe.cells(o).forEach(([x, y]) => pipeCell.add(x + ',' + y)); });
-    const solid = (x, y) => { const t = L.get(x, y); return pipeCell.has(x + ',' + y) || C.isSolid(t, L) || C.isSemi(t) || C.isSlope(t) || blk(t) || t === TT.PBLK || t === TT.PCOIN || ab(t); };
+    // base de los semisólidos del mapa (seta / árbol / cadena): se pisa, pero no bloquea
+    const platCell = new Set();
+    if (S.Model.Plat) L.objects.forEach((o) => { if (S.Model.Plat.is(o.type)) S.Model.Plat.cells(o).forEach(([x, y]) => platCell.add(x + ',' + y)); });
+    const solid = (x, y) => { const t = L.get(x, y); return pipeCell.has(x + ',' + y) || platCell.has(x + ',' + y) || C.isSolid(t, L) || C.isSemi(t) || C.isSlope(t) || blk(t) || t === TT.PBLK || t === TT.PCOIN || ab(t); };
     const free = (x, y) => { if (y < 0) return true; if (pipeCell.has(x + ',' + y)) return false; const t = L.get(x, y); return !C.isSolid(t, L) && !blk(t) && t !== TT.LIQUID && t !== TT.SPIKE && !(ab(t) && C.isSolid(t, L)); };
     const extra = new Set();
     L.objects.forEach((o) => {

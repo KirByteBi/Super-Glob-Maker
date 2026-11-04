@@ -48,6 +48,8 @@
         } else if (o.hdir) ob.hdir = 1;
         // decoración visual (sin colisión): cuál es el adorno
         if (o.deco) ob.deco = o.deco;
+        // semisólido del mapa (seta / árbol / cadena): ancho de su base en casillas (2-24)
+        if (ob.type === 'treeplat') ob.w = Math.max(2, Math.min(24, (o.w | 0) || 3));
         return ob;
       }).filter((o) => C.OBJECTS[o.type]);
       this.ab = [0, 0, 0]; // estado de los bloques A/B (solo en partida)
@@ -244,6 +246,7 @@
           if (o.hdir) j.hdir = 1;
           if (o.pd) j.pd = o.pd;
           if (o.len) j.len = o.len;
+          if (o.w) j.w = o.w;
           if (o.deco) j.deco = o.deco;
           return j;
         }), contents: Object.assign({}, this.contents),
