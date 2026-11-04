@@ -202,6 +202,7 @@
         if (q.search) r = r.ilike('name', '%' + String(q.search).replace(/[%_\\]/g, '') + '%');
         if (q.author && v2) r = r.eq('author', q.author);
         if (q.userId) r = r.eq('user_id', q.userId);
+        if (q.idRange) { r = r.gte('id', q.idRange.lo); if (q.idRange.hi) r = r.lt('id', q.idRange.hi); }
         if (q.sort === 'hard' || q.sort === 'easy') r = r.gte('plays', 5);
         const order = { new: v2 ? 'published_at' : 'updated_at', top: v2 ? 'score' : 'likes', plays: 'plays', hard: 'clears', easy: 'clears' }[q.sort || 'new'];
         r = r.order(order, { ascending: q.sort === 'hard', nullsFirst: false });
@@ -217,6 +218,13 @@
       if (q.sort === 'hard') rows.sort((a, b) => a.rate - b.rate);
       if (q.sort === 'easy') rows.sort((a, b) => b.rate - a.rate);
       return { ok: true, rows, v2: Gld.v2 };
+    },
+    // Nivel publicado por su SEED corta (G123456, ver LevelSeed.js). Sin SQL nuevo: la seed sale
+    // del id del nivel, así que se busca el rango de ids que le corresponde.
+    async findBySeed(seed) {
+      const r = S.Model.Seed.idRange(seed);
+      if (!r) return { ok: false, error: 'seed', rows: [] };
+      return Gld.browse({ sort: 'new', idRange: r, limit: 5 });
     },
     // Datos completos de un nivel público (para jugarlo)
     async getLevel(id) {

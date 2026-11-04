@@ -192,8 +192,8 @@
       b.appendChild(form);
       const row = el('div', 'row');
       row.appendChild(button('Aplicar', 'primary', () => { this.closeModal(); onApply({ name: name.value.trim() || 'Nivel sin nombre', width: +width.value, height: +height.value, time: +time.value, win: { type: winSel.value, n: +winN.value, target: tgSel.value }, scroll: scroll.checked ? 1 : 0, scrollSpeed: +scrollSpeed.value, noPowers: noPowers.checked ? 1 : 0 }); }));
-      row.appendChild(button('Exportar', '', h.exportLevel));
-      row.appendChild(button('Importar', '', h.importLevel));
+      row.appendChild(button('📋 Seed', '', h.exportLevel));
+      row.appendChild(button('🌱 Cargar seed', '', h.importLevel));
       row.appendChild(button('🗑 Vaciar', 'danger', () => { this.confirm('¿Borrar todo el contenido del nivel?', h.clearLevel); }));
       row.appendChild(button('Cancelar', '', () => this.closeModal()));
       b.appendChild(row);
@@ -254,6 +254,45 @@
       row.appendChild(button('Cerrar', '', () => this.closeModal()));
       b.appendChild(row);
       setTimeout(() => { ta.focus(); if (!onOk) ta.select(); }, 30);
+    }
+
+    // Opciones de seed (como en Glob Defenders): SEED corta si está publicado + seed completa.
+    // h = { copy(text), download(), publish? }
+    seedOptions(name, short, full, h) {
+      const b = this.openModal('🌱 Opciones de seed');
+      b.appendChild(el('p', 'note', 'Elige cómo quieres guardar o compartir "' + name + '".'));
+      if (short) {
+        const card = el('div', 'seed-card');
+        card.appendChild(el('span', 'seed-code', 'SEED: ' + short));
+        card.appendChild(button('📋 Copiar seed', 'primary', () => h.copy(short)));
+        b.appendChild(card);
+        b.appendChild(el('small', 'note', 'Con la SEED cualquiera lo carga desde 🌐 Online → 🔍 Buscar o 📁 Mis niveles → 🌱 Cargar seed (necesita internet).'));
+      } else b.appendChild(el('p', 'note', 'Publícalo en 🌐 Online para tener una SEED corta de 7 caracteres (ej: G123456).'));
+      b.appendChild(el('h3', 'sec', '🌱 Seed completa (funciona sin internet)'));
+      const ta = document.createElement('textarea'); ta.className = 'code seed-full'; ta.readOnly = true; ta.value = full; ta.spellcheck = false; ta.setAttribute('aria-label', 'Seed completa');
+      b.appendChild(ta);
+      const row = el('div', 'row');
+      row.appendChild(button('📋 Copiar seed completa', short ? '' : 'primary', () => h.copy(full)));
+      row.appendChild(button('⬇ Descargar seed', '', h.download));
+      row.appendChild(button('Cerrar', '', () => this.closeModal()));
+      b.appendChild(row);
+      setTimeout(() => ta.select(), 30);
+    }
+    // Cargar seed: corta (online), completa o el JSON antiguo; también desde un archivo descargado
+    loadSeed(onOk) {
+      const b = this.openModal('🌱 Cargar seed');
+      b.appendChild(el('p', 'note', 'Pega una SEED (ej: G123456) o una seed completa.'));
+      const ta = document.createElement('textarea'); ta.className = 'code'; ta.spellcheck = false; ta.placeholder = S.tr ? S.tr('Ej: G123456') : 'Ej: G123456'; ta.setAttribute('aria-label', 'Seed');
+      b.appendChild(ta);
+      const file = document.createElement('input'); file.type = 'file'; file.accept = '.sgmseed,.txt,.json'; file.style.display = 'none';
+      file.onchange = () => { const f = file.files && file.files[0]; if (!f) return; f.text().then((t) => { ta.value = t.trim(); }); };
+      b.appendChild(file);
+      const row = el('div', 'row');
+      row.appendChild(button('Cargar', 'primary', () => { const v = ta.value.trim(); if (!v) { this.toast('Introduce una seed válida.'); return; } this.closeModal(); onOk(v); }));
+      row.appendChild(button('📂 Abrir archivo', '', () => file.click()));
+      row.appendChild(button('Cerrar', '', () => this.closeModal()));
+      b.appendChild(row);
+      setTimeout(() => ta.focus(), 30);
     }
 
     // Aviso con imagen opcional (p. ej. el Glob Cometa de "ya publicado")
@@ -361,7 +400,7 @@
       if (st.v2 === false) wrap.appendChild(el('p', 'note', '⚠ Falta aplicar kiro/supabase_online_v2.sql en el servidor: los "no me gusta", la puntuación y los autores no se guardarán hasta entonces.'));
       if (st.tab === 'search') {
         const f = el('div', 'search-row');
-        const inp = document.createElement('input'); inp.type = 'search'; inp.placeholder = 'Nombre del nivel o @autor'; inp.value = st.search || ''; inp.maxLength = 40; inp.setAttribute('aria-label', 'Buscar niveles');
+        const inp = document.createElement('input'); inp.type = 'search'; inp.placeholder = S.tr ? S.tr('Nombre, @autor o SEED (ej: G123456)') : 'Nombre, @autor o SEED (ej: G123456)'; inp.value = st.search || ''; inp.maxLength = 40; inp.setAttribute('aria-label', 'Buscar niveles');
         inp.onkeydown = (e) => { if (e.key === 'Enter') h.search(inp.value.trim()); };
         f.appendChild(inp); f.appendChild(button('Buscar', 'primary', () => h.search(inp.value.trim())));
         wrap.appendChild(f);
@@ -421,6 +460,13 @@
       info.appendChild(by);
       const pct = r.plays ? Math.round(r.rate * 100) + '%' : '—';
       info.appendChild(el('small', 'stats', '👍 ' + r.likes + '   👎 ' + r.dislikes + '   ⭐ ' + (r.score > 0 ? '+' : '') + r.score + '   ▶ ' + (r.plays || 0) + '   🏁 ' + pct + ' superado'));
+      // SEED del nivel (como en Glob Defenders): clic para copiarla
+      const sd = S.Model.Seed && r.id ? S.Model.Seed.fromId(r.id) : null;
+      if (sd) {
+        const sb = el('button', 'link seed-code', 'SEED: ' + sd); sb.title = S.tr ? S.tr('📋 Copiar seed') : '📋 Copiar seed';
+        sb.onclick = () => { click(); (navigator.clipboard ? navigator.clipboard.writeText(sd) : Promise.reject()).then(() => this.toast('📋 SEED copiada: ' + sd), () => this.toast('SEED: ' + sd, 4000)); };
+        info.appendChild(sb);
+      }
       row.appendChild(info);
       row.appendChild(button('▶ Jugar', 'primary', () => h.play(r)));
       if (h.download) row.appendChild(button('⬇', '', () => h.download(r))).title = 'Descargar a Mis niveles (solo para jugar)';
@@ -507,7 +553,7 @@
       const St = S.Model.LevelStorage;
       head.appendChild(el('span', 'level-count', list.length + ' / ' + St.limit() + (St.isLinked() ? ' (Glob Defenders)' : '')));
       head.appendChild(button('＋ Nuevo', 'primary', h.create));
-      head.appendChild(button('Importar', '', h.importLevel));
+      head.appendChild(button('🌱 Cargar seed', '', h.importLevel));
       s.appendChild(head);
       const wrap = el('div', 'level-list');
       if (!list.length) wrap.appendChild(el('p', 'empty', 'Aún no has guardado niveles. ¡Crea el primero!'));
@@ -548,7 +594,7 @@
         row.appendChild(button('✏ Editar', '', () => h.edit(l)));
         if (h.publish) row.appendChild(button(pub ? '☄ Publicado' : '🌐 Publicar', pub ? 'disabled' : '', () => h.publish(l)));
         if (h.copy) row.appendChild(button('📄 Copiar', '', () => h.copy(l)));
-        if (h.exportLevel) row.appendChild(button('📤 Exportar', '', () => h.exportLevel(l)));
+        if (h.exportLevel) row.appendChild(button('📋 Seed', '', () => h.exportLevel(l))).title = S.tr ? S.tr('Opciones de seed') : 'Opciones de seed';
         row.appendChild(button('🗑', 'danger', () => this.confirm('¿Borrar "' + l.name + '"?' + (pub ? ' (la versión online no se borra)' : ''), () => h.remove(l))));
         wrap.appendChild(row);
       });

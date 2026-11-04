@@ -56,7 +56,16 @@
     'Aún no has publicado niveles. Ve a 📁 Mis niveles, impórtalos o créalos y pulsa 🌐 Publicar.': "You haven't published any levels. Go to 📁 My levels, import or create them and press 🌐 Publish.",
     '🙈 Ocultar': '🙈 Hide', 'Oculto': 'Hidden', '☄ Público': '☄ Public', '🦆 Favorito': '🦆 Favorite', '➕ Añadir': '➕ Add', 'Usuario de tu amigo': "Your friend's username", 'Aún no tienes amigos añadidos.': "You haven't added any friends yet.", 'Inicia sesión para tener amigos.': 'Log in to have friends.',
     'En línea ahora': 'Online now', 'Nunca visto': 'Never seen', '🌐 Sus niveles': '🌐 Their levels', '👍 Me gusta': '👍 Like', '👎 No me gusta': '👎 Dislike', 'Inicia sesión en 🌐 Online para votar este nivel.': 'Log in on 🌐 Online to vote for this level.',
-    '👑 GOD': '👑 GOD', '🛡 Moderar': '🛡 Moderate', 'Solo para admin': 'Admins only',
+    '👑 GOD': '👑 GOD',
+    // ---- seeds (mismos términos que Glob Defenders)
+    '🌱 Opciones de seed': '🌱 Seed options', 'Opciones de seed': 'Seed options', '📋 Copiar seed': '📋 Copy seed', '📋 Copiar seed completa': '📋 Copy full seed', '⬇ Descargar seed': '⬇ Download seed',
+    '🌱 Cargar seed': '🌱 Load seed', 'Cargar': 'Load', '📋 Seed': '📋 Seed', '📂 Abrir archivo': '📂 Open file', 'Introduce una seed válida.': 'Enter a valid seed.', 'Ej: G123456': 'E.g. G123456',
+    '🌱 Seed completa (funciona sin internet)': '🌱 Full seed (works offline)', 'Pega una SEED (ej: G123456) o una seed completa.': 'Paste a SEED (e.g. G123456) or a full seed.',
+    'Publícalo en 🌐 Online para tener una SEED corta de 7 caracteres (ej: G123456).': 'Publish it on 🌐 Online to get a short 7-character SEED (e.g. G123456).',
+    'Con la SEED cualquiera lo carga desde 🌐 Online → 🔍 Buscar o 📁 Mis niveles → 🌱 Cargar seed (necesita internet).': 'With the SEED anyone can load it from 🌐 Online → 🔍 Search or 📁 My levels → 🌱 Load seed (needs internet).',
+    'Nombre, @autor o SEED (ej: G123456)': 'Name, @author or SEED (e.g. G123456)', '📋 Seed completa copiada': '📋 Full seed copied',
+    'Tu navegador no puede abrir esta seed: actualízalo': "Your browser can't open this seed: please update it",
+    'Aquí hace falta la seed completa (la SEED corta se carga desde 📁 Mis niveles)': 'A full seed is needed here (load short SEEDs from 📁 My levels)', '🛡 Moderar': '🛡 Moderate', 'Solo para admin': 'Admins only',
     '🛡 Moderación: los 100 niveles más recientes de todos los jugadores. 👑 GOD los destaca arriba en ⭐ Destacados; 🛡🗑 los borra para todos.': '🛡 Moderation: the 100 most recent levels from every player. 👑 GOD pins them at the top of ⭐ Featured; 🛡🗑 deletes them for everyone.',
     '🛡 El servidor aún no te reconoce como admin: ejecuta kiro/supabase_admin_fix.sql en Supabase': "🛡 The server doesn't recognize you as admin yet: run kiro/supabase_admin_fix.sql in Supabase", '👑 Quitar GOD': '👑 Remove GOD', '☄ Nivel ya publicado': '☄ Level already published', '📄 Copia demasiado parecida': '📄 Copy too similar',
     'Este nivel ya está publicado y no se puede volver a publicar. Si quieres otra versión, haz una COPIA (📄) y cámbiale el tema, el modo o bastantes cosas.': 'This level is already published and cannot be published again. For another version, make a COPY (📄) and change its theme, mode or plenty of things.',
@@ -93,7 +102,8 @@
     [/^(\d+) niveles · (.*)$/, (m) => `${m[1]} levels · ${m[2].replace('partidas', 'plays')}`],
     [/^💾 Nivel guardado \((.*)\)$/, (m) => `💾 Level saved (${m[1]})`],
     [/^¡Vinculado como (.*)!$/, (m) => `Linked as ${m[1]}!`], [/^Sesión iniciada como: (.*)$/, (m) => 'Logged in as: ' + m[1]],
-    [/^Exportar "(.*)"$/, (m) => `Export "${m[1]}"`], [/^🔒 Nivel de @(.*)$/, (m) => `🔒 Level by @${m[1]}`], [/^⬇ de @(.*) · solo jugar$/, (m) => `⬇ by @${m[1]} · play only`],
+    [/^Exportar "(.*)"$/, (m) => `Export "${m[1]}"`], [/^Elige cómo quieres guardar o compartir "(.*)"\.$/, (m) => `Choose how you want to save or share "${m[1]}".`],
+    [/^📋 SEED copiada: (.*)$/, (m) => '📋 SEED copied: ' + m[1]], [/^Buscando SEED: (.*)$/, (m) => 'Looking for SEED: ' + m[1]], [/^No hay ningún nivel publicado con la SEED (.*)$/, (m) => 'No published level has the SEED ' + m[1]], [/^🔒 Nivel de @(.*)$/, (m) => `🔒 Level by @${m[1]}`], [/^⬇ de @(.*) · solo jugar$/, (m) => `⬇ by @${m[1]} · play only`],
     [/^🦆 Favoritos de @(.*)$/, (m) => `🦆 @${m[1]}'s favorites`], [/^Mundo (\d) · (.*)$/, (m) => `World ${m[1]} · ${m[2]}`],
     [/^(.*) · (Primeros pasos|Bloques y cajas|Plataformas|Tuberías|Muelles|Plataformas móviles|Monedas rojas|Llaves y puertas|Bloques Nota|Raíles|Hielo|Cañones|Rosquillas|Nubes|Bloques A\/B|Los Bros|Interruptor P|Monedas púrpura|Cintas|Agua|Barras Estelares|Palacio "!"|Castillo)$/, (m) => tr(m[1]) + ' · ' + tr(m[2])]
   ];
