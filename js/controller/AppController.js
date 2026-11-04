@@ -283,20 +283,21 @@
       } else askPass();
     }
 
-    // Opciones de seed (términos de Glob Defenders):
-    //  - SEED corta de 7 caracteres (G123456) si el nivel está publicado: sale de su id en la nube
-    //  - seed completa (el nivel entero comprimido) para compartirlo sin internet
+    // Código del nivel (estilo Super Mario Maker):
+    //  - código corto GGNN-NGNN-GNGN si el nivel está publicado: sale de su id en la nube
+    //  - código completo (el nivel entero comprimido) para compartirlo sin internet
+    // (las SEEDS estilo Glob Defenders quedan para las salas del multijugador)
     exportLevel(l) {
       if (this.lockedDownload(l)) return;
-      const Seed = S.Model.Seed, Gld = S.Model.Gld;
+      const Code = S.Model.LevelCode, Gld = S.Model.Gld;
       const cloud = l.cloudId || (Gld && Gld.cloudIdOf(l.id)) || null;
-      const short = cloud ? Seed.fromId(cloud) : null;
-      Seed.pack(S.Model.Level.content(l)).then((full) => {
+      const short = cloud ? Code.fromId(cloud) : null;
+      Code.pack(S.Model.Level.content(l)).then((full) => {
         this.menu.seedOptions(l.name, short, full, {
-          copy: (txt) => (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => this.menu.toast(txt === short ? '📋 SEED copiada: ' + short : '📋 Seed completa copiada'), () => this.menu.toast('Selecciona el texto y usa Ctrl+C')),
+          copy: (txt) => (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => this.menu.toast(txt === short ? '📋 Código copiado: ' + short : '📋 Código completo copiado'), () => this.menu.toast('Selecciona el texto y usa Ctrl+C')),
           download: () => {
-            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([(short ? 'SEED: ' + short + '\n' : '') + full], { type: 'text/plain' }));
-            a.download = (String(l.name || 'nivel').replace(/[^\w\- áéíóúñÁÉÍÓÚÑ]/g, '').trim() || 'nivel') + '.sgmseed';
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([(short ? 'CÓDIGO: ' + short + '\n' : '') + full], { type: 'text/plain' }));
+            a.download = (String(l.name || 'nivel').replace(/[^\w\- áéíóúñÁÉÍÓÚÑ]/g, '').trim() || 'nivel') + '.sgmcode';
             document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
           }
         });
@@ -353,7 +354,7 @@
         back: () => this.showTitle(),
         tab: (id) => this.showOnline(id),
         author: (name) => this.showOnline('author', name),
-        search: (q) => (q && q[0] === '@' ? this.showOnline('author', q.slice(1)) : this.showOnline('search', S.Model.Seed.isShort(q) ? S.Model.Seed.clean(q) : q)),
+        search: (q) => (q && q[0] === '@' ? this.showOnline('author', q.slice(1)) : this.showOnline('search', S.Model.LevelCode.isShort(q) ? S.Model.LevelCode.pretty(q) : q)),
         account: () => this.accountDialog(() => this.showOnline(tab, arg)),
         play: (row) => this.playOnline(row, () => this.showOnline(tab, arg)),
         download: (row) => this.downloadOnline(row),
@@ -404,8 +405,8 @@
           });
         }
         // Moderar (admin): los últimos niveles de TODOS, para marcar GOD o borrar
-        // Buscar por SEED (G123456): el nivel cuyo id corresponde a esa seed
-        if (tab === 'search' && S.Model.Seed.isShort(st.search)) return Gld.findBySeed(st.search).then((r) => { st.rows = r.rows; done(r); });
+        // Buscar por código (KX47-2B91-R3T8): el nivel cuyo id corresponde a ese código
+        if (tab === 'search' && S.Model.LevelCode.isShort(st.search)) return Gld.findBySeed(st.search).then((r) => { st.rows = r.rows; done(r); });
         const q = tab === 'mod' ? { sort: 'new', limit: 100 } : tab === 'author' ? { sort: 'top', author: st.author, limit: 60 } : tab === 'search' ? { sort: 'top', search: st.search, limit: 40 } : { sort: tab, limit: tab === 'top' ? 10 : 30 };
         return Gld.browse(q).then((r) => { st.rows = r.rows; done(r); });
       }).catch((e) => done({ ok: false, error: String(e && e.message || e) }));
@@ -419,36 +420,36 @@
       });
     }
 
-    // Cargar seed. cb(L) recibe el nivel de una seed completa (o JSON antiguo).
-    // Una SEED corta (G123456) busca el nivel publicado: desde Mis niveles se descarga
+    // Cargar código. cb(L) recibe el nivel de un código completo (o JSON antiguo).
+    // Un código corto (KX47-2B91-R3T8) busca el nivel publicado: desde Mis niveles se descarga
     // (igual que ⬇ en Online, bloqueado si es de otro); en el editor (onlyFull) no vale.
     importDialog(cb, onlyFull) {
       this.menu.loadSeed((txt) => {
-        const Seed = S.Model.Seed;
-        // un archivo .sgmseed puede llevar "SEED: X" en la 1ª línea y la seed completa debajo
+        const Code = S.Model.LevelCode;
+        // un archivo .sgmcode puede llevar "CÓDIGO: X" en la 1ª línea y el código completo debajo
         const lines = txt.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
-        const fullLine = lines.find((s) => Seed.isFull(s)) || (Seed.isFull(txt) ? txt : null);
+        const fullLine = lines.find((s) => Code.isFull(s)) || (Code.isFull(txt) ? txt : null);
         if (fullLine) {
-          Seed.unpack(/^\s*\{/.test(txt) ? txt : fullLine).then((d) => { const L = new S.Model.Level(d); L.id = S.util.uid(); cb(L); })
-            .catch((e) => this.menu.toast(e && e.message === 'zip' ? 'Tu navegador no puede abrir esta seed: actualízalo' : 'Introduce una seed válida.'));
+          Code.unpack(/^\s*\{/.test(txt) ? txt : fullLine).then((d) => { const L = new S.Model.Level(d); L.id = S.util.uid(); cb(L); })
+            .catch((e) => this.menu.toast(e && e.message === 'zip' ? 'Tu navegador no puede abrir este código: actualízalo' : 'Introduce un código válido.'));
           return;
         }
-        if (Seed.isShort(txt)) {
-          if (onlyFull) { this.menu.toast('Aquí hace falta la seed completa (la SEED corta se carga desde 📁 Mis niveles)', 3400); return; }
-          this.seedLookup(Seed.clean(txt), (row) => this.downloadOnline(row, () => this.showLevels()));
+        if (Code.isShort(txt)) {
+          if (onlyFull) { this.menu.toast('Aquí hace falta el código completo (el código corto se carga desde 📁 Mis niveles)', 3400); return; }
+          this.seedLookup(Code.pretty(txt), (row) => this.downloadOnline(row, () => this.showLevels()));
           return;
         }
-        this.menu.toast('Introduce una seed válida.');
+        this.menu.toast('Introduce un código válido.');
       });
     }
-    // Busca un nivel publicado por su SEED corta y llama a found(row)
-    seedLookup(seed, found) {
+    // Busca un nivel publicado por su código corto y llama a found(row)
+    seedLookup(code, found) {
       const Gld = S.Model.Gld;
       if (!Gld.configured()) { this.menu.toast('Sin conexión con Glob Defenders.'); return; }
-      this.menu.toast('Buscando SEED: ' + seed + '…', 1500);
-      Gld.findBySeed(seed).then((r) => {
+      this.menu.toast('Buscando ' + code + '…', 1500);
+      Gld.findBySeed(code).then((r) => {
         if (!r.ok) this.menu.toast(r.error === 'offline' ? 'Sin conexión con Glob Defenders.' : 'Error: ' + r.error);
-        else if (!r.rows.length) this.menu.toast('No hay ningún nivel publicado con la SEED ' + seed, 3000);
+        else if (!r.rows.length) this.menu.toast('No hay ningún nivel publicado con el código ' + code, 3000);
         else found(r.rows[0]);
       });
     }

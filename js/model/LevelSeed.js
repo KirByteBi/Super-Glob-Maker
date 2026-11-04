@@ -1,44 +1,46 @@
-/* Modelo: SEEDS de nivel (con los mismos términos que Glob Defenders).
-   - SEED (corta, online): 7 caracteres como en GlD, p. ej. "G3K7Q2X". Primera letra G/K/P/W/B/N/A
-     y 6 caracteres 0-9/A-Z sin O ni I. Sale del id del nivel publicado en la nube (no hace falta
-     guardarla en el servidor): "Cargar" busca el nivel cuyo id cae en el rango de esa seed.
-   - SEED COMPLETA (sin internet): el nivel entero comprimido en texto ("GLOB1." + base64url).
+/* Modelo: CÓDIGOS de nivel (estilo Super Mario Maker). Las SEEDS (estilo Glob Defenders) son
+   de las salas del multijugador, no de los niveles.
+   - CÓDIGO (corto, online): como SMM, "GGNN-NGNN-GNGN" (G = letra, N = número), p. ej.
+     "KX47-2B91-R3T8". Letras sin O ni I (no se confunden con 0 y 1). Sale del id del nivel
+     publicado en la nube (no hace falta guardarlo en el servidor): "Cargar" busca el nivel
+     cuyo id cae en el rango de ese código.
+   - CÓDIGO COMPLETO (sin internet): el nivel entero comprimido en texto ("GLOB1." + base64url).
      Sirve para cualquier nivel, publicado o no. "GLOB0." = sin comprimir (navegadores viejos).
    El JSON de antes se sigue aceptando al cargar. */
 (function (S) {
   'use strict';
-  const FIRST = ['G', 'K', 'P', 'W', 'B', 'N', 'A'];          // como generateSeed() de Glob Defenders
-  const DIG = '0123456789ABCDEFGHJKLMNPQRSTUVWXYZ';          // 34 caracteres (sin O ni I)
-  const B34 = 34n ** 6n, N = BigInt(FIRST.length) * B34, TWO64 = 1n << 64n;
-  const SHORT_RE = /^[GKPWBNA][0-9A-HJ-NP-Z]{6}$/;
+  const LET = 'ABCDEFGHJKLMNPQRSTUVWXYZ', NUM = '0123456789'; // 24 letras (sin O ni I) y 10 cifras
+  const PAT = 'GGNNNGNNGNGN';                                 // GGNN-NGNN-GNGN sin guiones
+  const RAD = PAT.split('').map((c) => (c === 'G' ? 24n : 10n));
+  const N = RAD.reduce((a, r) => a * r, 1n), TWO64 = 1n << 64n; // 24^5 · 10^7 ≈ 8·10^13 códigos
+  const SHORT_RE = /^[A-HJ-NP-Z]{2}[0-9]{3}[A-HJ-NP-Z][0-9]{2}[A-HJ-NP-Z][0-9][A-HJ-NP-Z][0-9]$/;
+  const dash = (s) => s.slice(0, 4) + '-' + s.slice(4, 8) + '-' + s.slice(8);
 
-  // ---------------------------------------------------------------- seed corta <-> id de la nube
-  // Los primeros 64 bits del uuid se reparten en N seeds por igual (s = u·N / 2^64).
+  // ---------------------------------------------------------------- código corto <-> id de la nube
+  // Los primeros 64 bits del uuid se reparten en N códigos por igual (s = u·N / 2^64).
   function fromId(uuid) {
     const hex = String(uuid || '').replace(/-/g, '').slice(0, 16);
     if (!/^[0-9a-f]{16}$/i.test(hex)) return null;
-    let s = (BigInt('0x' + hex) * N) >> 64n;
-    const first = FIRST[Number(s / B34)]; s %= B34;
-    let out = '';
-    for (let i = 0; i < 6; i++) { out = DIG[Number(s % 34n)] + out; s /= 34n; }
-    return first + out;
+    let s = (BigInt('0x' + hex) * N) >> 64n, out = '';
+    for (let i = PAT.length - 1; i >= 0; i--) { const d = Number(s % RAD[i]); s /= RAD[i]; out = (PAT[i] === 'G' ? LET[d] : NUM[d]) + out; }
+    return dash(out);
   }
-  // Rango de ids [lo, hi) que corresponden a una seed (hi = null: hasta el final)
-  function idRange(seed) {
-    seed = clean(seed); if (!SHORT_RE.test(seed)) return null;
-    let s = BigInt(FIRST.indexOf(seed[0])) * B34;
-    let r = 0n; for (let i = 1; i < 7; i++) r = r * 34n + BigInt(DIG.indexOf(seed[i]));
-    s += r;
+  // Rango de ids [lo, hi) que corresponden a un código (hi = null: hasta el final)
+  function idRange(code) {
+    code = clean(code); if (!SHORT_RE.test(code)) return null;
+    let s = 0n;
+    for (let i = 0; i < PAT.length; i++) s = s * RAD[i] + BigInt((PAT[i] === 'G' ? LET : NUM).indexOf(code[i]));
     const ceilDiv = (a, b) => (a + b - 1n) / b;
     const lo = ceilDiv(s * TWO64, N), hi = ceilDiv((s + 1n) * TWO64, N);
     const toUuid = (v) => { const h = v.toString(16).padStart(16, '0') + '0000000000000000'; return h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20); };
     return { lo: toUuid(lo), hi: hi >= TWO64 ? null : toUuid(hi) };
   }
-  // Admite "SEED: g3k7-q2x", espacios y guiones
-  function clean(str) { return String(str || '').toUpperCase().replace(/^\s*SEED\s*:?\s*/, '').replace(/[\s-]/g, ''); }
+  // Admite "CÓDIGO: kx47 2b91 r3t8", "ID:", espacios y guiones
+  function clean(str) { return String(str || '').toUpperCase().replace(/^\s*(C[OÓ]DIGO|CODE|ID)\s*:?\s*/, '').replace(/[\s-]/g, ''); }
+  const pretty = (str) => { const c = clean(str); return SHORT_RE.test(c) ? dash(c) : c; };
   function isShort(str) { return SHORT_RE.test(clean(str)); }
 
-  // ---------------------------------------------------------------- seed completa (nivel entero)
+  // ---------------------------------------------------------------- código completo (nivel entero)
   const b64url = (bytes) => { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
   const unb64url = (str) => { const s = atob(str.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((str.length + 3) % 4)); const b = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i); return b; };
   const canZip = () => typeof CompressionStream === 'function' && typeof DecompressionStream === 'function';
@@ -62,5 +64,6 @@
   }
   const isFull = (str) => /^\s*(GLOB[01]\.|\{)/i.test(String(str || ''));
 
-  S.Model.Seed = { fromId, idRange, clean, isShort, isFull, pack, unpack };
+  S.Model.LevelCode = { fromId, idRange, clean, pretty, isShort, isFull, pack, unpack };
+  S.Model.Seed = S.Model.LevelCode; // nombre antiguo
 })(window.SGM);

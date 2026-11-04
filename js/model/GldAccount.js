@@ -231,10 +231,10 @@
       if (q.sort === 'easy') rows.sort((a, b) => b.rate - a.rate);
       return { ok: true, rows, v2: Gld.v2 };
     },
-    // Nivel publicado por su SEED corta (G123456, ver LevelSeed.js). Sin SQL nuevo: la seed sale
-    // del id del nivel, así que se busca el rango de ids que le corresponde.
-    async findBySeed(seed) {
-      const r = S.Model.Seed.idRange(seed);
+    // Nivel publicado por su código corto (KX47-2B91-R3T8, ver LevelSeed.js). Sin SQL nuevo: el
+    // código sale del id del nivel, así que se busca el rango de ids que le corresponde.
+    async findBySeed(code) {
+      const r = S.Model.LevelCode.idRange(code);
       if (!r) return { ok: false, error: 'seed', rows: [] };
       return Gld.browse({ sort: 'new', idRange: r, limit: 5 });
     },
