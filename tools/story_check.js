@@ -60,6 +60,9 @@ const nearSet = (R, o, r) => { for (let dx = -r; dx <= r; dx++) for (let dy = -3
 
 const only = process.argv[2];
 let bad = 0, total = 0;
+// La unicidad se comprueba SIN nombre, id, tema ni modo: dos niveles no pueden tener el mismo
+// diseño jugable aunque su decoración cambie.
+const fingerprints = new Map();
 for (const w of S.Model.StoryMap.worlds) {
   if (only && w.id !== only) continue;
   for (const n of w.nodes) {
@@ -79,6 +82,14 @@ for (const w of S.Model.StoryMap.worlds) {
         const gh = L.objects.find((o) => o.type === 'goalhidden'); if (gh && !nearSet(R, gh, 2)) errs.push('no se llega a la meta oculta');
         const reds = L.tiles.filter((t) => t === TT.RCOIN).length; if (L.win.type === 'redcoins' && reds !== 8) errs.push('monedas rojas: ' + reds);
         const st = L.objects.find((o) => o.type === 'start');
+        const enemies = L.objects.filter((o) => { const d = C.OBJECTS[o.type] || {}; return d.tier || d.boss; }).length;
+        if (enemies < 5) errs.push('demasiado vacío: solo ' + enemies + ' enemigos');
+        const cps = L.objects.filter((o) => o.type === 'checkpoint');
+        if (cps.length !== 1) errs.push('checkpoints: ' + cps.length + ' (debe haber 1)');
+        // Huella del diseño (sin datos cosméticos) para garantizar que cada uno sea diferente.
+        const fp = L.toJSON(); delete fp.id; delete fp.name; delete fp.theme; delete fp.mode; delete fp.character;
+        const key = JSON.stringify(fp), prev = fingerprints.get(key);
+        if (prev) errs.push('diseño duplicado de ' + prev); else fingerprints.set(key, w.id + '/' + n.id + '/' + mode);
         L.objects.forEach((o) => { const d = C.OBJECTS[o.type] || {}; if ((d.tier || d.boss) && Math.abs(o.x - st.x) < 6 && Math.abs(o.y - st.y) < 4) errs.push('enemigo en la salida'); });
         L.objects.filter((o) => o.type === 'checkpoint').forEach((cp) => L.objects.forEach((o) => { const d = C.OBJECTS[o.type] || {}; if ((d.tier || d.boss) && Math.abs(o.x - cp.x) < 5 && Math.abs(o.y - cp.y) < 4) errs.push(o.type + ' encima del punto de control'); }));
         try {

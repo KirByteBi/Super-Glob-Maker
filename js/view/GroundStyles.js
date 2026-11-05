@@ -354,6 +354,55 @@
     ink(ctx, 2.5); ctx.strokeRect(px + 1.5, py + 1.5, T - 3, T - 3);
   }
 
+  // ----- Frosty Christmas: REGALOS apilados -----
+  // Cada bloque 2×2 alineado (x par, y par) que esté lleno es UN regalo grande; si no cabe, un
+  // regalo pequeño de 1×1. Caja + cinta cruzada + lazo, con nieve encima si está al aire.
+  // Colores [caja, cinta]: rojo/amarillo, azul/verde, gris oscuro/rosa, verde/rojo, morado/blanco, blanco/rojo.
+  const GIFT_COLS = [['#e8323f', '#ffd000'], ['#3b8bff', '#2fd46a'], ['#3a3f4a', '#ff7ab8'], ['#2fa84a', '#e8323f'], ['#8a4dff', '#ffffff'], ['#f4f4f8', '#e8323f']];
+  function giftOf(level, x, y) {
+    const gx = x - (x & 1), gy = y - (y & 1);
+    const big = [[0, 0], [1, 0], [0, 1], [1, 1]].every(([dx, dy]) => isG2(level.get(gx + dx, gy + dy)));
+    return big ? { x0: gx, y0: gy, n: 2 } : { x0: x, y0: y, n: 1 };
+  }
+  function giftColor(level, g) {
+    const pick = (q) => Math.floor(U.hash2(q.x0 * 3 + 11, q.y0 * 5 + 2) * GIFT_COLS.length) % GIFT_COLS.length;
+    let i = pick(g);
+    // que no coincida con el regalo de la izquierda ni el de arriba
+    const near = [];
+    if (isG2(level.get(g.x0 - 1, g.y0))) near.push(pick(giftOf(level, g.x0 - 1, g.y0)));
+    if (isG2(level.get(g.x0, g.y0 - 1))) near.push(pick(giftOf(level, g.x0, g.y0 - 1)));
+    for (let k = 0; k < GIFT_COLS.length && near.includes(i); k++) i = (i + 1) % GIFT_COLS.length;
+    return GIFT_COLS[i];
+  }
+  function drawGift(ctx, X, Y, S2, box, rib, snow) {
+    const lid = Math.max(7, S2 * 0.2), rw = Math.max(6, S2 * 0.16);
+    // caja
+    ctx.beginPath(); ctx.roundRect(X + 1.5, Y + lid - 1, S2 - 3, S2 - lid - 0.5, 3); ctx.fillStyle = box; ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,0.16)'; ctx.fillRect(X + S2 * 0.62, Y + lid, S2 * 0.34, S2 - lid - 3); // sombra lateral
+    // cinta vertical (caja)
+    ctx.fillStyle = rib; ctx.fillRect(X + S2 / 2 - rw / 2, Y + lid, rw, S2 - lid - 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fillRect(X + S2 / 2 - rw / 2 + 1, Y + lid, 2, S2 - lid - 2);
+    ink(ctx, 2.5); ctx.beginPath(); ctx.roundRect(X + 1.5, Y + lid - 1, S2 - 3, S2 - lid - 0.5, 3); ctx.stroke();
+    // tapa (algo más ancha) con su cinta
+    ctx.beginPath(); ctx.roundRect(X + 0.5, Y + 1.5, S2 - 1, lid, 3); ctx.fillStyle = U.shade(box, -0.12); ctx.fill();
+    ctx.fillStyle = rib; ctx.fillRect(X + S2 / 2 - rw / 2, Y + 1.5, rw, lid);
+    if (snow) { ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.roundRect(X + 0.5, Y + 0.5, S2 - 1, Math.min(5, lid * 0.6), 3); ctx.fill(); }
+    ink(ctx, 2.5); ctx.beginPath(); ctx.roundRect(X + 0.5, Y + 1.5, S2 - 1, lid, 3); ctx.stroke();
+    // lazo encima de la tapa (dos lazadas y el nudo)
+    const bx = X + S2 / 2, by = Y + lid * 0.55, br = Math.max(4, S2 * 0.11);
+    ctx.fillStyle = rib;
+    [-1, 1].forEach((d) => { ctx.beginPath(); ctx.ellipse(bx + d * br, by, br, br * 0.62, d * 0.35, 0, 7); ctx.fill(); ink(ctx, 2); ctx.stroke(); });
+    ctx.beginPath(); ctx.arc(bx, by, br * 0.45, 0, 7); ctx.fillStyle = U.shade(rib, -0.2); ctx.fill(); ink(ctx, 2); ctx.stroke();
+  }
+  function pieceGift(ctx, level, x, y, pal, ed) {
+    const g = giftOf(level, x, y), [box, rib] = giftColor(level, g);
+    const snow = !isG2(level.get(g.x0, g.y0 - 1)) && (g.n === 1 || !isG2(level.get(g.x0 + 1, g.y0 - 1)));
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x * T, y * T, T, T); ctx.clip();
+    drawGift(ctx, g.x0 * T, g.y0 * T, g.n * T, box, rib, snow);
+    ctx.restore();
+  }
+
   // ----- Abismo Gelatinoso: coral -----
   function fillCoral(ctx, level, x, y, pal, ed) {
     const px = x * T, py = y * T;
@@ -390,7 +439,7 @@
     hub: { fill: fillBlue },          // suelo azul dimensional
     vortex: { fill: fillRunes },      // runas verde-azuladas (Dark Glob)
     factory: { fill: fillPixelStar }, // azul cian con estrellas amarillas
-    snow: { fill: fillIce },          // hielo tallado
+    snow: { fill: pieceGift, piece: pieceGift, col: pieceGift, row: pieceGift }, // regalos apilados (2×2 o 1×1)
     underwater: { fill: fillCoral },  // coral
     jungle: { fill: fillRoot }        // raices / madera
   };

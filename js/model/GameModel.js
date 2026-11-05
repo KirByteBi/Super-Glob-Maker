@@ -72,7 +72,7 @@
           if (e.to) {
             if (e.to.z === this.zone) { e.link = list[e.to.i] || null; e.toZone = null; }
             else { e.link = null; e.toZone = e.to; } // destino en otra zona: se resuelve al entrar
-          } else { e.link = list.length > 1 ? list[(i + 1) % list.length] : null; e.toZone = null; }
+          } else { e.link = fam !== 'door' && list.length > 1 ? list[(i + 1) % list.length] : null; e.toZone = null; } // las puertas SOLO van a donde las enlaces
         });
       });
       this.stampPipes();
@@ -374,7 +374,7 @@
         const list = this.entities.filter((e) => e.gizmo && e.family === family);
         list.forEach((e, i) => {
           if (e.to) { if (e.to.z === z) { e.link = list[e.to.i] || null; e.toZone = null; } else { e.link = null; e.toZone = e.to; } }
-          else { e.link = list.length > 1 ? list[(i + 1) % list.length] : null; e.toZone = null; }
+          else { e.link = family !== 'door' && list.length > 1 ? list[(i + 1) % list.length] : null; e.toZone = null; }
         });
       });
       this.stampPipes();

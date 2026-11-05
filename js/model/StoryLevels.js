@@ -35,14 +35,26 @@
       // (siempre se coloca: quita lo que hubiera en sus 2x2 casillas; si no, los enlaces se cruzan)
       warp(x, top) {
         L.objects = L.objects.filter((q) => !(q.x >= x - 1 && q.x <= x + 2 && q.y >= top - 3 && q.y <= top - 1));
-        B.fill(x, top - 2, x + 1, top - 1, 0);
-        const w = { type: 'warp', x, y: top - 1 }; L.objects.push(w); B.warps.push(w); return B.warps.length - 1;
+        B.fill(x, top - 2, x + 1, top - 1, top > GY ? TT.CAVEBG : 0); // bajo tierra: detrás, pared de cueva (no el cielo)
+        // la tubería es 2×2 y su (x, y) es la esquina de ARRIBA de la boca
+        const w = { type: 'warp', x, y: top - 2 }; L.objects.push(w); B.warps.push(w); return B.warps.length - 1;
       },
       // enlaza por OBJETO; los índices reales (orden de tuberías en el nivel) se fijan al final
       link(a, b) { B.warps[a].toObj = B.warps[b]; B.warps[b].toObj = B.warps[a]; return B; },
+      // las dos últimas puertas puestas (con llave + salida) quedan enlazadas entre sí
+      linkLast2Doors() {
+        const ds = L.objects.filter((q) => q.type === 'door' || q.type === 'lockdoor'), a = ds[ds.length - 2], b = ds[ds.length - 1];
+        if (a && b) { a.toObj = b; b.toObj = a; a.col = b.col = 1 + (Math.floor(ds.length / 2) - 1) % 4; }
+        return B;
+      },
       fixLinks() {
-        const fam = L.objects.filter((q) => q.type === 'warp' || q.type === 'lockwarp');
-        fam.forEach((q) => { if (q.toObj) { const i = fam.indexOf(q.toObj); if (i >= 0) q.to = { z: 0, i }; delete q.toObj; } });
+        [['warp', 'lockwarp'], ['door', 'lockdoor']].forEach((types) => {
+          const fam = L.objects.filter((q) => types.includes(q.type));
+          // puerta cuya pareja se borró (p. ej. la pisó una tubería): fuera, no puede ir a ningún sitio
+          if (types[0] === 'door') L.objects = L.objects.filter((q) => !(types.includes(q.type) && (!q.toObj || !L.objects.includes(q.toObj))));
+          const fam2 = L.objects.filter((q) => types.includes(q.type));
+          fam2.forEach((q) => { if (q.toObj) { const i = fam2.indexOf(q.toObj); if (i >= 0) q.to = { z: 0, i }; delete q.toObj; } });
+        });
       }
     };
     return B;
@@ -63,36 +75,39 @@
   // Cada sala recibe (B, x, ctx) y devuelve su ancho. ctx = { d: dificultad 1..5, rnd, pool, theme, ex }.
   const pick = (c, arr) => arr[Math.floor(c.rnd() * arr.length)];
   const enemy = (B, c, x, top) => { const t = pick(c, c.pool); B.foe(t, x, FLYERS.has(t) ? (top == null ? GY : top) - 2 : top); };
+  // Enemigo aéreo para salas sobre el vacío. Usa uno del mapa si lo hay; si no, Wingel.
+  const airEnemy = (B, c, x, top) => { const fly = c.pool.filter((t) => FLYERS.has(t)); B.foe(fly.length ? pick(c, fly) : 'wingel', x, (top == null ? GY : top) - 3); };
   const hazardPit = (c) => (['volcano', 'factory', 'vortex'].includes(c.theme) ? TT.LIQUID : 0);
-  const gapW = (c) => U.clamp(1 + c.d + Math.floor(c.rnd() * 2), 2, 5);
+  // Incluso en el mundo 1 hay un salto real; luego el hueco crece con la dificultad.
+  const gapW = (c) => U.clamp(2 + c.d + Math.floor(c.rnd() * 2), 3, 6);
 
   const ROOMS = {
     // --- genéricas
-    flat(B, x, c) { const w = 10; B.ground(x, x + w - 1); for (let i = 0; i < Math.min(3, c.d); i++) enemy(B, c, x + 3 + i * 3); B.coins(x + 2, x + 5, GY - 3); return w; },
-    gap(B, x, c) { const g = gapW(c), w = g + 8; B.ground(x, x + w - 1).pit(x + 4, x + 3 + g, hazardPit(c)); B.coins(x + 4, x + 3 + g, GY - 4); if (c.d > 2) enemy(B, c, x + w - 2); return w; },
-    stairs(B, x, c) { const w = 12; B.ground(x, x + w - 1); for (let i = 0; i < 4; i++) B.fill(x + 2 + i, GY - 1 - i, x + 2 + i, GY - 1, TT.HARD); B.fill(x + 6, GY - 4, x + 7, GY - 1, TT.HARD); B.pit(x + 8, x + 8 + Math.min(2, c.d - 1), hazardPit(c)); return w; },
+    flat(B, x, c) { const w = 12; B.ground(x, x + w - 1); const n = Math.min(4, 1 + Math.ceil(c.d / 2) + (c.late ? 1 : 0)); for (let i = 0; i < n; i++) enemy(B, c, x + 2 + i * 3); B.row(x + 4, x + 7, GY - 4, TT.SEMI); B.coins(x + 2, x + 9, GY - 5); return w; },
+    gap(B, x, c) { const g = gapW(c), w = g + 8; B.ground(x, x + w - 1).pit(x + 4, x + 3 + g, hazardPit(c)); if (g >= 4) B.row(x + 5, x + Math.min(x + 6, x + 2 + g), GY - 3, TT.SEMI); B.coins(x + 4, x + 3 + g, GY - 5); enemy(B, c, x + w - 2); if (c.d >= 3) airEnemy(B, c, x + 4 + Math.floor(g / 2), GY - 4); return w; },
+    stairs(B, x, c) { const w = 14; B.ground(x, x + w - 1); for (let i = 0; i < 4; i++) B.fill(x + 2 + i, GY - 1 - i, x + 2 + i, GY - 1, TT.HARD); B.fill(x + 6, GY - 4, x + 7, GY - 1, TT.HARD); const g = Math.min(3, c.d); B.pit(x + 8, x + 8 + g, hazardPit(c)); B.row(x + 8, x + 9, GY - 4, TT.SEMI); B.coins(x + 2, x + 10, GY - 6); enemy(B, c, x + 12); return w; },
     // --- lecciones
     blocks(B, x, c) { const w = 14; B.ground(x, x + w - 1); B.row(x + 3, x + 7, GY - 4, TT.BRICK).box(x + 5, GY - 4, c.d < 3 ? 'evo' : 'flor').box(x + 4, GY - 4, 'coin'); B.set(x + 9, GY - 4, TT.HIDDEN); B.L.contents[(x + 9) + ',' + (GY - 4)] = 'miniglob'; B.row(x + 5, x + 9, GY - 8, TT.BRICK); B.coins(x + 5, x + 9, GY - 9); enemy(B, c, x + 11); return w; },
     semis(B, x, c) { const w = 16; B.ground(x, x + 1).ground(x + w - 2, x + w - 1).pit(x + 2, x + w - 3, hazardPit(c)); [[x + 2, GY - 2], [x + 6, GY - 4], [x + 10, GY - 3], [x + 12, GY - 6]].forEach(([a, b], i) => { B.row(a, a + 2, b, i % 2 ? TT.SEMI2 : TT.SEMI); B.coins(a, a + 2, b - 1); }); if (c.d > 1) enemy(B, c, x + 7, GY - 4); return w; },
     springs(B, x, c) { const w = 14; B.ground(x, x + w - 1); B.fill(x + 6, GY - 6 - Math.min(2, c.d), x + 7, GY - 1, TT.HARD); B.obj('spring', x + 4, GY - 1); B.coins(x + 6, x + 7, GY - 10 - Math.min(2, c.d)); enemy(B, c, x + 10); return w; },
     pipes(B, x, c) { const w = 16; B.ground(x, x + w - 1); [[x + 3, 2], [x + 8, 3 + Math.min(1, c.d - 1)], [x + 13, 2]].forEach(([a, h]) => { B.fill(a, GY - h, a + 1, GY - 1, TT.PIPE); if (c.d > 1 && a === x + 8) B.obj('flower', a, GY - h, { }); }); enemy(B, c, x + 6); enemy(B, c, x + 11); return w; },
-    moving(B, x, c) { const g = 6 + c.d, w = g + 6; B.ground(x, x + 2).ground(x + w - 3, x + w - 1).pit(x + 3, x + 2 + g, hazardPit(c)); B.obj(c.d % 2 ? 'platformV' : 'platform', x + 3 + Math.floor(g / 2), GY - 2, { r: 2 }); B.coins(x + 4, x + 1 + g, GY - 6); return w; },
-    rails(B, x, c) { const g = 10 + c.d, w = g + 6; B.ground(x, x + 2).ground(x + w - 3, x + w - 1).pit(x + 3, x + 2 + g, hazardPit(c)); const y0 = GY - 2, y1 = GY - 5; for (let i = 0; i <= g; i++) { const yy = i < g / 3 ? y0 - Math.round(i * (y0 - y1) / (g / 3)) : i > (2 * g) / 3 ? y1 + Math.round((i - (2 * g) / 3) * (y0 - y1) / (g / 3)) : y1; B.set(x + 2 + i, yy, TT.RAIL); } B.obj('platform', x + 2, y0); if (c.d > 2) { for (let i = 3; i <= g - 3; i++) B.set(x + 2 + i, y1 - 3, TT.RAIL); B.obj('firebar', x + 2 + Math.floor(g / 2), y1 - 3, { r: 2 }); } B.coins(x + 4, x + g, y1 - 2); return w; },
-    notes(B, x, c) { const n = 2 + c.d, w = n * 3 + 6; B.ground(x, x + 2).ground(x + w - 3, x + w - 1).pit(x + 3, x + w - 4, hazardPit(c)); for (let i = 0; i < n; i++) B.set(x + 4 + i * 3, GY - 1 - (i % 2), TT.NOTE); B.coins(x + 4, x + w - 5, GY - 7); return w; },
-    ab(B, x, c) { const w = 18, k = (c.seed + c.d) % 3; const A = TT.A0 + k * 2, Bb = A + 1, SW = TT.SW0 + k; B.ground(x, x + 3).ground(x + w - 3, x + w - 1).pit(x + 4, x + w - 4, hazardPit(c)); B.set(x + 2, GY - 4, SW); for (let i = 4; i < w - 3; i++) B.set(x + i, GY - 1, i % 6 < 3 ? A : Bb); B.row(x + 6, x + 11, GY - 5, Bb); B.coins(x + 6, x + 11, GY - 6); return w; },
-    pswitch(B, x, c) { const w = 16; B.ground(x, x + 3).ground(x + w - 3, x + w - 1).pit(x + 4, x + w - 4, hazardPit(c)); B.set(x + 2, GY - 1, TT.PSW); B.row(x + 4, x + w - 4, GY - 1, TT.PBLK); B.coins(x + 5, x + w - 5, GY - 4); return w; },
+    moving(B, x, c) { const g = 7 + c.d, w = g + 6; B.ground(x, x + 2).ground(x + w - 3, x + w - 1).pit(x + 3, x + 2 + g, hazardPit(c)); B.obj(c.d % 2 ? 'platformV' : 'platform', x + 3 + Math.floor(g / 2), GY - 2, { r: 2 }); B.row(x + 4, x + 5, GY - 5, TT.SEMI); B.coins(x + 4, x + 1 + g, GY - 7); if (c.d >= 2) airEnemy(B, c, x + 4 + Math.floor(g / 2), GY - 5); enemy(B, c, x + w - 2); return w; },
+    rails(B, x, c) { const g = 11 + c.d, w = g + 6; B.ground(x, x + 2).ground(x + w - 3, x + w - 1).pit(x + 3, x + 2 + g, hazardPit(c)); const y0 = GY - 2, y1 = GY - 5; for (let i = 0; i <= g; i++) { const yy = i < g / 3 ? y0 - Math.round(i * (y0 - y1) / (g / 3)) : i > (2 * g) / 3 ? y1 + Math.round((i - (2 * g) / 3) * (y0 - y1) / (g / 3)) : y1; B.set(x + 2 + i, yy, TT.RAIL); } B.obj('platform', x + 2, y0); if (c.d > 2) { for (let i = 3; i <= g - 3; i++) B.set(x + 2 + i, y1 - 3, TT.RAIL); B.obj('firebar', x + 2 + Math.floor(g / 2), y1 - 3, { r: 2 }); } B.coins(x + 4, x + g, y1 - 2); if (c.d >= 2) airEnemy(B, c, x + Math.floor(g / 2), y1 - 1); enemy(B, c, x + w - 2); return w; },
+    notes(B, x, c) { const n = 3 + c.d, w = n * 3 + 6; B.ground(x, x + 2).ground(x + w - 3, x + w - 1).pit(x + 3, x + w - 4, hazardPit(c)); for (let i = 0; i < n; i++) B.set(x + 4 + i * 3, GY - 1 - (i % 2), TT.NOTE); B.coins(x + 4, x + w - 5, GY - 7); if (c.d >= 2) airEnemy(B, c, x + Math.floor(w / 2), GY - 5); enemy(B, c, x + w - 2); return w; },
+    ab(B, x, c) { const w = 18, k = (c.seed + c.d) % 3; const A = TT.A0 + k * 2, Bb = A + 1, SW = TT.SW0 + k; B.ground(x, x + 3).ground(x + w - 3, x + w - 1).pit(x + 4, x + w - 4, hazardPit(c)); B.set(x + 2, GY - 4, SW); for (let i = 4; i < w - 3; i++) B.set(x + i, GY - 1, i % 6 < 3 ? A : Bb); B.row(x + 6, x + 11, GY - 5, Bb); B.coins(x + 6, x + 11, GY - 6); if (c.d >= 3) airEnemy(B, c, x + 9, GY - 6); enemy(B, c, x + w - 2); return w; },
+    pswitch(B, x, c) { const w = 16; B.ground(x, x + 3).ground(x + w - 3, x + w - 1).pit(x + 4, x + w - 4, hazardPit(c)); B.set(x + 2, GY - 1, TT.PSW); B.row(x + 4, x + w - 4, GY - 1, TT.PBLK); B.row(x + 7, x + 9, GY - 5, TT.SEMI); B.coins(x + 5, x + w - 5, GY - 6); if (c.d >= 2) airEnemy(B, c, x + 8, GY - 5); enemy(B, c, x + w - 2); return w; },
     conveyor(B, x, c) { const w = 16; B.ground(x, x + w - 1); B.row(x + 2, x + w - 3, GY, c.d % 2 ? TT.CONV_L : TT.CONV_R); B.fill(x + 6, GY - 2, x + 7, GY - 1, TT.HARD); for (let i = 0; i < c.d; i++) enemy(B, c, x + 9 + i * 2); return w; },
     ice(B, x, c) { const w = 16; B.ground(x, x + w - 1); B.row(x + 1, x + w - 2, GY, TT.ICE); B.pit(x + 7, x + 7 + Math.min(3, c.d), hazardPit(c)); B.obj('icicle', x + 5, GY - 7); B.obj('icicle', x + 12, GY - 7); enemy(B, c, x + 13); return w; },
     water(B, x, c) { const w = 18; B.ground(x, x + w - 1); B.fill(x + 3, GY, x + w - 4, TUN_TOP - 1, TT.WATER); B.ground(x + 3, x + w - 4, TUN_TOP); B.foe('pysh', x + 7, TUN_TOP - 1); if (c.d > 1) B.foe('squid', x + 11, TUN_TOP - 1); B.coins(x + 5, x + 13, GY + 1, TT.BCOIN); return w; },
     cannons(B, x, c) { const w = 16; B.ground(x, x + w - 1); B.foe('cannon', x + 5, GY); if (c.d > 2) B.foe('cannon', x + 11, GY); B.row(x + 7, x + 9, GY - 4, TT.SEMI); B.coins(x + 7, x + 9, GY - 5); return w; },
     firebars(B, x, c) { const w = 16; B.ground(x, x + w - 1); B.fill(x + 4, GY - 3, x + 4, GY - 1, TT.HARD).fill(x + 11, GY - 3, x + 11, GY - 1, TT.HARD); B.obj('firebar', x + 4, GY - 4, { r: c.d > 2 ? 3 : 2 }); if (c.d > 1) B.obj('firebar', x + 11, GY - 4, { r: 2 }); B.coins(x + 6, x + 9, GY - 2); return w; },
     bros(B, x, c) { const w = 18; B.ground(x, x + w - 1); B.row(x + 4, x + 12, GY - 4, TT.SEMI); B.foe(c.d > 3 ? 'miner' : 'builder', x + 8, GY - 4); if (c.d > 2) B.foe('builder', x + 14); B.box(x + 2, GY - 4, 'flor'); return w; },
-    donuts(B, x, c) { const w = 16; B.ground(x, x + 2).ground(x + w - 3, x + w - 1).pit(x + 3, x + w - 4, hazardPit(c)); B.row(x + 3, x + w - 4, GY - 1, TT.DONUT); B.coins(x + 4, x + w - 5, GY - 3); return w; },
-    clouds(B, x, c) { const w = 18; B.ground(x, x + 1).ground(x + w - 2, x + w - 1).pit(x + 2, x + w - 3, hazardPit(c)); [[x + 3, GY - 1], [x + 7, GY - 3], [x + 11, GY - 2], [x + 14, GY - 4]].forEach(([a, b]) => B.row(a, a + 1, b, TT.CLOUD)); enemy(B, c, x + 9, GY - 4); return w; },
-    keys(B, x, c) { const w = 18; B.ground(x, x + w - 1); B.box(x + 4, GY - 4, 'key'); B.fill(x + 10, 0, x + 10, GY - 3, TT.HARD); B.obj('lockdoor', x + 8, GY - 1); B.obj('door', x + 13, GY - 1); enemy(B, c, x + 6); return w; },
+    donuts(B, x, c) { const w = 16; B.ground(x, x + 2).ground(x + w - 3, x + w - 1).pit(x + 3, x + w - 4, hazardPit(c)); B.row(x + 3, x + w - 4, GY - 1, TT.DONUT); B.row(x + 7, x + 9, GY - 5, TT.SEMI); B.coins(x + 4, x + w - 5, GY - 4); if (c.d >= 2) airEnemy(B, c, x + 8, GY - 5); enemy(B, c, x + w - 2); return w; },
+    clouds(B, x, c) { const w = 18; B.ground(x, x + 1).ground(x + w - 2, x + w - 1).pit(x + 2, x + w - 3, hazardPit(c)); [[x + 3, GY - 1], [x + 7, GY - 3], [x + 11, GY - 2], [x + 14, GY - 4]].forEach(([a, b]) => { B.row(a, a + 1, b, TT.CLOUD); B.coins(a, a + 1, b - 1); }); airEnemy(B, c, x + 9, GY - 4); if (c.d >= 3) airEnemy(B, c, x + 14, GY - 6); enemy(B, c, x + w - 2); return w; },
+    keys(B, x, c) { const w = 18; B.ground(x, x + w - 1); B.box(x + 4, GY - 4, 'key'); B.fill(x + 10, 0, x + 10, GY - 3, TT.HARD); B.obj('lockdoor', x + 8, GY - 1); B.obj('door', x + 13, GY - 1); B.linkLast2Doors(); enemy(B, c, x + 6); return w; },
     purple(B, x, c) { const w = 14; B.ground(x, x + w - 1); B.coins(x + 2, x + 11, GY - 1, TT.VCOIN); B.row(x + 4, x + 9, GY - 5, TT.SEMI); B.coins(x + 4, x + 9, GY - 6, TT.VCOIN); enemy(B, c, x + 12); return w; },
     // bloques "!" del color del mundo: sólidos solo si ya pasaste el palacio. Atajo con premio.
-    exbridge(B, x, c) { const w = 16, EX = TT.EX0 + (c.ex || 0); B.ground(x, x + 2).ground(x + w - 3, x + w - 1).pit(x + 3, x + w - 4, hazardPit(c)); B.row(x + 3, x + w - 4, GY - 1, EX); B.row(x + 5, x + 9, GY - 4, TT.SEMI); B.obj('platform', x + 7, GY - 2, { r: 2 }); B.coins(x + 4, x + w - 5, GY - 2, TT.BCOIN); return w; }
+    exbridge(B, x, c) { const w = 16, EX = TT.EX0 + (c.ex || 0); B.ground(x, x + 2).ground(x + w - 3, x + w - 1).pit(x + 3, x + w - 4, hazardPit(c)); B.row(x + 3, x + w - 4, GY - 1, EX); B.row(x + 5, x + 9, GY - 4, TT.SEMI); B.obj('platform', x + 7, GY - 2, { r: 2 }); B.coins(x + 4, x + w - 5, GY - 6, TT.BCOIN); if (c.d >= 3) airEnemy(B, c, x + 10, GY - 5); enemy(B, c, x + w - 2); return w; }
   };
   // salas de calentamiento de cada lección (versión fácil, para enseñar sin castigar)
   const INTRO = { pipes: 'pipes', moving: 'moving', rails: 'rails', notes: 'notes', water: 'water', bros: 'bros', firebars: 'firebars', conveyor: 'conveyor' };
@@ -117,9 +132,11 @@
   // Bajo la sala [x0, x1]: túnel con monedas y un Pyce, tubería de bajada antes y de subida después.
   // En Corrupto la superficie de esa sala queda bloqueada, así que el túnel es el ÚNICO camino.
   function tunnel(B, c, x0, x1, block) {
-    B.fill(x0, TUN_TOP, x1, TUN_FLOOR - 1, 0);                 // aire del túnel
-    B.fill(x0 - 2, TUN_TOP, x0 - 1, H - 1, TT.HARD).fill(x1 + 1, TUN_TOP, x1 + 2, H - 1, TT.HARD);
-    B.fill(x0, TUN_FLOOR, x1, H - 1, TT.HARD);
+    // túnel EXCAVADO en la tierra: fondo de cueva detrás (no se ve el cielo) y paredes/suelo de tierra
+    const GT = B.L.groundT || TT.GROUND;
+    B.fill(x0, TUN_TOP, x1, TUN_FLOOR - 1, TT.CAVEBG);          // aire del túnel (fondo de cueva)
+    B.fill(x0 - 2, TUN_TOP, x0 - 1, H - 1, GT).fill(x1 + 1, TUN_TOP, x1 + 2, H - 1, GT);
+    B.fill(x0, TUN_FLOOR, x1, H - 1, GT);
     B.fill(x0, TUN_TOP - 1, x1, TUN_TOP - 1, TT.HARD);         // techo (también suelo de pozos)
     B.coins(x0 + 4, x1 - 4, TUN_TOP + 1, c.d > 2 ? TT.BCOIN : TT.COIN);
     enemy(B, c, Math.floor((x0 + x1) / 2), TUN_FLOOR);
@@ -149,7 +166,7 @@
     const lesson = isPalace ? 'palace' : isCastle ? 'castle' : plan.lessons[(idx - 1) % plan.lessons.length] || 'basics';
     const name = (isCastle ? '🏰 ' : isPalace ? '⚠ ' : '') + S.Model.Themes.name(theme, mode) + ' · ' + (LESSON_NAME[lesson] || lesson);
     const B = builder({ id: 'story-' + world.id + '-' + node.id + '-' + mode, name, theme: node.theme, mode, w: 400, time: isCastle ? 400 : 320 });
-    const c = { d, rnd, seed, pool: POOLS[node.theme] || POOLS.lake, theme: node.theme, ex: world.excolor != null ? world.excolor : (world.nodes.find((n) => n.type === 'palace') || {}).excolor || 0 };
+    const c = { d, late: idx > 5, progress: Math.max(0, idx - 1), rnd, seed, pool: POOLS[node.theme] || POOLS.lake, theme: node.theme, ex: world.excolor != null ? world.excolor : (world.nodes.find((n) => n.type === 'palace') || {}).excolor || 0 };
     const swim = !!theme.swim;
     if (swim) B.fill(0, 0, 399, 1, TT.HARD);
     // salida
@@ -174,7 +191,8 @@
       const picks = [];
       for (let k = 0; k < nSec && sec.length; k++) { const j = Math.floor(rnd() * sec.length); picks.push(sec.splice(j, 1)[0]); }
       if (lesson === 'basics') {
-        seq.push('flat', 'gap', 'flat', 'stairs', 'gap', 'blocks', 'flat');
+        // Introducción: sigue siendo fácil, pero ya alterna suelo, vacío y plataformas.
+        seq.push('flat', 'gap', 'flat', 'stairs', 'semis', 'blocks', 'flat');
       } else {
         // patron variado: intro facil -> principal -> secundaria A -> transicion -> principal
         //                 -> secundaria B -> transicion -> principal (remate)
@@ -188,13 +206,20 @@
     const tunnels = []; // tramos [x0, x1] con túnel (en Corrupto la superficie está cortada)
     let checkpoint = false, redPlaced = 0;
     seq.forEach((room, i) => {
-      if (!checkpoint && i === Math.floor(seq.length / 2)) { B.ground(x, x + 5); B.obj('checkpoint', x + 2, GY - 1); x += 6; checkpoint = true; }
-      if (tunnelAt.has(i) && !swim) {
-        // sala tranquila encima del túnel (en Corrupto, bloqueada)
-        B.ground(x - 6, x - 1); const w = 18; B.ground(x, x + w - 1); B.coins(x + 3, x + w - 4, GY - 3);
+      const checkpointHere = !checkpoint && i === Math.floor(seq.length / 2);
+      const hasTunnel = tunnelAt.has(i) && !swim;
+      // El checkpoint va antes de una sala normal; si aquí hay túnel, se pone DESPUÉS para que
+      // su tubería de entrada no lo borre.
+      if (checkpointHere && !hasTunnel) { B.ground(x, x + 5); B.obj('checkpoint', x + 2, GY - 1); x += 6; checkpoint = true; }
+      if (hasTunnel) {
+        // En la superficie del túnel también hay actividad (en Paz); en Corrupto queda bloqueada.
+        B.ground(x - 6, x - 1); const w = 18; B.ground(x, x + w - 1); B.coins(x + 3, x + w - 4, GY - 4);
+        if (!corrupt) { B.row(x + 6, x + 10, GY - 4, TT.SEMI); enemy(B, c, x + 14); }
         tunnel(B, c, x, x + w - 1, corrupt ? (seed + i) % 3 + 3 : 0);
         tunnels.push([x - 6, x + w + 5]);
-        x += w; B.ground(x, x + 5); x += 6; return;
+        x += w; B.ground(x, x + 5); x += 6;
+        if (checkpointHere) { B.ground(x, x + 5); B.obj('checkpoint', x + 2, GY - 1); x += 6; checkpoint = true; }
+        return;
       }
       const fn = ROOMS[room] || ROOMS.flat;
       const w = fn(B, x, c);
@@ -221,6 +246,15 @@
       B.row(sx + 4, sx + len, GY - 11, TT.SEMI); B.coins(sx + 6, sx + len - 4, GY - 12); B.obj('goalhidden', sx + len - 2, GY - 12);
     }
     if (lesson === 'redcoins') B.L.win = Level.normWin({ type: 'redcoins', target: node.secretNext ? 'hidden' : 'both' });
+    // Zona segura al aparecer y al reaparecer: la densidad nunca pone un enemigo encima de la
+    // salida ni a menos de 5 casillas de un checkpoint. Se hace al final porque algunas salas
+    // posteriores pueden invadir el margen del checkpoint.
+    const safe = B.L.objects.filter((o) => o.type === 'start' || o.type === 'checkpoint');
+    B.L.objects = B.L.objects.filter((o) => {
+      const def = C.OBJECTS[o.type] || {};
+      if (!(def.tier || def.boss)) return true;
+      return !safe.some((s) => Math.abs(o.x - s.x) < (s.type === 'start' ? 6 : 5) && Math.abs(o.y - s.y) < 4);
+    });
     x += 15;
     B.fixLinks();
     // recortar el ancho y cerrar

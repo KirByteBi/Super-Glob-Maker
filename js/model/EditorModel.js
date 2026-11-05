@@ -278,6 +278,21 @@
       src.to = { z: dstZone, i: idx };
       // Las tuberías enlazadas comparten color (el del origen); no se cambia por separado
       if (fam === 'pipe') { const col = src.col != null ? src.col : 0; src.col = col; dst.col = col; }
+      // Puertas: cada pareja enlazada toma un color propio (las sin enlazar se quedan de madera),
+      // así se ve de un vistazo qué puerta lleva a cuál. El destino también vuelve al origen.
+      if (fam === 'door') {
+        const all = [this.base].concat(this.base.subs || []).reduce((a, z) => a.concat((z.objects || [])), this.level.objects);
+        const used = new Set(all.filter((q) => (q.type === 'door' || q.type === 'lockdoor') && q !== src && q !== dst && q.to && q.col).map((q) => q.col));
+        let col = src.col && !used.has(src.col) ? src.col : 0;
+        for (let k = 1; !col && k <= 6; k++) if (!used.has(k)) col = k;
+        src.col = dst.col = col || 1 + Math.floor(Math.random() * 6);
+        // ida y vuelta: si el destino no tenía enlace, vuelve a la puerta de origen
+        if (!dst.to) {
+          const srcList = (from.z === 0 ? this.base.objects : ((this.base.subs[from.z - 1] || {}).objects || (from.z === this.activeZone ? this.level.objects : []))).filter((q) => famOf(q.type) === 'door');
+          const si = (from.z === this.activeZone ? this.level.objects.filter((q) => famOf(q.type) === 'door') : srcList).findIndex((q) => q.x === from.x && q.y === from.y);
+          if (si >= 0) dst.to = { z: from.z, i: si };
+        }
+      }
       this.changed = true; this.dirty = true;
       this.emit('linkDone', { z: dstZone, i: idx }); this.emit('change');
       return 'done';

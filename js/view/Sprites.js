@@ -498,8 +498,11 @@
   // Puerta (y con llave)
   function doorArt(ctx, e, locked) {
     const x = e.x, y = e.y, w = e.w, h = e.h;
-    rr(ctx, x, y, w, h, [8, 8, 0, 0]); fillStroke(ctx, locked ? '#8a5a2b' : '#b06a3a', 3.5);
-    rr(ctx, x + 4, y + 4, w - 8, h - 6, [6, 6, 0, 0]); ctx.strokeStyle = U.shade('#b06a3a', -0.3); ctx.lineWidth = 2; ctx.stroke();
+    // color de la pareja enlazada (col 1-6); sin enlazar = madera
+    const DOOR_COL = [null, '#e8323f', '#3b8bff', '#2fd46a', '#ffd000', '#b44dff', '#ff7ab8'];
+    const base = DOOR_COL[e.col | 0] || '#b06a3a', body = locked ? U.shade(base, -0.2) : base;
+    rr(ctx, x, y, w, h, [8, 8, 0, 0]); fillStroke(ctx, body, 3.5);
+    rr(ctx, x + 4, y + 4, w - 8, h - 6, [6, 6, 0, 0]); ctx.strokeStyle = U.shade(base, -0.3); ctx.lineWidth = 2; ctx.stroke();
     ctx.fillStyle = '#ffd000'; ctx.beginPath(); ctx.arc(x + w - 8, y + h / 2, 2.5, 0, 7); ctx.fill();
     if (locked) { rr(ctx, x + w / 2 - 6, y + h * 0.4, 12, 11, 3); fillStroke(ctx, '#ffd000', 2.5); ctx.fillStyle = INK; ctx.fillRect(x + w / 2 - 1, y + h * 0.45, 2, 4); }
   }

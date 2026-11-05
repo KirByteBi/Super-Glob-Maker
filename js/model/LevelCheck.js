@@ -58,7 +58,7 @@
       const [x, y] = q.shift();
       // entrar por la boca (según hacia dónde mire) y salir por la boca del destino
       warps.forEach((wp, i) => { if (mouthSpots(wp).some(([mx, my]) => Math.abs(x - mx) <= 1 && Math.abs(y - my) <= 2)) { const d = dest(i); if (d) mouthSpots(d).forEach(([mx, my]) => { push(mx, my); const ly = land(mx, my); if (ly != null) push(mx, ly); }); } });
-      doors.forEach((dr, i) => { if (x === dr.x && Math.abs(y - dr.y) <= 1) { const d = doors[dr.to && dr.to.z === 0 ? dr.to.i : (i + 1) % doors.length]; if (d && d !== dr) push(d.x, d.y); } });
+      doors.forEach((dr) => { if (dr.to && dr.to.z === 0 && x === dr.x && Math.abs(y - dr.y) <= 1) { const d = doors[dr.to.i]; if (d && d !== dr) push(d.x, d.y); } });
       for (let dx = -FAR; dx <= FAR; dx++) for (let up = 0; up <= UP; up++) {
         if (Math.abs(dx) > (up >= 3 && !swim ? 4 : FAR)) continue;
         let ok = true; for (let k = 1; k <= up; k++) if (!free(x, y - k)) ok = false;
