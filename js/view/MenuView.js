@@ -53,6 +53,16 @@
       menu.appendChild(row);
       s.appendChild(menu);
       s.appendChild(el('div', 'foot', 'Versión 2D · Los Globs y sus amigos'));
+      // Conexión con Glob Defenders (misma cuenta): logo que abre el juego en otra pestaña
+      const gld = document.createElement('a');
+      gld.className = 'gld-link'; gld.href = 'https://kirbytebi.github.io/Glob-Defenders/';
+      gld.target = '_blank'; gld.rel = 'noopener noreferrer';
+      const gt = S.tr ? S.tr('Jugar a Glob Defenders') : 'Jugar a Glob Defenders';
+      gld.title = gt; gld.setAttribute('aria-label', gt + ' (se abre en otra pestaña)');
+      gld.onclick = () => click();
+      const gi = document.createElement('img'); gi.src = S.View.Assets.url('logo/GlobDefendersLogo.png'); gi.alt = 'Glob Defenders'; gi.draggable = false;
+      gld.appendChild(gi); gld.appendChild(el('span', '', '🎮 ' + gt + ' ↗'));
+      s.appendChild(gld);
     }
 
     controls(onClose) {
