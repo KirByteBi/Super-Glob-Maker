@@ -25,7 +25,9 @@
       set(x, y, t) { L.set(x, y, t); return B; },
       fill(x0, y0, x1, y1, t) { for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) L.set(x, y, t); return B; },
       ground(x0, x1, top) { return B.fill(x0, top == null ? GY : top, x1, H - 1, o.groundT || TT.GROUND); },
-      pit(x0, x1, liquid) { B.fill(x0, GY, x1, TUN_TOP - 1, 0); if (liquid) B.fill(x0, GY + 2, x1, TUN_TOP - 1, TT.LIQUID); return B; },
+      // Pozo REAL: se vacía hasta el fondo para que caer mate. En los mapas peligrosos, el
+      // fondo se rellena de líquido mortal (dejando dos casillas de caída visibles).
+      pit(x0, x1, liquid) { B.fill(x0, GY, x1, H - 1, 0); if (liquid) B.fill(x0, GY + 2, x1, H - 1, TT.LIQUID); return B; },
       row(x0, x1, y, t) { return B.fill(x0, y, x1, y, t); },
       box(x, y, what) { L.set(x, y, TT.BOX); if (what) L.contents[x + ',' + y] = what; return B; },
       coins(x0, x1, y, t) { for (let x = x0; x <= x1; x++) if (!L.get(x, y)) L.set(x, y, t || TT.COIN); return B; },

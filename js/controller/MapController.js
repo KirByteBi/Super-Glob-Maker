@@ -50,8 +50,8 @@
       let dir = null;
       if (inp.left) dir = 'left'; else if (inp.right) dir = 'right'; else if (inp.up) dir = 'up'; else if (inp.down) dir = 'down';
       if (dir && this.moveCd <= 0) { this.moveCursor(dir); this.moveCd = 0.18; }
-      // entrar al nodo con salto/disparo, solo si NO se esta moviendo (evita que ↑ entre sin querer)
-      if (!dir && (inp.jumpPressed || inp.shootPressed)) this.enter();
+      // entrar al nodo con Z/Espacio/Enter, solo si NO se está moviendo (evita que ↑ entre sin querer)
+      if (!dir && (inp.jumpPressed || inp.shootPressed || inp.enterPressed)) this.enter();
     }
     // pasa al siguiente mundo DESBLOQUEADO (ciclico). Si solo hay 1, no hace nada.
     cycleWorld() {

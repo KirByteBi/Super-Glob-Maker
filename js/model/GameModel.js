@@ -409,7 +409,11 @@
         // semisólido del mapa (seta / árbol / cadena): su base se pisa como un semisólido
         if (S.Model.Plat.is(o.type)) { S.Model.Plat.cells(o).forEach(([x, y]) => { if (L.inBounds(x, y) && !L.get(x, y)) L.set(x, y, TT.SEMIX); }); return; }
         if (!S.Model.Pipe.isPipe(o.type)) return;
-        S.Model.Pipe.cells(o).forEach(([x, y]) => { if (L.inBounds(x, y) && !L.get(x, y)) L.set(x, y, TT.PIPEX); });
+        S.Model.Pipe.cells(o).forEach(([x, y]) => {
+          // La tubería ocupa de verdad TODAS sus casillas 2×2 + cuerpo. Un fondo de cueva,
+          // agua, raíl, moneda o cualquier tile visual no sólido no puede quitarle la colisión.
+          if (L.inBounds(x, y) && !C.isSolid(L.get(x, y), L)) L.set(x, y, TT.PIPEX);
+        });
       });
     }
     // Caja en píxeles de la BOCA (2×2) de una tubería
