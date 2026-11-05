@@ -60,9 +60,10 @@
       // congela y no responde ni al teclado). Se registra una vez y se sigue reprogramando el frame.
       try {
         const inp = this.input.poll();
-        if (this.mode === 'game' && this.game) { this.game.update(dt, inp); this.game.render(this.t); }
-        else if (this.mode === 'editor' && this.editor) { this.editor.update(dt); this.editor.render(this.t); }
-        else if (this.mode === 'map' && this.worldmap) { this.worldmap.update(dt, inp); this.worldmap.render(this.t); }
+        // (tras update se vuelve a mirar: entrar a un nivel desde el mapa borra el mapa a mitad de fotograma)
+        if (this.mode === 'game' && this.game) { this.game.update(dt, inp); if (this.game) this.game.render(this.t); }
+        else if (this.mode === 'editor' && this.editor) { this.editor.update(dt); if (this.editor) this.editor.render(this.t); }
+        else if (this.mode === 'map' && this.worldmap) { this.worldmap.update(dt, inp); if (this.worldmap && this.mode === 'map') this.worldmap.render(this.t); }
         else this.drawMenuBackdrop();
       } catch (e) { if (!this._loopErr) { this._loopErr = true; console.error('Error en el bucle (' + this.mode + '):', e); } }
       requestAnimationFrame((t) => this.loop(t));
@@ -203,7 +204,11 @@
       const SD = S.Model.StoryDialogs;
       if (!SD || !SD.has(id) || !this.menu.storyDialog) { cb(); return; }
       const charPath = S.Model.Characters.get(this.prefs.character).paths[0];
-      try { this.menu.storyDialog(SD.get(id), charPath, cb); } catch (e) { cb(); }
+      // mientras el diálogo está abierto el mapa no recibe teclas (si no, Z avanzaba el texto
+      // Y entraba al nivel a la vez); al cerrarlo se tragan las teclas pulsadas
+      this.dialogOpen = true;
+      const end = () => { this.dialogOpen = false; this.input.swallow(); cb(); };
+      try { this.menu.storyDialog(SD.get(id), charPath, end); } catch (e) { end(); }
     }
 
     // Lanzar el nivel de un nodo del mapamundi

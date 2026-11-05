@@ -36,6 +36,7 @@
 
     update(dt, inp) {
       this.t += dt; this.moveCd = Math.max(0, this.moveCd - dt);
+      if (this.app.dialogOpen) return;                                // diálogo de la Historia abierto
       if (inp.editExitPressed) { this.app.showTitle(); return; }      // Esc vuelve al titulo
       // M: alternar Paz/Corrupto (solo si la Historia Corrupta esta desbloqueada)
       if (inp.altmodePressed && this.moveCd <= 0) { this.toggleMode(); this.moveCd = 0.3; return; }
