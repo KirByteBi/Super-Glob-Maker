@@ -13,9 +13,20 @@
       this.world = SM.world(this.worldId);
       this.cursor = SM.firstNode(this.worldId); // id del nodo donde esta el Glob
       this.moveCd = 0; this.t = 0;
+      // Confirmación directa: algunos navegadores pueden perder enterPressed entre dos frames.
+      // Enter normal y Enter numérico entran siempre; durante un diálogo no hacen nada aquí.
+      this.onConfirm = (e) => {
+        if ((e.code !== 'Enter' && e.code !== 'NumpadEnter') || e.repeat || this.app.dialogOpen || this.app.mode !== 'map') return;
+        e.preventDefault();
+        // Enter también es Pausa en partida: marcarlo como ya consumido para que el nivel no
+        // aparezca pausado en su primer fotograma.
+        if (this.app.input && this.app.input.swallow) this.app.input.swallow();
+        this.enter();
+      };
+      window.addEventListener('keydown', this.onConfirm);
       S.View.SoundView && S.View.SoundView.playMusic && S.View.SoundView.playMusic(S.Model.Themes.get('lake'), 'peace');
     }
-    destroy() { S.View.SoundView && S.View.SoundView.stopMusic && S.View.SoundView.stopMusic(); }
+    destroy() { window.removeEventListener('keydown', this.onConfirm); S.View.SoundView && S.View.SoundView.stopMusic && S.View.SoundView.stopMusic(); }
 
     // posicion en pixeles del centro de un nodo
     nodePos(n) {
