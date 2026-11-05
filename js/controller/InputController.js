@@ -9,9 +9,10 @@
     KeyX: 'run', ShiftLeft: 'run', ShiftRight: 'run', KeyJ: 'run',
     // Disparar: Espacio (principal), C o L
     Space: 'shoot', KeyC: 'shoot', KeyL: 'shoot',
-    Escape: 'pause', Enter: 'pause', KeyP: 'pause'
+    Escape: 'pause', Enter: 'pause', KeyP: 'pause',
+    KeyM: 'altmode' // alterna Paz/Corrupto en el mapamundi (Historia Corrupta)
   };
-  const ACTIONS = ['left', 'right', 'jump', 'up', 'down', 'run', 'shoot', 'pause'];
+  const ACTIONS = ['left', 'right', 'jump', 'up', 'down', 'run', 'shoot', 'pause', 'altmode'];
   const acts = (code) => { const a = MAP[code]; return a ? [].concat(a) : null; };
 
   class InputController {

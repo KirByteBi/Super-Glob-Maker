@@ -299,6 +299,52 @@
       setTimeout(() => ta.focus(), 30);
     }
 
+    // ---------- DIALOGO / CINEMATICA del Modo Historia ----------
+    // script = { pages:[ {speaker, side, sprite, text} ] }. onDone() al terminar o saltar.
+    // Pantalla DOM superpuesta: el mapa se sigue viendo detras (CSS semitransparente).
+    // Avanza con click / Enter / Z / Espacio; Esc salta todo.
+    storyDialog(script, charPath, onDone) {
+      const pages = (script && script.pages) || [];
+      if (!pages.length) { if (onDone) onDone(); return; }
+      const s = this.open('story-dialog');
+      let i = 0, closed = false;
+      const box = el('div', 'dlg-box');
+      const portrait = el('div', 'dlg-portrait');
+      const bubble = el('div', 'dlg-bubble');
+      const who = el('b', 'dlg-who');
+      const txt = el('p', 'dlg-text');
+      const hint = el('span', 'dlg-hint', '▶');
+      bubble.appendChild(who); bubble.appendChild(txt); bubble.appendChild(hint);
+      const close = () => {
+        if (closed) return; closed = true;
+        window.removeEventListener('keydown', onKey);
+        this.clear(); if (onDone) onDone();
+      };
+      const render = () => {
+        const p = pages[i];
+        box.className = 'dlg-box ' + (p.side === 'right' ? 'right' : 'left');
+        portrait.innerHTML = '';
+        const path = p.sprite || charPath;
+        if (path) { const im = globImg(path, 'dlg-face'); portrait.appendChild(im); }
+        who.textContent = S.tr ? S.tr(p.speaker === 'player' ? 'Glob' : p.speaker) : (p.speaker === 'player' ? 'Glob' : p.speaker);
+        txt.textContent = S.tr ? S.tr(p.text) : p.text;
+        hint.textContent = i < pages.length - 1 ? '▶' : '✓';
+      };
+      const next = () => { S.events.emit('ui:click'); if (i < pages.length - 1) { i++; render(); } else close(); };
+      const onKey = (e) => {
+        if (['Enter', ' ', 'z', 'Z'].includes(e.key)) { e.preventDefault(); next(); }
+        else if (e.key === 'Escape') { e.preventDefault(); close(); }
+      };
+      window.addEventListener('keydown', onKey);
+      box.appendChild(portrait); box.appendChild(bubble);
+      s.appendChild(box);
+      const bar = el('div', 'dlg-bar');
+      bar.appendChild(button('Saltar ⏭', '', () => close()));
+      s.appendChild(bar);
+      s.onclick = (e) => { if (!e.target.closest('.btn')) next(); };
+      render();
+    }
+
     // Aviso con imagen opcional (p. ej. el Glob Cometa de "ya publicado")
     notice(title, msg, img) {
       const b = this.openModal(title);

@@ -220,6 +220,22 @@ button.link.seed-code:hover, button.link.seed-code:focus-visible { text-decorati
 .level-row.mail textarea.code { min-height: 44px; }
 .mail-input { width: 100%; font: inherit; font-size: 16px; padding: 6px 10px; border: 3px solid #000; border-radius: 10px; margin-bottom: 6px; box-sizing: border-box; }
 
+/* ---------- diálogo / cinemática del Modo Historia ---------- */
+.screen.story-dialog { justify-content: flex-end; background: rgba(0,0,0,0.45); cursor: pointer; padding-bottom: 42px; gap: 10px; }
+.dlg-box { display: flex; align-items: flex-end; gap: 14px; width: min(760px, 92%); }
+.dlg-box.right { flex-direction: row-reverse; }
+.dlg-portrait { flex: 0 0 auto; }
+.dlg-face { width: 120px; height: 120px; object-fit: contain; image-rendering: auto; filter: drop-shadow(0 4px 0 rgba(0,0,0,0.4)); animation: dlgpop .18s ease-out; }
+@keyframes dlgpop { from { transform: scale(0.8) translateY(8px); opacity: 0; } }
+.dlg-bubble { flex: 1; position: relative; background: #fff; color: #111; border: 4px solid #000; border-radius: 16px; padding: 12px 16px; min-height: 92px; }
+.dlg-box.right .dlg-bubble { text-align: right; }
+.dlg-who { display: block; font-size: 15px; color: #2f7bff; margin-bottom: 4px; -webkit-text-stroke: .5px #000; }
+.dlg-text { margin: 0; font-size: 18px; font-weight: 700; line-height: 1.3; }
+.dlg-hint { position: absolute; right: 12px; bottom: 6px; font-size: 14px; color: #888; animation: dlgblink 1s steps(2) infinite; }
+.dlg-box.right .dlg-hint { right: auto; left: 12px; }
+@keyframes dlgblink { 50% { opacity: 0.2; } }
+.dlg-bar { display: flex; width: min(760px, 92%); justify-content: flex-end; }
+
 /* ---------- controles táctiles (móvil) ---------- */
 body.touch { touch-action: none; overscroll-behavior: none; -webkit-user-select: none; }
 #touch { position: absolute; inset: 0; pointer-events: none; z-index: 30; }

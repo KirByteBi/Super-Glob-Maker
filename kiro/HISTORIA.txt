@@ -1,102 +1,260 @@
 ==============================================================
-  SUPER GLOB MAKER - MODO HISTORIA (idea general)
+  SUPER GLOB MAKER - MODO HISTORIA (biblia narrativa + diseno)
 ==============================================================
-Esto es la VISION del modo, no el plan tecnico. Es una idea
-general para tener claro hacia donde va; los detalles de
-implementacion se concretan al construirlo.
-[ESTO NO ES CANON EN GLOB DEFENDERS]
+Esto es la VISION del modo: trama, personajes, teorias y como
+se cuenta, mas el esqueleto de diseno (mapa, metas, palacios).
+Los detalles de implementacion se concretan al construirlo.
+
+[NOTA DE CANON] Este modo NO es canon estricto en Glob Defenders.
+Toma personajes y lugares del universo (Pyces, Globs, NOeye,
+MoonStar, PixelStar/MadStars, el Bitcore, Bitlands...) y cuenta
+una historia propia que ENCAJA con ese universo sin fijar canon.
+Lo que de MadStars/PixelStar es lore oficial se INSINUA, no se
+confirma, porque aqui no aparece nadie de MadStars, solo su
+fabrica.
 
 
---------------------------------------------------------------
- QUE ES
---------------------------------------------------------------
-Un world-map navegable al estilo Super Mario World: en vez de
-una lista de niveles, el jugador mueve su Glob por un mapa con
-caminos, nodos y secretos.
+==============================================================
+ 1. EL CONFLICTO: PYCES vs GLOBS
+==============================================================
+La gran pregunta del modo: ¿POR QUE los Pyces atacan a los Globs?
 
-Estructura: 5 mundos. Cada mundo tiene 9 niveles + 1 castillo
-final. El castillo adopta la forma tematica del mundo: puede ser
-una fabrica, un vortice, un espacio-tiempo... (cada mundo elige
-uno segun su ambientacion).
+La respuesta NO es "porque son malos". Es mas humana:
+  - Los Pyces sienten CELOS. Los Globs son los nuevos heroes del
+    mundo, los que todos admiran ahora. Los Pyces creen que ellos
+    "llevan mas tiempo existiendo" y que merecian ese puesto.
+  - Ese "llevamos mas tiempo" NO es del todo cierto (semilla de
+    teoria): la linea temporal es mas enredada de lo que los
+    Pyces cuentan.
+  - Los Pyces SIEMPRE fueron celosos, desde que se crearon. No
+    atacan a malas; atacan por despecho, por sentirse desplazados.
 
-Cada mundo gira en torno a una idea, pero con variedad: por
-ejemplo, un mundo de circo puede combinar plataformas moviles,
-rosquillas y enemigos saltarines. Cada nivel aporta su propia
-vuelta de tuerca a esa idea, de modo que sirva de puente hacia
-el siguiente sin volverse repetitivo.
+Civilizacion (otra semilla de teoria): los dos pueblos son casi
+opuestos.
+  - PYCES: una civilizacion mas ORDENADA. Caotica y ruidosa por
+    fuera, si, pero con JERARQUIAS CLARAS (ordenadores con cara,
+    estructura, mando). Saben quien manda y como se organizan.
+  - GLOBS: practicamente ANIMALES (son criaturas). 
+    No hay jerarquia; cada uno se monta lo suyo. 
+    Como apenas PIENSAN, causan PROBLEMAS... pero
+    justo de esos problemas sacan su avance: los problemas que
+    provocan los acaban DESARROLLANDO (aprenden a lo bruto).
+El jugador va descubriendo entre pistas que la comparacion no es
+tan simple: los Pyces "ordenados" no son por eso mejores, y el
+caos "animal" de los Globs es su manera de progresar.
 
-
---------------------------------------------------------------
- NAVEGACION Y CAMINOS
---------------------------------------------------------------
-El mapa no es una fila recta: hay CRUCES. En ciertos nodos el
-camino se bifurca y el jugador elige por donde seguir. Unas
-rutas son mas directas; otras, mas largas pero con premios o
-niveles especiales.
-
-Algunos caminos (y nodos) empiezan ocultos y se abren al
-descubrir secretos, de forma que explorar tenga recompensa.
-
-
---------------------------------------------------------------
- METAS OCULTAS
---------------------------------------------------------------
-Ademas de la Medalla normal, un nivel puede esconder una META
-OCULTA (una 2a Medalla secreta, al estilo de las salidas
-secretas de SMW / SMM). Maximo una por zona.
-
-Pasar un nivel por la meta oculta NO cuenta como "completado
-normal", sino como "completado en META OCULTA". En el mapa, un
-nivel con salida secreta se marca con dos huecos (normal +
-oculta) para que se vea que aun queda algo por encontrar.
-
-Encontrar una meta oculta es lo que abre los caminos y nodos
-secretos del mundo.
+=> Tono: no hay un villano "malo malisimo" generico. Hay un
+   pueblo dolido (Pyces) y unos pocos jefes que SI son una
+   amenaza real. El jugador ata cabos.
 
 
---------------------------------------------------------------
- PALACIOS DE INTERRUPTORES "!"
---------------------------------------------------------------
-Hay niveles especiales de PALACIO cuyo objetivo es activar un
-INTERRUPTOR "!" de un color. Al activarlo, los BLOQUES "!" de
-ese mismo color se vuelven solidos.
+==============================================================
+ 2. LOS JEFES
+==============================================================
+Los jefes NO son todos iguales. Hay matices:
 
-Lo importante: ese estado es PERSISTENTE. No alterna como los
-bloques A/B; una vez activado, se recuerda entre niveles del
-mundo (y potencialmente entre zonas). Eso cambia como se juegan
-otros niveles despues: caminos que antes no existian aparecen.
+NOeye  (el mas complejo; no es simplemente bueno ni malo)
+  - De origen NO es un Pyce. ADOPTO la forma de uno con la primera
+    intencion de TRAICIONARLOS: a el lo habian abandonado y
+    transformado en una masa de pura maldad (eso fue una traicion),
+    y venia a devolver esa misma traicion a los Pyces.
+  - Pero el plan le salio al reves: cuando los Pyces lo SELLARON,
+    sin querer le dieron algo que NUNCA habia tenido: un HOGAR. Y
+    acabo ENCARIÑANDOSE de ellos.
+  - Es SILENCIOSO. Quien se cruza en su camino lo paga caro, asi
+    que acabo VISTO como malo por COMO se le ve, no por lo que es.
+  - Su HOGAR es el DIGITAL DARKNESS PALACE, en TECHSPAWN: el lugar
+    de los primeros Pyces, precuela ("Find the Pyces") de
+    "Find Those Pyces 2". Alli vive NOeye.
+  - Desde entonces busca siempre un HOGAR (para si y para los
+    suyos) y DEFENDER A LOS PYCES. Los comprende como amigos un
+    poco estupidos, pero capaces. Ahora se le considera uno mas.
+  - En este modo: NOeye quiere conquistar PixelStar/MadStars, pero
+    con otra intencion que los demas: para DETENER a los otros
+    jefes (y proteger a su gente), no por maldad.
 
-Activar el interruptor de un palacio tambien cuenta como pasar
-ese nivel por META OCULTA.
+MoonStar Pyce  (el verdadero final; una tragedia)
+  - ORIGEN: era un Pyce NORMAL. Un 2.0, como los Pyce2. Nada
+    especial.
+  - El BITCORE es una energia ancestral sumamente peligrosa que
+    TRANSFORMA a quien lo toca SI NO SABE CUIDARSE con el. MoonStar
+    no supo controlarlo: lo toco, no pudo con esa energia y acabo
+    CONVERTIDO en lo que es ahora, el amo de la corrupcion.
+  - Ese mismo Bitcore daño gravemente a la estrella Pyce.
+  - Ahora quiere conquistarlo TODO. Pero su maldad nacio de un
+    accidente, de no saber manejar un poder demasiado grande.
 
-Idea potente a futuro: poder ENLAZAR que palacio activa los
-bloques "!" de que nivel/zona, dando mucha libertad en el
-diseno del mundo (un nivel puede "preparar" otro).
+NOsense  (= NOIRrupt; son el MISMO ser en dos formas)
+  - Origen: es un Pyce creado ARTIFICIALMENTE mezclando la
+    NAVIDAD con materia de NOeye. De ahi su vinculo retorcido con
+    el.
+  - Quiere ELIMINAR la navidad y ODIA profundamente a NOeye.
+  - Rivalidad: en su lore NOeye y NOsense son RIVALES, no amigos.
+    Aqui se ALIAN por conveniencia (contra un enemigo mayor), pero
+    el rencor sigue ahi: no son aliados de verdad.
+  - Historia: NOsense fue DERROTADO en TECHSPAWN (el hogar de
+    NOeye y los primeros Pyces). Pero ha VUELTO como FANTASMA, mas
+    potente que nunca.
+  - NOIRrupt: es la forma mas CERCANA a NOeye de NOsense. Cambia
+    los tonos vivos por NEGROS y BLANCOS, con alguna excepcion de
+    color para que siga siendo reconociblemente el. Version
+    "corrupta/espejo" de NOsense, mas fuerte.
 
-Colores: reutilizar los 3 de los bloques A/B (rojo, verde,
-rosa) para que la paleta sea coherente.
+El resto de la pandilla de jefes (los que acompañan a MoonStar):
+pura maldad, quieren conquistar PixelStar y MadStars sin mas
+matiz. Son el "ejercito" corrupto.
+
+Resumen de intenciones (semilla de teoria 2): NOeye quiere
+PARAR a los demas; MoonStar y los demas quieren CONQUISTAR. No
+todos juegan en el mismo bando aunque lo parezca.
 
 
---------------------------------------------------------------
- LA HISTORIA
---------------------------------------------------------------
-El mundo esta amenazado por un grupo que quiere sumirlo en las
-tinieblas: MoonStar, NOeye y NOsense / NOIRrupt. El objetivo del
-jugador es detenerlos, mundo a mundo, hasta el enfrentamiento
-final.
+==============================================================
+ 3. LUGARES: PIXELSTAR, MADSTARS Y EL VORTICE
+==============================================================
+PixelStar
+  - La fabrica/mundo de referencia. El castillo "fabrica" del mapa.
 
-Esto es solo el marco. Hay libertad para ampliar el lore
-(motivaciones, jefes intermedios, por que cada mundo esta
-corrompido, etc.) mientras encaje con esa premisa.
+MadStars (aqui = la version CORRUPTA de la fabrica PixelStar)
+  - En el lore OFICIAL del universo, MadStars es una subempresa
+    mafiosa de PixelStar que busca la INMORTALIDAD a base de los
+    Globs. ESO NO SE REVELA del todo aqui: en este juego no
+    aparece nadie de MadStars, solo su fabrica corrupta. Queda
+    como teoria/pista de fondo para quien conozca el universo.
+
+El BITCORE  (el origen de todo)
+  - Energia ANCESTRAL de BITLANDS. Es el "porque" ultimo de la
+    corrupcion. Transforma a quien lo toca si no sabe cuidarse.
+  - A lo largo de la historia del universo dio lugar a MUCHOS
+    traspies (MoonStar es uno; hay mas). No es un villano: es un
+    poder demasiado grande que nadie deberia tocar.
+
+El VORTICE  (el final del modo)
+  - Es el FIN DE LOS TIEMPOS: el fin del mundo, formado por toda
+    la CORRUPCION que fueron dejando los Pyces y MoonStar Pyce.
+  - Es una REFERENCIA a los "UNDERGROUNDS": un BITLANDS ALTERNO
+    controlado por MoonStar Pyce, donde viven Pyces como NOeye
+    (NOeye no es un Pyce de origen, pero ahora mismo se le puede
+    considerar uno mas). El Vortice evoca ese lugar corrompido.
+  - Alli, en el nucleo, espera MoonStar, transformado por el
+    Bitcore.
 
 
---------------------------------------------------------------
- EN RESUMEN (lo que define el modo)
---------------------------------------------------------------
-  - 5 mundos x (9 niveles + castillo)
-  - World-map navegable con el Glob, no una lista
-  - Cruces: caminos a elegir
-  - Metas ocultas que abren rutas y nodos secretos
-  - Palacios con interruptores "!" de estado persistente
-  - Castillos tematicos (fabrica / vortice / espacio-tiempo...)
-  - Detener a MoonStar, NOeye y NOsense / NOIRrupt
+==============================================================
+ 4. LAS TEORIAS (lo que el jugador descubre entre pistas)
+==============================================================
+El modo NO explica todo de golpe. Siembra PISTAS (en niveles,
+dialogos, cinematicas, carteles del mapa) y deja que el jugador
+teorice. Las preguntas abiertas:
+
+  T1. ¿QUIEN es NOeye de verdad? (¿malo, victima, protector?)
+  T2. ¿QUE intenciones tienen NOeye y los demas jefes? (no todos
+      quieren lo mismo)
+  T3. ¿QUE les pasa a los Pyces? ¿POR QUE atacan a los Globs?
+      (los celos, lo de "mas tiempo existiendo")
+  T4. ¿QUE tipo de CIVILIZACION son los Pyces frente a los Globs?
+
+Teorias FALSAS que el modo deja caer a proposito (para despistar):
+  - "MadStars esta detras de todo" (no aparece nadie de MadStars).
+  - "NOeye controla a los Pyces" (en realidad los protege).
+  - "MoonStar controla a los Pyces" (los usa, pero el origen es
+    el Bitcore y los celos, no una marioneta).
+
+La VERDAD que se va revelando: los Pyces atacan por celos y
+despecho, no por maldad; los jefes tienen agendas distintas; y la
+corrupcion viene del Bitcore a traves de MoonStar.
+
+
+==============================================================
+ 5. COMO SE CUENTA (narrativa en el juego)
+==============================================================
+Se cuenta ENTRE los niveles, con:
+  - DIALOGOS: al entrar/salir de ciertos nodos (un Pyce que te
+    reta, NOeye que aparece y se va sin decir nada, etc.).
+  - CINEMATICAS: breves, al empezar un mundo, antes de un castillo
+    y al derrotar a un jefe (texto + sprites, estilo SMM/retro).
+  - CARTELES del mapamundi: frases ambientales en nodos concretos.
+  - PISTAS AMBIENTALES: detalles en los propios niveles (una
+    estatua de NOeye, ruinas de Bitlands, el brillo del Bitcore
+    al fondo del Vortice) para los teoricos.
+
+Regla de oro: mostrar, no explicar. Las cinematicas insinuan; el
+jugador decide que cree.
+
+
+==============================================================
+ 6. ESTRUCTURA DEL MAPA (diseno, ya implementado en gran parte)
+==============================================================
+World-map navegable estilo SMW: el Glob se mueve por nodos y
+caminos, no una lista de niveles. 5 MUNDOS, cada uno con sus
+niveles + castillo(s) tematico(s).
+
+  Mundo 1 - Globland Isle      (hogar de los Globs; empieza la
+                                amenaza; castillo fabrica)
+  Mundo 2 - Wildsand Leaf      (territorio salvaje/Pyce)
+  Mundo 3 - Wonders Circus     (lo bizarro, el espectaculo Pyce)
+  Mundo 4 - Tormenta Volcanica (la corrupcion se intensifica)
+  Mundo 5 - Ruptura Dimensional(el Vortice: fin de los tiempos,
+                                3 castillos, final con MoonStar)
+
+NAVEGACION: hay CRUCES (el camino se bifurca). Unas rutas son mas
+directas; otras mas largas pero con premios. Algunos caminos y
+nodos empiezan OCULTOS y se abren al descubrir secretos.
+
+TRANSICION ENTRE MUNDOS (ya hecho): superar el CASTILLO FINAL de
+un mundo desbloquea el siguiente.
+
+METAS OCULTAS: ademas de la Medalla normal, un nivel puede
+esconder una META OCULTA (2a Medalla secreta; max 1 por zona).
+Pasarla NO cuenta como "normal" sino como "meta oculta", y es lo
+que ABRE los caminos y nodos secretos. En el mapa se marca con
+dos huecos (normal + oculta).
+
+PALACIOS "!": niveles cuyo objetivo es activar un INTERRUPTOR "!"
+de un color. Al activarlo, los BLOQUES "!" de ese color se
+vuelven solidos, de forma PERSISTENTE en el mundo (aparecen
+caminos que antes no existian). Activar el palacio cuenta como
+meta oculta. Colores: los 3 de los A/B.
+
+CASTILLOS: jugables, con sala de jefe al final. El castillo final
+de cada mundo cierra su arco. El del Vortice (w5) es el combate
+final contra MoonStar.
+
+
+==============================================================
+ 7. HISTORIA CORRUPTA (modo desbloqueable)
+==============================================================
+Al terminar la HISTORIA NORMAL se desbloquea la HISTORIA
+CORRUPTA. No es "lo mismo mas dificil"; es una RELECTURA:
+
+  - Todos los niveles pasan a modo CORRUPTO (paleta, efecto y
+    musica corruptos de cada mapa).
+  - Se ALTERAN los niveles: cambian rutas, objetivos y retos.
+    Ejemplos: un nivel que era de llegar a la meta ahora es de
+    RECOLECTAR monedas; una ruta principal se bloquea y hay que ir
+    por otra; aparecen tramos nuevos; mas enemigos o colocados
+    distinto.
+  - Narrativamente: es el mundo ya consumido por el Bitcore. Las
+    pistas que antes eran sutiles aqui se vuelven mas claras: la
+    Historia Corrupta REVELA mas de las teorias (quien es NOeye de
+    verdad, el papel del Bitcore, etc.).
+
+Mecanica: reusa el sistema de nodos/niveles generados por semilla,
+pero con el modo 'corrupt' y variaciones de ruta/objetivo. El
+desbloqueo se guarda junto al progreso del mundo (sgm.story.v1).
+
+
+==============================================================
+ 8. EN RESUMEN (lo que define el modo)
+==============================================================
+  - 5 mundos navegables con el Glob (no una lista)
+  - Cruces, metas ocultas y nodos secretos
+  - Palacios con interruptores "!" persistentes
+  - Castillos tematicos con jefe; final = MoonStar en el Vortice
+  - Trama: celos Pyces vs Globs; jefes con agendas distintas;
+    NOeye el matizado; MoonStar + Bitcore detras de la corrupcion
+  - Teorias sembradas con pistas (quien es NOeye, intenciones,
+    por que atacan los Pyces, que civilizacion son)
+  - Se cuenta con dialogos, cinematicas, carteles y pistas
+  - HISTORIA CORRUPTA desbloqueable: relectura que altera niveles
+    y revela mas del lore

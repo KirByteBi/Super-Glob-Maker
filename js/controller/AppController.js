@@ -179,6 +179,12 @@
       if (SM && !SM.isWorldUnlocked(wid)) wid = 'w1';
       this.worldmap = new S.Controller.MapController(this, wid, this.prefs.storyMode);
       this.mode = 'map';
+      // Intro del mundo la PRIMERA vez que se abre (cinematica). Solo en Historia Normal.
+      if (SM && SM.seen && this.prefs.storyMode !== 'corrupt' && !SM.seen(wid, 'intro') && S.Model.StoryDialogs && S.Model.StoryDialogs.has(wid + '/intro')) {
+        SM.markSeen(wid, 'intro');
+        setTimeout(() => this.showStoryDialog(wid + '/intro'), 300);
+        return;
+      }
       // ¿se acaba de desbloquear un mundo nuevo? avisar y ofrecer ir
       if (SM && this._worldUnlocked) {
         const nx = this._worldUnlocked; this._worldUnlocked = null;
@@ -190,8 +196,28 @@
       }
     }
 
+    // Muestra un dialogo/cinematica del Modo Historia (id p.ej. 'w1/intro'). onDone al cerrar.
+    // Aislado: si falta el modulo o el guion, llama a onDone directamente (no rompe el flujo).
+    showStoryDialog(id, onDone) {
+      const cb = onDone || (() => {});
+      const SD = S.Model.StoryDialogs;
+      if (!SD || !SD.has(id) || !this.menu.storyDialog) { cb(); return; }
+      const charPath = S.Model.Characters.get(this.prefs.character).paths[0];
+      try { this.menu.storyDialog(SD.get(id), charPath, cb); } catch (e) { cb(); }
+    }
+
     // Lanzar el nivel de un nodo del mapamundi
     playStoryNode(worldId, nodeId, mode) {
+      const node = S.Model.StoryMap.world(worldId).map[nodeId];
+      // Dialogo PRE-castillo (una vez por mundo, solo en Normal). Al cerrarlo, lanza el nivel.
+      if (node && node.type === 'castle' && mode !== 'corrupt' && S.Model.StoryMap.seen && !S.Model.StoryMap.seen(worldId, 'castle') && S.Model.StoryDialogs && S.Model.StoryDialogs.has(worldId + '/castle')) {
+        S.Model.StoryMap.markSeen(worldId, 'castle');
+        this.showStoryDialog(worldId + '/castle', () => this._launchStoryNode(worldId, nodeId, mode));
+        return;
+      }
+      this._launchStoryNode(worldId, nodeId, mode);
+    }
+    _launchStoryNode(worldId, nodeId, mode) {
       const node = S.Model.StoryMap.world(worldId).map[nodeId];
       // Nivel propio del nodo (lección del mundo); si el módulo falla, el genérico de su mapa
       let L = null;
@@ -527,8 +553,12 @@
       const online = this.lastPlay && this.lastPlay.opts.online;
       if (online && online.back) { online.back(); return; }
       const story = this.lastPlay && this.lastPlay.opts.story;
-      if (story && story.world) this.showStoryMap(story.world); // vuelve al mapamundi
-      else if (story) this.showStory();
+      if (story && story.world) {
+        // Cinematica de DERROTA DE JEFE antes de volver al mapa (una vez por mundo, solo Normal)
+        const pend = this._pendingBossCinematic; this._pendingBossCinematic = null;
+        if (pend) { this.showStoryDialog(pend, () => this.showStoryMap(story.world)); return; }
+        this.showStoryMap(story.world); // vuelve al mapamundi
+      } else if (story) this.showStory();
       else this.showTitle();
     }
 
@@ -623,6 +653,7 @@
     }
 
     progress() { try { return JSON.parse(localStorage.getItem(PROG) || '{}'); } catch (e) { return {}; } }
+    savePrefs() { savePrefs(this.prefs); }
 
     // ¿El nivel (base + subzonas) esconde meta oculta o interruptor "!"? Para la pantalla de resultado.
     levelSecrets(data) {
@@ -652,9 +683,15 @@
         // Mapamundi: marca el nodo como completado (y por meta oculta si aplica) para desbloquear
         if (lp.opts.story.world && lp.opts.story.node && S.Model.StoryMap) {
           const SM = S.Model.StoryMap;
-          SM.markCleared(lp.opts.story.world, lp.opts.story.node, !!g.secretClear);
+          const wId = lp.opts.story.world, nId = lp.opts.story.node;
+          SM.markCleared(wId, nId, !!g.secretClear);
           // ¿era el castillo final? -> desbloquea el mundo siguiente (se avisa al volver al mapa)
-          this._worldUnlocked = SM.onNodeCleared(lp.opts.story.world, lp.opts.story.node);
+          this._worldUnlocked = SM.onNodeCleared(wId, nId);
+          // ¿era un CASTILLO? -> cinematica de jefe al volver al mapa (una vez por mundo, Normal)
+          const node = SM.world(wId).map[nId];
+          if (node && node.type === 'castle' && lp.opts.story.mode !== 'corrupt' && SM.seen && !SM.seen(wId, 'boss') && S.Model.StoryDialogs && S.Model.StoryDialogs.has(wId + '/boss')) {
+            SM.markSeen(wId, 'boss'); this._pendingBossCinematic = wId + '/boss';
+          }
         }
       }
       const img = g.player.formPath();

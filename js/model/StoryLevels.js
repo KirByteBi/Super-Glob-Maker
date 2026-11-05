@@ -138,9 +138,12 @@
   // ---------------------------------------------------------------- un nivel
   function buildNode(world, node, mode, idx) {
     const plan = WORLD_PLAN[world.id] || WORLD_PLAN.w1;
-    const seed = U.strSeed(world.id + '/' + node.id);
+    const corrupt = mode === 'corrupt';
+    // En CORRUPTO la semilla cambia: la secuencia de salas, los extras y los patrones
+    // deterministas (ab/pswitch, bloqueos de tunel) salen distintos -> otra relectura del nivel.
+    const seed = U.strSeed(world.id + '/' + node.id + (corrupt ? '/corrupt' : ''));
     const rnd = U.rng(seed);
-    const theme = S.Model.Themes.get(node.theme), corrupt = mode === 'corrupt';
+    const theme = S.Model.Themes.get(node.theme);
     const isCastle = node.type === 'castle', isPalace = node.type === 'palace';
     const d = U.clamp(plan.d + (isCastle ? 1 : 0) + (isPalace ? 1 : 0) + (idx > 5 ? 0.5 : 0), 1, 5) | 0;
     const lesson = isPalace ? 'palace' : isCastle ? 'castle' : plan.lessons[(idx - 1) % plan.lessons.length] || 'basics';
@@ -154,12 +157,29 @@
     B.ground(0, 11); B.obj('start', 3, GY - 1); B.box(7, GY - 4, 'evo');
     x = 12;
     // secuencia de salas
+    // Niveles normales: la leccion PRINCIPAL manda (identidad del nivel), pero se mezclan
+    // 1-2 secundarias por semilla para dar variedad tipo New SMB (plataformas, luego muelles,
+    // luego huecos...). Palacios y castillos mantienen su set fijo.
     const main = isPalace ? ['semis', 'moving', 'rails', 'notes', 'clouds'] : isCastle ? plan.castle.concat(plan.castle) : [lesson];
     const seq = [];
     if (!isPalace && !isCastle) {
       const L1 = lesson === 'basics' ? 'flat' : lesson === 'redcoins' ? 'semis' : lesson;
-      seq.push(INTRO[L1] ? L1 : 'flat', L1, 'gap', L1, 'stairs', L1, L1);
-      if (lesson === 'basics') seq.splice(0, seq.length, 'flat', 'gap', 'flat', 'stairs', 'gap', 'blocks', 'flat');
+      // pool de secundarias "compatibles" (evita agua en niveles secos, etc.)
+      const dry = ['blocks', 'semis', 'springs', 'moving', 'notes', 'stairs', 'gap', 'donuts', 'clouds'];
+      const wet = ['water', 'semis', 'moving', 'notes'];
+      const base = swim ? wet : dry;
+      const sec = base.filter((r) => r !== L1 && ROOMS[r]);
+      // elige 1-2 secundarias de forma determinista (mas variedad a mayor dificultad)
+      const nSec = 1 + (d >= 3 ? 1 : 0);
+      const picks = [];
+      for (let k = 0; k < nSec && sec.length; k++) { const j = Math.floor(rnd() * sec.length); picks.push(sec.splice(j, 1)[0]); }
+      if (lesson === 'basics') {
+        seq.push('flat', 'gap', 'flat', 'stairs', 'gap', 'blocks', 'flat');
+      } else {
+        // patron variado: intro facil -> principal -> secundaria A -> transicion -> principal
+        //                 -> secundaria B -> transicion -> principal (remate)
+        seq.push(INTRO[L1] ? L1 : 'flat', L1, picks[0] || 'gap', 'gap', L1, picks[1] || 'stairs', 'stairs', L1);
+      }
     } else seq.push(...main, 'gap', ...main.slice(0, 2));
     // ¿atajo con bloques "!" del mundo? (niveles a partir de la 2ª mitad)
     if (!isPalace && idx > 4 && world.nodes.some((n) => n.type === 'palace')) seq.splice(3, 0, 'exbridge');

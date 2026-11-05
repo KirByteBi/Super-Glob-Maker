@@ -192,11 +192,10 @@ Reglas generales
 --------------------------------------------------------------
  3. ELEMENTOS DE SMM1 Y SMM2
 --------------------------------------------------------------
-[ ] Semisolidos tematicos, 2 variantes por mapa
-      Ciudad ... edificio con tejado / vigas
-      Playa .... muelle del puerto / toldo
-      Fabrica .. vigas en construccion / andamio
-      (el resto de mapas ya estan definidos en Themes.js)
+[X] Semisolidos tematicos, 2 variantes por mapa
+      Ciudad ... edificio con tejado / vigas de obra
+      (etc.) Definidas en Themes.js (SEMIS) para los 16 mapas,
+      dibujadas por la vista segun su estilo. HECHO.
 [X] Semisolidos DE FONDO (con relleno detras, estilo SMM):
     sirven para hacer cuevas o niveles aereos sin depender del
     tema de cielo, y para montar escenarios enteros con la
@@ -220,21 +219,10 @@ Reglas generales
     arbustos). Cada mapa con su set tematico, p. ej.:
       Gelatin Lake .. arbusto-Glob, cartel roto, frutos, arbusto
       Urbanistic Road farol (parpadea de noche), viga rota...
-[ ] SUELO TEMATICO POR FORMA (autotiling visual, estilo SMM1/2):
-    el suelo es SIEMPRE el mismo tile con la MISMA colision; solo
-    cambia su DIBUJO segun la forma en que lo coloques (aislado,
-    fila horizontal, columna vertical, bloque, borde, esquina,
-    interior) y segun el mapa. Da personalidad sin tocar la
-    fisica. Ya hay base: Sprites.edges() mira los vecinos; falta
-    el set de dibujos por mapa.
-    - Selector de "estilo de suelo" por mapa en el editor (como el
-      de semisolidos A/B): eliges el estilo y el suelo que pintas
-      se dibuja asi.
-    - Urbanistic Road: cierta forma de suelo = VIGAS ROJAS de obra.
-    - ARCADES tangibles (azul/rojo/amarillo/verde/lila): el suelo
-      se ve como maquina arcade SOLO si pones 1 o 2 columnas
-      verticales (cabe un arcade); con 3+ de ancho pasa a PILAR.
-      (hasta ahora los arcades eran solo decoracion 1x1).
+[X] SUELO TEMATICO POR FORMA (autotiling visual, estilo SMM1/2):
+    tile GROUND2 (2o suelo) con el dibujo por mapa segun la forma
+    (aislado/fila/columna/bloque/borde). Modulo js/view/GroundStyles.js
+    con estilos para los 16 mapas; gancho protegido en Sprites. HECHO.
 [X] Pendientes: empinada (45 grados) y suave (2 casillas)
     (Physics.slopeY + 6 variantes; el jugador camina por ellas)
 [X] Rosquilla (cae si te quedas encima), Bloque Nota, Bloque POW,

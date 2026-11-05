@@ -37,6 +37,8 @@
     update(dt, inp) {
       this.t += dt; this.moveCd = Math.max(0, this.moveCd - dt);
       if (inp.editExitPressed) { this.app.showTitle(); return; }      // Esc vuelve al titulo
+      // M: alternar Paz/Corrupto (solo si la Historia Corrupta esta desbloqueada)
+      if (inp.altmodePressed && this.moveCd <= 0) { this.toggleMode(); this.moveCd = 0.3; return; }
       // cambiar de mundo (entre los desbloqueados) con correr: Shift/X
       if (inp.runPressed && this.moveCd <= 0) { this.cycleWorld(); this.moveCd = 0.25; return; }
       // mover el cursor al vecino en la direccion pulsada
@@ -51,6 +53,14 @@
       const ids = SM.unlockedWorlds(); if (ids.length < 2) return;
       const i = ids.indexOf(this.worldId); const nx = ids[(i + 1) % ids.length];
       if (nx && nx !== this.worldId) this.app.showStoryMap(nx);
+    }
+    // alterna Historia Normal <-> Corrupta (solo si esta desbloqueada)
+    toggleMode() {
+      if (!SM.isCorruptUnlocked || !SM.isCorruptUnlocked()) { this.app.menu.toast('🔒 La Historia Corrupta se desbloquea al terminar la Historia Normal'); return; }
+      const nm = this.mode === 'corrupt' ? 'peace' : 'corrupt';
+      this.app.prefs.storyMode = nm; if (this.app.savePrefs) this.app.savePrefs();
+      this.app.menu.toast(nm === 'corrupt' ? '☠ HISTORIA CORRUPTA' : '☀ Historia Normal', 1800);
+      this.app.showStoryMap(this.worldId); // recrea el mapa en el nuevo modo
     }
     moveCursor(dir) {
       const cur = this.world.map[this.cursor], cp = this.nodePos(cur);
@@ -212,7 +222,15 @@
       ctx.fillText(tr(this.world.name), 16, 20);
       ctx.font = '600 13px "Trebuchet MS",sans-serif'; ctx.textAlign = 'right';
       const multi = SM.unlockedWorlds().length > 1;
-      ctx.fillText(tr('Flechas: mover · Z/Enter: entrar' + (multi ? ' · X/Shift: cambiar de mundo' : '') + ' · Esc: salir'), W - 16, 20);
+      const corruptOn = SM.isCorruptUnlocked && SM.isCorruptUnlocked();
+      ctx.fillText(tr('Flechas: mover · Z/Enter: entrar' + (multi ? ' · X: cambiar mundo' : '') + (corruptOn ? ' · M: Paz/Corrupto' : '') + ' · Esc: salir'), W - 16, 20);
+      // indicador del modo (solo si la Corrupta esta desbloqueada)
+      if (corruptOn) {
+        const badge = this.mode === 'corrupt' ? '☠ CORRUPTO' : '☀ NORMAL';
+        ctx.textAlign = 'center'; ctx.font = '900 14px "Trebuchet MS",sans-serif';
+        ctx.fillStyle = this.mode === 'corrupt' ? '#ff4df0' : '#ffe600';
+        ctx.fillText(badge, W / 2, 20);
+      }
       // cartel inferior con el nombre del nodo seleccionado (estilo SMM2)
       let label = '';
       if (cur.type === 'castle') label = '🏰 ' + tr('Castillo') + ' · ' + S.Model.Themes.name(S.Model.Themes.get(cur.theme), this.mode);

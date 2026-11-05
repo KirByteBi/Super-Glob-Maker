@@ -170,6 +170,20 @@
       if (nx && !this.isWorldUnlocked(nx)) { this.unlockWorld(nx); return nx; }
       return null;
     },
-    unlockedWorlds() { return WORLDS.filter((w) => this.isWorldUnlocked(w.id)).map((w) => w.id); }
+    unlockedWorlds() { return WORLDS.filter((w) => this.isWorldUnlocked(w.id)).map((w) => w.id); },
+
+    // ---- cinematicas/dialogos ya vistos (para no repetirlos) ----
+    // kind: 'intro' | 'castle' | 'boss' (por mundo). Se guarda en p.seen[worldId][kind].
+    seen(worldId, kind) { const p = read(); return !!(p.seen && p.seen[worldId] && p.seen[worldId][kind]); },
+    markSeen(worldId, kind) { const p = read(); p.seen = p.seen || {}; (p.seen[worldId] = p.seen[worldId] || {})[kind] = true; write(p); },
+
+    // ---- HISTORIA CORRUPTA ----
+    // El ultimo mundo (el que lleva el castillo del Vortice). Completarlo = terminar la Normal.
+    lastWorldId() { return WORLDS[WORLDS.length - 1].id; },
+    // La Historia Corrupta se desbloquea al superar el CASTILLO FINAL del ultimo mundo.
+    isCorruptUnlocked() {
+      const w = this.lastWorldId(); const fc = this.finalCastleId(w);
+      return fc ? this.isCleared(w, fc) : false;
+    }
   };
 })(window.SGM);
