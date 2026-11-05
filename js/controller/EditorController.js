@@ -43,8 +43,10 @@
         }),
         save: () => this.save(),
         exit: () => {
-          if (m.dirty) menu.confirm('Hay cambios sin guardar. ¿Salir igualmente?', () => this.app.showTitle());
-          else this.app.showTitle();
+          // editando un nivel de la Historia: se vuelve a su mapamundi
+          const back = this.story ? () => this.app.showStoryMap(this.story.world) : () => this.app.showTitle();
+          if (m.dirty) menu.confirm('Hay cambios sin guardar. ¿Salir igualmente?', back);
+          else back();
         }
       };
     }
@@ -66,6 +68,13 @@
           b.appendChild(row);
           return;
         }
+      }
+      // Nivel del Modo Historia (admin): va a la lista oculta de la Historia, no a Mis niveles
+      if (this.story) {
+        const st = this.story, ok = S.Model.StoryPack.saveLocal(st.world, st.node, st.mode, this.model.full().toJSON());
+        if (ok) { this.model.dirty = false; this.view.refreshInfo(this.model); }
+        this.app.menu.toast(ok ? '📖 Guardado en la Historia (' + st.world.toUpperCase() + ' · ' + st.node + '). En el mapa, B exporta la lista.' : 'No se pudo guardar (almacenamiento del navegador lleno)', 3200);
+        return;
       }
       const r = Storage.save(this.model.full().toJSON());
       if (r === 'ok') { this.model.dirty = false; this.view.refreshInfo(this.model); }

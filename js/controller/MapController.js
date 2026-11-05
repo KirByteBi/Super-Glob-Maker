@@ -40,6 +40,10 @@
       if (inp.editExitPressed) { this.app.showTitle(); return; }      // Esc vuelve al titulo
       // M: alternar Paz/Corrupto (solo si la Historia Corrupta esta desbloqueada)
       if (inp.altmodePressed && this.moveCd <= 0) { this.toggleMode(); this.moveCd = 0.3; return; }
+      // ADMIN: E edita el nivel del nodo (lista oculta de la Historia) · B exporta esa lista
+      const admin = !!(S.Model.Gld && S.Model.Gld._admin);
+      if (admin && inp.editPressed) { this.app.editStoryNode(this.worldId, this.cursor, this.mode); return; }
+      if (admin && inp.packexpPressed) { this.app.exportStoryPack(); return; }
       // cambiar de mundo (entre los desbloqueados) con correr: Shift/X
       if (inp.runPressed && this.moveCd <= 0) { this.cycleWorld(); this.moveCd = 0.25; return; }
       // mover el cursor al vecino en la direccion pulsada
@@ -99,35 +103,64 @@
       ctx.restore();
     }
 
-    // ---- paisaje de mapa (capas): cielo, montañas lejanas, terreno, agua/decoracion ----
+    // ---- paisaje del mapa VISTO DESDE ARRIBA (estilo SMW): mar / lava / vacío de fondo y una
+    // ISLA de tierra con acantilado debajo de los caminos y los niveles (nada flota en el aire) ----
+    scenePal() {
+      return {
+        isle:      { sea: '#2f7bff', sea2: '#1f5fd0', top: '#5fd46a', top2: '#3fb357', cliff: '#c98a4a', cliff2: '#8a5a2b', deco: 'tree' },
+        wild:      { sea: '#2fa0c8', sea2: '#1f7fa8', top: '#f2c879', top2: '#e0ad5a', cliff: '#b57a3a', cliff2: '#7a4f22', deco: 'cactus' },
+        circus:    { sea: '#3a1660', sea2: '#24093f', top: '#a8407a', top2: '#86305f', cliff: '#4d2273', cliff2: '#2b0f4f', deco: 'tent' },
+        volcano:   { sea: '#ff4a00', sea2: '#c22a00', top: '#6a4a44', top2: '#4f3530', cliff: '#3a2420', cliff2: '#1f1210', deco: 'rock' },
+        dimension: { sea: '#0a0a1a', sea2: '#000008', top: '#6a2fbf', top2: '#4d1f8f', cliff: '#2a0a50', cliff2: '#140428', deco: 'star' }
+      }[this.world.scenery] || null;
+    }
+    // Puntos de tierra: cada nodo y cada tramo de camino (muestreado), más bultos para que la costa
+    // no sea un tubo. Se calcula una vez por mapa.
+    landPoints() {
+      if (this._land) return this._land;
+      const pts = [], segs = [];
+      this.world.nodes.forEach((n) => {
+        const a = this.nodePos(n); pts.push({ x: a.x, y: a.y, r: 58 });
+        [].concat(n.next || [], n.secretNext || []).forEach((id) => {
+          const m = this.world.map[id]; if (!m) return; const b = this.nodePos(m); segs.push([a, b]);
+          const len = Math.hypot(b.x - a.x, b.y - a.y), k = Math.max(1, Math.ceil(len / 22));
+          for (let i = 1; i < k; i++) pts.push({ x: a.x + (b.x - a.x) * i / k, y: a.y + (b.y - a.y) * i / k, r: 46 });
+        });
+      });
+      // bultos deterministas en la costa
+      const base = pts.slice();
+      base.forEach((p, i) => { if (U.hash(i * 3 + 1) < 0.45) { const an = U.hash(i * 7 + 2) * Math.PI * 2; pts.push({ x: p.x + Math.cos(an) * 34, y: p.y + Math.sin(an) * 30, r: 30 + U.hash(i + 5) * 22 }); } });
+      // adornos repartidos por la isla, lejos de caminos y niveles
+      const dSeg = (x, y) => segs.reduce((m, [a, b]) => { const vx = b.x - a.x, vy = b.y - a.y, l2 = vx * vx + vy * vy || 1; const tt = U.clamp(((x - a.x) * vx + (y - a.y) * vy) / l2, 0, 1); return Math.min(m, Math.hypot(x - a.x - vx * tt, y - a.y - vy * tt)); }, Infinity);
+      const inLand = (x, y) => pts.some((p) => Math.hypot(x - p.x, y - p.y) < p.r - 14);
+      const deco = [];
+      for (let i = 0; i < 260 && deco.length < 34; i++) {
+        const x = 40 + U.hash(i * 11 + 3) * (W - 80), y = 70 + U.hash(i * 13 + 7) * (H - 130);
+        if (inLand(x, y) && dSeg(x, y) > 26 && this.world.nodes.every((n) => { const q = this.nodePos(n); return Math.hypot(q.x - x, q.y - y) > 34; }) && deco.every((d) => Math.hypot(d.x - x, d.y - y) > 26)) deco.push({ x, y, i });
+      }
+      this._land = { pts, deco };
+      return this._land;
+    }
     drawScenery(ctx, t) {
-      const S0 = this.world.scenery;
-      const P = {
-        isle:      { sky1: '#8fd0ff', sky2: '#d6f3ff', far: '#9fd8bf', near: '#2fb36b', water: '#2f7bff', deco: 'tree' },
-        wild:      { sky1: '#ffce8a', sky2: '#ffe9c2', far: '#d8a860', near: '#8a6a3a', water: '#4a9a5a', deco: 'cactus' },
-        circus:    { sky1: '#2b0f4f', sky2: '#6a2f8f', far: '#4d2273', near: '#8a2e6a', water: '#9a2fd0', deco: 'tent' },
-        volcano:   { sky1: '#2b0a0a', sky2: '#7a2a12', far: '#5c1b10', near: '#3a1010', water: '#ff4a00', deco: 'rock' },
-        dimension: { sky1: '#0a0a1a', sky2: '#2a0a50', far: '#2a0a45', near: '#541c86', water: '#00e5cc', deco: 'star' }
-      }[S0] || { sky1: '#8fd0ff', sky2: '#d6f3ff', far: '#9fd8bf', near: '#2fb36b', water: '#2f7bff', deco: 'tree' };
-      // cielo
-      const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, P.sky1); g.addColorStop(1, P.sky2);
+      const P = this.scenePal() || this.scenePal.call({ world: { scenery: 'isle' } });
+      // fondo: mar / lava / vacío con brillos que se mueven
+      const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, P.sea); g.addColorStop(1, P.sea2);
       ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-      // estrellas en mundos oscuros
-      if (S0 === 'circus' || S0 === 'volcano' || S0 === 'dimension') { ctx.fillStyle = 'rgba(255,255,255,0.7)'; for (let i = 0; i < 40; i++) { const x = (U.hash(i) * W), y = U.hash(i + 9) * H * 0.6; ctx.fillRect(x, y, 2, 2); } }
-      // montañas lejanas
-      const band = (yBase, amp, col, freq, ph) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(0, H); for (let x = 0; x <= W; x += 12) ctx.lineTo(x, yBase + Math.sin(x * freq + ph) * amp); ctx.lineTo(W, H); ctx.closePath(); ctx.fill(); };
-      band(H * 0.45, 30, P.far, 0.012, 1.3);
-      band(H * 0.62, 24, U.mix(P.far, P.near, 0.5), 0.016, 3.1);
-      // franja de agua/lava con brillo
-      ctx.fillStyle = P.water; ctx.globalAlpha = 0.5; ctx.fillRect(0, H * 0.72, W, H * 0.1); ctx.globalAlpha = 1;
-      ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2; for (let i = 0; i < 8; i++) { const x = ((i * 120 + t * 20) % (W + 60)) - 30; ctx.beginPath(); ctx.moveTo(x, H * 0.76 + Math.sin(t + i) * 2); ctx.lineTo(x + 50, H * 0.76 + Math.sin(t + i) * 2); ctx.stroke(); }
-      // terreno cercano
-      band(H * 0.8, 20, P.near, 0.02, 0.5);
-      // decoracion ambiental repartida
-      ctx.fillStyle = U.shade(P.near, -0.2);
-      for (let i = 0; i < 7; i++) { const x = 60 + i * (W / 7) + Math.sin(i) * 20, y = H * 0.82 + Math.sin(i * 2) * 10; this.drawSceneryDeco(ctx, P.deco, x, y, t, i); }
-      // vignette suave para que resalten los nodos
-      const v = ctx.createRadialGradient(W / 2, H / 2, H * 0.3, W / 2, H / 2, H * 0.8); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.3)'); ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+      if (this.world.scenery === 'dimension' || this.world.scenery === 'circus') { ctx.fillStyle = 'rgba(255,255,255,0.7)'; for (let i = 0; i < 60; i++) { const s = 1 + (U.hash(i + 3) > 0.8 ? 1 : 0); ctx.fillRect(U.hash(i) * W, U.hash(i + 9) * H, s, s); } }
+      else { ctx.strokeStyle = 'rgba(255,255,255,0.28)'; ctx.lineWidth = 2; for (let i = 0; i < 26; i++) { const x = ((U.hash(i) * W + t * 12) % (W + 40)) - 20, y = U.hash(i + 4) * H; ctx.beginPath(); ctx.moveTo(x, y + Math.sin(t * 2 + i) * 2); ctx.lineTo(x + 18, y + Math.sin(t * 2 + i) * 2); ctx.stroke(); } }
+      const L = this.landPoints(), blobs = (dy, grow, col) => { ctx.fillStyle = col; ctx.beginPath(); L.pts.forEach((p) => { ctx.moveTo(p.x + p.r + grow, p.y + dy); ctx.arc(p.x, p.y + dy, p.r + grow, 0, Math.PI * 2); }); ctx.fill(); };
+      // espuma de la orilla, contorno, acantilado (más bajo) y la superficie de la isla
+      blobs(16, 10, 'rgba(255,255,255,0.25)');
+      blobs(16, 4, '#000');
+      blobs(16, 0, P.cliff2);
+      blobs(8, 0, P.cliff);
+      blobs(0, 4, '#000');
+      blobs(0, 0, P.top);
+      // textura: manchas de un tono más oscuro
+      ctx.fillStyle = P.top2;
+      L.pts.forEach((p, i) => { if (U.hash(i * 5 + 9) < 0.35) { ctx.beginPath(); ctx.ellipse(p.x + (U.hash(i) - 0.5) * p.r, p.y + (U.hash(i + 1) - 0.5) * p.r * 0.6, 10 + U.hash(i + 2) * 10, 5, 0, 0, Math.PI * 2); ctx.fill(); } });
+      // adornos (árboles, cactus, carpas, rocas o estrellas) encima de la isla
+      L.deco.forEach((d) => this.drawSceneryDeco(ctx, P.deco, d.x, d.y, t, d.i));
     }
     drawSceneryDeco(ctx, kind, x, y, t, i) {
       if (kind === 'tree') { ctx.fillStyle = '#6e4a26'; ctx.fillRect(x - 2, y - 4, 4, 14); ctx.fillStyle = '#2f8f5b'; ctx.beginPath(); ctx.arc(x, y - 10, 10, 0, 7); ctx.fill(); }
@@ -224,6 +257,13 @@
       ctx.font = '600 13px "Trebuchet MS",sans-serif'; ctx.textAlign = 'right';
       const multi = SM.unlockedWorlds().length > 1;
       const corruptOn = SM.isCorruptUnlocked && SM.isCorruptUnlocked();
+      // admin: recordatorio de E / B y de dónde sale el nivel seleccionado
+      if (S.Model.Gld && S.Model.Gld._admin && S.Model.StoryPack && cur.type !== 'start') {
+        const src = S.Model.StoryPack.source(this.worldId, cur.id, this.mode);
+        ctx.save(); ctx.font = '700 12px "Trebuchet MS",sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = '#ffe600';
+        ctx.fillText('🛡 E: editar nivel · B: exportar lista · ' + (src === 'local' ? '✏ editado aquí' : src === 'pack' ? '📖 lista' : '⚙ generado'), 16, H - 14);
+        ctx.restore();
+      }
       ctx.fillText(tr('Flechas: mover · Z/Enter: entrar' + (multi ? ' · X: cambiar mundo' : '') + (corruptOn ? ' · M: Paz/Corrupto' : '') + ' · Esc: salir'), W - 16, 20);
       // indicador del modo (solo si la Corrupta esta desbloqueada)
       if (corruptOn) {

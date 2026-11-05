@@ -11,8 +11,8 @@ const ctx = { console, Math, JSON, Date, localStorage: { getItem: (k) => store[k
 ctx.window = ctx; vm.createContext(ctx);
 ['core/sgm.js', 'model/Characters.js', 'model/Themes.js', 'model/Catalog.js', 'model/Pipe.js', 'model/Level.js', 'model/LevelStorage.js', 'model/Physics.js',
   'model/entities/Entity.js', 'model/entities/Enemies.js', 'model/entities/EnemiesSpecial.js', 'model/entities/Objects.js', 'model/Player.js', 'model/GameModel.js',
-  'model/SampleLevels.js', 'model/StoryMap.js', 'model/StoryLevels.js']
-  .forEach((f) => vm.runInContext(fs.readFileSync(path.join(root, 'js', f), 'utf8'), ctx, { filename: f }));
+  'model/SampleLevels.js', 'model/StoryMap.js', 'model/StoryLevels.js', 'model/StoryPackData.js', 'model/StoryPack.js']
+  .forEach((f) => { const p = path.join(root, 'js', f); if (fs.existsSync(p)) vm.runInContext(fs.readFileSync(p, 'utf8'), ctx, { filename: f }); });
 const S = ctx.SGM, C = S.Model.Catalog, TT = C.T;
 
 function reach(L, swim, ex) {
@@ -68,7 +68,8 @@ for (const w of S.Model.StoryMap.worlds) {
       total++;
       const errs = [];
       let L;
-      try { L = S.Model.StoryLevels.build(w.id, n.id, mode); } catch (e) { errs.push('al construir: ' + e.message); }
+      // el que se juega de verdad: el de la lista fija si está, si no el generado
+      try { const d = S.Model.StoryPack && S.Model.StoryPack.get(w.id, n.id, mode); L = d ? new S.Model.Level(d) : S.Model.StoryLevels.build(w.id, n.id, mode); } catch (e) { errs.push('al construir: ' + e.message); }
       if (L) {
         const swim = !!S.Model.Themes.get(L.theme).swim;
         const end = L.objects.find((o) => o.type === 'goal' || /^exswitch/.test(o.type));

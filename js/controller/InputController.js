@@ -10,9 +10,10 @@
     // Disparar: Espacio (principal), C o L
     Space: 'shoot', KeyC: 'shoot', KeyL: 'shoot',
     Escape: 'pause', Enter: 'pause', KeyP: 'pause',
-    KeyM: 'altmode' // alterna Paz/Corrupto en el mapamundi (Historia Corrupta)
+    KeyM: 'altmode', // alterna Paz/Corrupto en el mapamundi (Historia Corrupta)
+    KeyE: 'edit', KeyB: 'packexp' // admin en el mapamundi: editar el nivel / exportar la lista de la Historia
   };
-  const ACTIONS = ['left', 'right', 'jump', 'up', 'down', 'run', 'shoot', 'pause', 'altmode'];
+  const ACTIONS = ['left', 'right', 'jump', 'up', 'down', 'run', 'shoot', 'pause', 'altmode', 'edit', 'packexp'];
   const acts = (code) => { const a = MAP[code]; return a ? [].concat(a) : null; };
 
   class InputController {

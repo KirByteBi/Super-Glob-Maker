@@ -225,11 +225,36 @@
     _launchStoryNode(worldId, nodeId, mode) {
       const node = S.Model.StoryMap.world(worldId).map[nodeId];
       // Nivel propio del nodo (lección del mundo); si el módulo falla, el genérico de su mapa
-      let L = null;
-      try { L = S.Model.StoryLevels && S.Model.StoryLevels.build(worldId, nodeId, mode); } catch (e) { console.warn('StoryLevels', e); }
-      if (!L) L = S.Model.SampleLevels.build(node.theme, mode);
+      const L = this.storyLevel(worldId, nodeId, mode, node);
       // Los interruptores "!" del mundo (palacio) se conservan entre niveles
       this.playLevel(L.toJSON(), { character: this.prefs.character, exState: S.Model.StoryMap.exState(worldId).slice(), story: { theme: node.theme, mode, world: worldId, node: nodeId } });
+    }
+
+    // Nivel de un nodo de la Historia: 1º la lista fija (tus ediciones locales o el pack del
+    // juego), si no está, se genera (StoryLevels) y, si eso falla, el genérico de su mapa.
+    storyLevel(worldId, nodeId, mode, node) {
+      node = node || S.Model.StoryMap.world(worldId).map[nodeId];
+      let L = null;
+      try { const d = S.Model.StoryPack && S.Model.StoryPack.get(worldId, nodeId, mode); if (d) L = new S.Model.Level(d); } catch (e) { console.warn('StoryPack', e); }
+      if (!L) { try { L = S.Model.StoryLevels && S.Model.StoryLevels.build(worldId, nodeId, mode); } catch (e) { console.warn('StoryLevels', e); } }
+      if (!L) L = S.Model.SampleLevels.build(node.theme, mode);
+      return L;
+    }
+    // ADMIN: editar un nivel de la Historia. Se guarda en la lista oculta (no en Mis niveles).
+    editStoryNode(worldId, nodeId, mode) {
+      const node = S.Model.StoryMap.world(worldId).map[nodeId];
+      if (!node || node.type === 'start') return;
+      const L = this.storyLevel(worldId, nodeId, mode, node);
+      this.openEditor(L);
+      if (this.editor) this.editor.story = { world: worldId, node: nodeId, mode };
+      this.menu.toast('🛡 Editando el nivel de la Historia ' + worldId.toUpperCase() + ' · ' + nodeId + ' (' + (mode === 'corrupt' ? 'Corrupto' : 'Paz') + '). 💾 Guardar lo deja en la lista de la Historia.', 4200);
+    }
+    // ADMIN: descarga StoryPackData.js (pack + tus ediciones) para subirlo al repositorio
+    exportStoryPack() {
+      const txt = S.Model.StoryPack.exportJS();
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'text/javascript' })); a.download = 'StoryPackData.js';
+      document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+      this.menu.toast('📦 StoryPackData.js descargado (' + S.Model.StoryPack.localCount() + ' niveles editados). Cópialo a js/model/ y súbelo para que lo tengan todos.', 5000);
     }
 
     showLevels() {
