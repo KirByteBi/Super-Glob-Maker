@@ -111,7 +111,7 @@
         // formato rico: @usuario abre su perfil; las tarjetas de nivel dejan jugar / descargar
         rich: {
           author: (name) => this.showOnline('author', name),
-          play: (row) => { this.menu.closeModal(); this.playOnline(row, () => this.showMessages()); },
+          play: (row) => { this.menu.closeModal(); this.playOnline(row, () => { this.clearAll(); this.showMessages(); }); },
           download: (row) => this.downloadOnline(row)
         }
       };
