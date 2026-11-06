@@ -207,7 +207,10 @@ button.link.seed-code:hover, button.link.seed-code:focus-visible { text-decorati
 .badge.admin { background: #ff4f6b; color: #fff; }
 
 /* ---------- moderación y ✉ mensajes ---------- */
-.profile-card .warns { color: #ff6b6b; font-size: 13px; }
+.void-glob-icon { width: 24px; height: 24px; object-fit: contain; vertical-align: middle; }
+.void-warn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+.void-warn .void-glob-icon { width: 26px; height: 26px; }
+.profile-card .warns { display: inline-flex; align-items: center; gap: 4px; color: #ff6b6b; font-size: 13px; }
 .mail-list { max-height: 50vh; }
 .level-row.mail { background: #f4f0ff; align-items: flex-start; }
 .level-row.mail.apology { background: #ffe3e3; border-color: #7a0000; }

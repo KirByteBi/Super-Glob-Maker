@@ -498,11 +498,19 @@
         p.appendChild(el('span', '', st.rows.length + ' niveles · 👍 ' + tl + ' · 👎 ' + td + ' · ▶ ' + tp + ' partidas'));
         if (st.crowns > 0) p.appendChild(el('span', 'badge on', '👑 ×' + st.crowns + ' Torneos ganados'));
         // sanciones (Void Globs) del autor
-        if (st.authorWarns > 0) p.appendChild(el('span', 'warns', '🕳 ' + st.authorWarns + ' ' + (st.authorWarns === 1 ? 'Void Glob (sanción)' : 'Void Globs (sanciones)') + (st.authorWarns >= 15 ? ' · 🚫 BLOQUEADO para publicar' : '')));
+        if (st.authorWarns > 0) {
+          const warns = el('span', 'warns');
+          warns.appendChild(globImg(S.Model.Characters.specials.vacio.path, 'void-glob-icon'));
+          warns.appendChild(document.createTextNode(st.authorWarns + ' ' + (st.authorWarns === 1 ? 'Void Glob (sanción)' : 'Void Globs (sanciones)') + (st.authorWarns >= 15 ? ' · 🚫 BLOQUEADO para publicar' : '')));
+          p.appendChild(warns);
+        }
         // herramientas de ADMIN sobre el usuario
         if (st.admin && h.warn) {
           const ar = el('div', 'row');
-          ar.appendChild(button('⚠ Sancionar', 'danger', () => h.warn(st.author)));
+          const warn = button('', 'danger void-warn', () => h.warn(st.author));
+          warn.appendChild(globImg(S.Model.Characters.specials.vacio.path, 'void-glob-icon'));
+          warn.appendChild(document.createTextNode('Sancionar'));
+          ar.appendChild(warn);
           ar.appendChild(button('🔓 Quitar bloqueo', '', () => h.unblock(st.author)));
           p.appendChild(ar);
         }
@@ -561,7 +569,8 @@
         row.appendChild(button(r.god ? '👑 Quitar GOD' : '👑 GOD', r.god ? 'primary' : '', () => h.adminGod(r, !r.god)));
         row.appendChild(button('🛡🗑', 'danger', () => h.adminDelete(r))).title = 'ADMIN: borrar para todos';
         if (r.author && h.warn) {
-          const wb = button('🕳', 'danger', () => h.warn(r.author));
+          const wb = button('', 'danger void-warn', () => h.warn(r.author));
+          wb.appendChild(globImg(S.Model.Characters.specials.vacio.path, 'void-glob-icon'));
           wb.title = 'ADMIN: enviar un Void Glob sin borrar el nivel';
           wb.setAttribute('aria-label', wb.title);
           row.appendChild(wb);
