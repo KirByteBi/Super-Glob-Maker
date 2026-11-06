@@ -405,18 +405,26 @@
       if (!st.user) { b.appendChild(el('p', '', 'Inicia sesión en 🌐 Online para ver tus mensajes.')); b.appendChild(button('Cerrar', 'primary', () => this.closeModal())); return; }
       if (st.loading) { b.appendChild(el('p', 'empty', 'Cargando…')); return; }
       if (st.error === 'no-v4') { b.appendChild(el('p', 'note', '⚠ Falta aplicar kiro/supabase_online_v4.sql en el servidor para activar los mensajes.')); b.appendChild(button('Cerrar', '', () => this.closeModal())); return; }
+      if (st.error === 'no-v5') { b.appendChild(el('p', 'note', '⚠ Falta aplicar kiro/supabase_online_v5.sql en el servidor para editar noticias.')); b.appendChild(button('Cerrar', '', () => this.closeModal())); return; }
       if (st.error) { b.appendChild(el('p', 'empty', 'No se pudo cargar: ' + st.error)); b.appendChild(button('Cerrar', '', () => this.closeModal())); return; }
-      // ADMIN: redactar una noticia global
+      // ADMIN: publicar o editar una noticia global
       if (st.admin && h.news) {
-        b.appendChild(el('h3', 'sec', '📣 Publicar noticia (admin)'));
-        const tin = document.createElement('input'); tin.type = 'text'; tin.placeholder = 'Título'; tin.maxLength = 60; tin.className = 'mail-input';
-        const bta = document.createElement('textarea'); bta.className = 'code'; bta.placeholder = 'Texto de la noticia…'; bta.rows = 2;
+        const editing = st.editingNews || null;
+        b.appendChild(el('h3', 'sec', editing ? '✏ Editar noticia (admin)' : '📣 Publicar noticia (admin)'));
+        const tin = document.createElement('input'); tin.type = 'text'; tin.placeholder = 'Título'; tin.maxLength = 60; tin.className = 'mail-input'; tin.value = editing ? editing.title : '';
+        const bta = document.createElement('textarea'); bta.className = 'code'; bta.placeholder = 'Texto de la noticia…'; bta.rows = 2; bta.value = editing ? editing.body : '';
         // tipo de noticia: Actualización (estándar) / Aviso (rojo) / Evento (verde)
         const sel = document.createElement('select'); sel.className = 'mail-input';
         [['update', '🔧 Actualización'], ['warn', '⚠ Aviso (rojo)'], ['event', '🎉 Evento (verde)']].forEach(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o); });
+        if (editing) sel.value = editing.category === 'warn' || editing.category === 'event' ? editing.category : 'update';
         b.appendChild(tin); b.appendChild(sel); b.appendChild(bta);
         this.richPreview(b, bta, h.rich);
-        b.appendChild(button('📣 Enviar a todos', 'primary', () => { if (tin.value.trim() && bta.value.trim()) h.news(tin.value.trim(), bta.value.trim(), sel.value); }));
+        b.appendChild(button(editing ? '💾 Guardar cambios' : '📣 Enviar a todos', 'primary', () => {
+          if (!tin.value.trim() || !bta.value.trim()) return;
+          if (editing) h.editNews(editing.id, tin.value.trim(), bta.value.trim(), sel.value);
+          else h.news(tin.value.trim(), bta.value.trim(), sel.value);
+        }));
+        if (editing) b.appendChild(button('Cancelar edición', '', () => { st.editingNews = null; this.messages(st, h); }));
       }
       const list = el('div', 'level-list mail-list');
       if (!st.rows.length) list.appendChild(el('p', 'empty', 'No tienes mensajes.'));
@@ -446,6 +454,9 @@
           }
         }
         row.appendChild(info);
+        if (st.admin && m.kind === 'news') {
+          row.appendChild(button('✏ Editar', '', () => { st.editingNews = m; this.messages(st, h); }));
+        }
         list.appendChild(row);
       });
       b.appendChild(list);
@@ -516,7 +527,7 @@
         wrap.appendChild(this.onlineRow(st.featured, -1, h, true));
         wrap.appendChild(el('h3', 'sec', '🏆 Lo mejor ahora mismo'));
       }
-      if (st.tab === 'mod') wrap.appendChild(el('p', 'note', '🛡 Moderación: los 100 niveles más recientes de todos los jugadores. 👑 GOD los destaca arriba en ⭐ Destacados; 🛡🗑 los borra para todos.'));
+      if (st.tab === 'mod') wrap.appendChild(el('p', 'note', '🛡 Moderación: los 100 niveles más recientes de todos los jugadores. 👑 GOD los destaca arriba en ⭐ Destacados; 🛡🗑 borra el nivel sin sancionar y 🕳 envía un Void Glob sin borrarlo.'));
       if (!st.rows.length) wrap.appendChild(el('p', 'empty', st.tab === 'search' ? (st.search ? 'Nada por aquí con "' + st.search + '".' : 'Escribe algo para buscar.') : 'Todavía no hay niveles publicados. ¡Sé el primero!'));
       st.rows.forEach((r, i) => wrap.appendChild(this.onlineRow(r, st.tab === 'top' ? i : -1, h)));
     }
@@ -549,6 +560,12 @@
       if (this._st && this._st.admin && h.adminGod) {
         row.appendChild(button(r.god ? '👑 Quitar GOD' : '👑 GOD', r.god ? 'primary' : '', () => h.adminGod(r, !r.god)));
         row.appendChild(button('🛡🗑', 'danger', () => h.adminDelete(r))).title = 'ADMIN: borrar para todos';
+        if (r.author && h.warn) {
+          const wb = button('🕳', 'danger', () => h.warn(r.author));
+          wb.title = 'ADMIN: enviar un Void Glob sin borrar el nivel';
+          wb.setAttribute('aria-label', wb.title);
+          row.appendChild(wb);
+        }
       }
       return row;
     }

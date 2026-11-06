@@ -107,6 +107,7 @@
       const h = {
         apologize: (mail, text) => Gld.apologize(mail.id, text).then((r) => { this.menu.toast(r.ok ? '📨 Disculpa enviada. Espera la revisión de KirByte_Bi.' : errTxt(r.error)); this.showMessages(); }),
         news: (title, body, category) => Gld.adminNews(title, body, category).then((r) => { this.menu.toast(r.ok ? '📣 Noticia publicada para todos' : errTxt(r.error)); this.showMessages(); }),
+        editNews: (id, title, body, category) => Gld.adminEditNews(id, title, body, category).then((r) => { this.menu.toast(r.ok ? '✏ Noticia actualizada' : r.error === 'not-found' ? 'La noticia ya no existe' : r.error === 'no-v5' ? 'Falta aplicar kiro/supabase_online_v5.sql en Supabase' : errTxt(r.error)); this.showMessages(); }),
         // formato rico: @usuario abre su perfil; las tarjetas de nivel dejan jugar / descargar
         rich: {
           author: (name) => this.showOnline('author', name),

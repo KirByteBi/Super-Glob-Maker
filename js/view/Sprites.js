@@ -278,6 +278,23 @@
     ctx.fillStyle = INK; ctx.fillRect(px + 10, e.y + 9, 3, 3); ctx.fillRect(px + 15, e.y + 12, 3, 3);
   };
   D.shot = (ctx, e, t) => { drop(ctx, e.cx(), e.cy(), 7, e.color || '#00ff66'); };
+  D.grayshot = (ctx, e) => {
+    const cx = e.cx(), cy = e.cy(), dir = Math.sign(e.vx) || 1;
+    ctx.save(); ctx.translate(cx, cy); ctx.scale(dir, 1);
+    ctx.beginPath(); ctx.moveTo(-14, 0); ctx.lineTo(-4, -5); ctx.lineTo(8, -4); ctx.lineTo(13, 0); ctx.lineTo(8, 4); ctx.lineTo(-4, 5); ctx.closePath();
+    fillStroke(ctx, '#d0d0d0', 2.5);
+    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.ellipse(3, -1.5, 5, 2, -0.2, 0, 7); ctx.fill();
+    ctx.restore();
+  };
+  D.blackshot = (ctx, e, t) => {
+    const cx = e.cx(), cy = e.cy(), tilt = Math.sin(t * 10) * 0.12;
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(tilt);
+    ctx.beginPath(); ctx.ellipse(0, 0, 11, 9, 0, 0, 7); fillStroke(ctx, '#ff4df0', 3);
+    ctx.beginPath(); ctx.ellipse(0, 0, 5, 6, 0, 0, 7); fillStroke(ctx, '#260a35', 2);
+    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.ellipse(-3, -5, 2.5, 1.5, -0.5, 0, 7); ctx.fill();
+    ctx.fillStyle = '#ffb8f8'; ctx.beginPath(); ctx.arc(8, -5, 1.5, 0, 7); ctx.arc(-8, 5, 1.2, 0, 7); ctx.fill();
+    ctx.restore();
+  };
   D.poop = (ctx, e, t) => { ctx.beginPath(); ctx.arc(e.cx(), e.cy(), 7, 0, 7); fillStroke(ctx, '#8a5a2b', 3); ctx.fillStyle = '#5c3a18'; ctx.beginPath(); ctx.arc(e.cx() + Math.cos(t * 12) * 2, e.cy() - 2, 2, 0, 7); ctx.fill(); };
   D.goo = (ctx, e) => { ctx.globalAlpha = Math.min(1, e.life); ctx.beginPath(); ctx.ellipse(e.cx(), e.y + e.h - 2, e.w / 2 + 4, 5, 0, 0, 7); fillStroke(ctx, '#8a5a2b', 2.5); ctx.globalAlpha = 1; };
   D.starwave = (ctx, e, t) => {

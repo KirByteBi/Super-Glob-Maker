@@ -402,6 +402,9 @@ ESTADO REAL (ya implementado, pendiente de AFINAR al gusto):
     OJO: se llama "Flor Estelar", no "Flor de Fuego", y el
     disparo de EVO3 solo funciona si el Glob tiene habilidad
     'shoot' (gris/negro), no es universal.
+  - [HECHO] Arte propio para el disparo gris recto y el
+    proyectil-portal rosa del Glob negro, con contorno negro y
+    colores planos en Sprites.js.
   [ ] A decidir por ti (son ajustes de diseno, no bugs):
       - si el azul debe ignorar pinchos SIEMPRE o solo al patinar
       - si el gris debe "nadar" mejor como rasgo base

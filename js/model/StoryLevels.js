@@ -90,7 +90,7 @@
     stairs(B, x, c) { const w = 14; B.ground(x, x + w - 1); for (let i = 0; i < 4; i++) B.fill(x + 2 + i, GY - 1 - i, x + 2 + i, GY - 1, TT.HARD); B.fill(x + 6, GY - 4, x + 7, GY - 1, TT.HARD); const g = Math.min(3, c.d); B.pit(x + 8, x + 8 + g, hazardPit(c)); B.row(x + 8, x + 9, GY - 4, TT.SEMI); B.coins(x + 2, x + 10, GY - 6); enemy(B, c, x + 12); return w; },
     // --- lecciones
     blocks(B, x, c) { const w = 14; B.ground(x, x + w - 1); B.row(x + 3, x + 7, GY - 4, TT.BRICK).box(x + 5, GY - 4, c.d < 3 ? 'evo' : 'flor').box(x + 4, GY - 4, 'coin'); B.set(x + 9, GY - 4, TT.HIDDEN); B.L.contents[(x + 9) + ',' + (GY - 4)] = 'miniglob'; B.row(x + 5, x + 9, GY - 8, TT.BRICK); B.coins(x + 5, x + 9, GY - 9); enemy(B, c, x + 11); return w; },
-    semis(B, x, c) { const w = 16; B.ground(x, x + 1).ground(x + w - 2, x + w - 1).pit(x + 2, x + w - 3, hazardPit(c)); [[x + 2, GY - 2], [x + 6, GY - 4], [x + 10, GY - 3], [x + 12, GY - 6]].forEach(([a, b], i) => { B.row(a, a + 2, b, i % 2 ? TT.SEMI2 : TT.SEMI); B.coins(a, a + 2, b - 1); }); if (c.d > 1) enemy(B, c, x + 7, GY - 4); return w; },
+    semis(B, x, c) { const w = 16; B.ground(x, x + 1).ground(x + w - 2, x + w - 1).pit(x + 2, x + w - 3, hazardPit(c)); [[x + 2, GY - 2], [x + 6, GY - 4], [x + 10, GY - 3], [x + 12, GY - 6]].forEach(([a, b], i) => { B.row(a, a + 2, b, i % 2 ? TT.SEMI2 : TT.SEMI); B.coins(a, a + 2, b - 1); }); enemy(B, c, x + 7, GY - 4); return w; },
     springs(B, x, c) { const w = 14; B.ground(x, x + w - 1); B.fill(x + 6, GY - 6 - Math.min(2, c.d), x + 7, GY - 1, TT.HARD); B.obj('spring', x + 4, GY - 1); B.coins(x + 6, x + 7, GY - 10 - Math.min(2, c.d)); enemy(B, c, x + 10); return w; },
     pipes(B, x, c) { const w = 16; B.ground(x, x + w - 1); [[x + 3, 2], [x + 8, 3 + Math.min(1, c.d - 1)], [x + 13, 2]].forEach(([a, h]) => { B.fill(a, GY - h, a + 1, GY - 1, TT.PIPE); if (c.d > 1 && a === x + 8) B.obj('flower', a, GY - h, { }); }); enemy(B, c, x + 6); enemy(B, c, x + 11); return w; },
     moving(B, x, c) { const g = 7 + c.d, w = g + 6; B.ground(x, x + 2).ground(x + w - 3, x + w - 1).pit(x + 3, x + 2 + g, hazardPit(c)); B.obj(c.d % 2 ? 'platformV' : 'platform', x + 3 + Math.floor(g / 2), GY - 2, { r: 2 }); B.row(x + 4, x + 5, GY - 5, TT.SEMI); B.coins(x + 4, x + 1 + g, GY - 7); if (c.d >= 2) airEnemy(B, c, x + 4 + Math.floor(g / 2), GY - 5); enemy(B, c, x + w - 2); return w; },
@@ -111,9 +111,6 @@
     // bloques "!" del color del mundo: sólidos solo si ya pasaste el palacio. Atajo con premio.
     exbridge(B, x, c) { const w = 16, EX = TT.EX0 + (c.ex || 0); B.ground(x, x + 2).ground(x + w - 3, x + w - 1).pit(x + 3, x + w - 4, hazardPit(c)); B.row(x + 3, x + w - 4, GY - 1, EX); B.row(x + 5, x + 9, GY - 4, TT.SEMI); B.obj('platform', x + 7, GY - 2, { r: 2 }); B.coins(x + 4, x + w - 5, GY - 6, TT.BCOIN); if (c.d >= 3) airEnemy(B, c, x + 10, GY - 5); enemy(B, c, x + w - 2); return w; }
   };
-  // salas de calentamiento de cada lección (versión fácil, para enseñar sin castigar)
-  const INTRO = { pipes: 'pipes', moving: 'moving', rails: 'rails', notes: 'notes', water: 'water', bros: 'bros', firebars: 'firebars', conveyor: 'conveyor' };
-
   // ---------------------------------------------------------------- mundos
   // Cada mundo: idea, dificultad y la lección de cada nivel (n1..nN, en orden del mapa).
   const WORLD_PLAN = {
@@ -179,7 +176,7 @@
     // Niveles normales: la leccion PRINCIPAL manda (identidad del nivel), pero se mezclan
     // 1-2 secundarias por semilla para dar variedad tipo New SMB (plataformas, luego muelles,
     // luego huecos...). Palacios y castillos mantienen su set fijo.
-    const main = isPalace ? ['semis', 'moving', 'rails', 'notes', 'clouds'] : isCastle ? plan.castle.concat(plan.castle) : [lesson];
+    const main = isPalace ? ['semis', 'moving', 'rails', 'notes', 'clouds'] : isCastle ? plan.castle : [lesson];
     const seq = [];
     if (!isPalace && !isCastle) {
       const L1 = lesson === 'basics' ? 'flat' : lesson === 'redcoins' ? 'semis' : lesson;
@@ -187,19 +184,23 @@
       const dry = ['blocks', 'semis', 'springs', 'moving', 'notes', 'stairs', 'gap', 'donuts', 'clouds'];
       const wet = ['water', 'semis', 'moving', 'notes'];
       const base = swim ? wet : dry;
-      const sec = base.filter((r) => r !== L1 && ROOMS[r]);
+      const alreadyUsed = new Set(lesson === 'basics' ? ['flat', 'gap', 'blocks', 'semis'] : [L1]);
+      const sec = base.filter((r) => !alreadyUsed.has(r) && ROOMS[r]);
       // elige 1-2 secundarias de forma determinista (mas variedad a mayor dificultad)
       const nSec = 1 + (d >= 3 ? 1 : 0);
       const picks = [];
       for (let k = 0; k < nSec && sec.length; k++) { const j = Math.floor(rnd() * sec.length); picks.push(sec.splice(j, 1)[0]); }
       if (lesson === 'basics') {
-        // Introducción: sigue siendo fácil, pero ya alterna suelo, vacío y plataformas.
-        seq.push('flat', 'gap', 'flat', 'stairs', 'semis', 'blocks', 'flat');
+        seq.push('flat', 'gap', 'blocks', picks[0] || 'stairs', 'semis');
       } else {
-        // patron variado: intro facil -> principal -> secundaria A -> transicion -> principal
-        //                 -> secundaria B -> transicion -> principal (remate)
-        seq.push(INTRO[L1] ? L1 : 'flat', L1, picks[0] || 'gap', 'gap', L1, picks[1] || 'stairs', 'stairs', L1);
+        // Alterna introducción, lección, variación y remate, evitando encadenar la misma sala.
+        seq.push('flat', L1, picks[0] || 'gap', picks[1] || 'stairs', L1);
       }
+    } else if (isCastle) {
+      const castleRooms = (swim ? ['water', 'semis', 'moving', 'notes', 'clouds'] : ['gap', 'stairs', 'blocks', 'semis', 'moving', 'notes', 'cannons', 'clouds'])
+        .filter((r) => !main.includes(r));
+      seq.push(...main);
+      for (let i = 0; i < 4 && castleRooms.length; i++) seq.push(castleRooms.splice(Math.floor(rnd() * castleRooms.length), 1)[0]);
     } else seq.push(...main, 'gap', ...main.slice(0, 2));
     // ¿atajo con bloques "!" del mundo? (niveles a partir de la 2ª mitad)
     if (!isPalace && idx > 4 && world.nodes.some((n) => n.type === 'palace')) seq.splice(3, 0, 'exbridge');

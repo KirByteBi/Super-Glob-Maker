@@ -195,6 +195,44 @@
     }
   }
 
+  // Disparo recto del Glob Antiguo: no rebota, avanza en línea recta en la dirección del disparo.
+  class GrayShot extends Shot {
+    constructor() { super(); this.type = 'grayshot'; this.w = 18; this.h = 12; this.gravity = 0; this.maxFall = 0; this.color = '#d0d0d0'; this.t = 0; }
+    physics(g, dt) {
+      this.x += this.vx * dt; this.y += this.vy * dt;
+      if (this.t > 2.4 || this.x < -40 || this.x > (g.level.width + 2) * T || this.y < -40 || this.y > (g.level.height + 2) * T) {
+        this.remove = true; g.emit('shotHit', { x: this.cx(), y: this.cy(), color: this.color });
+        return;
+      }
+      if (this.inLiquid(g)) this.remove = true;
+    }
+  }
+
+  // Disparo de portal rosa del Glob Cometa: rebota 2 veces como un portal, luego explota.
+  class BlackShot extends Shot {
+    constructor() { super(); this.type = 'blackshot'; this.w = 22; this.h = 22; this.gravity = 1200; this.maxFall = 500; this.maxBounces = 2; this.color = '#ff4df0'; }
+    physics(g, dt) {
+      this.vy = Math.min(this.vy + this.gravity * dt, this.maxFall);
+      const r = Physics.move(this, g.level, dt);
+      if (r.landed) {
+        this.bounces++; this.vy = -340;
+        if (this.bounces >= this.maxBounces) {
+          this.remove = true; g.explode(this.cx(), this.cy(), 46, this);
+          return;
+        }
+      }
+      if (r.wall || r.ceil.length || this.bounces > this.maxBounces || this.t > 2.8) {
+        this.remove = true; g.explode(this.cx(), this.cy(), 46, this);
+        return;
+      }
+      if (this.inLiquid(g)) { this.remove = true; g.explode(this.cx(), this.cy(), 32, this); }
+    }
+    onHit(g) {
+      if (this.remove) return;
+      this.remove = true; g.explode(this.cx(), this.cy(), 46, this);
+    }
+  }
+
   // Bola de caca: rebota y deja un charco pegajoso al deshacerse
   class Poop extends Shot {
     constructor() { super(); this.type = 'poop'; this.w = 16; this.h = 16; this.color = '#8a5a2b'; }
@@ -221,6 +259,8 @@
     think(g, dt) { this.life -= dt; if (this.life <= 0) this.remove = true; }
     physics() {}
   }
+
+  ['grayshot', 'blackshot'].forEach((k) => reg(k, k === 'grayshot' ? GrayShot : BlackShot));
 
   // Onda de estrellas del Glob Vacío
   class StarWave extends Entity {

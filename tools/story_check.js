@@ -103,5 +103,21 @@ for (const w of S.Model.StoryMap.worlds) {
     }
   }
 }
+// Una meta elevada solo debe activarse cuando el jugador cruza su poste, no al pasar por debajo.
+{
+  const L = S.Model.Level.createDefault();
+  L.objects = L.objects.filter((o) => o.type !== 'goal');
+  L.objects.push({ type: 'goalhidden', x: 8, y: 5 });
+  const g = new S.Model.GameModel(L.toJSON(), {});
+  const gh = g.goalHidden, p = g.player;
+  p.x = gh.x; p.y = gh.y + gh.h + 8; p.vx = 0; p.vy = 0; p.onGround = false;
+  g.update(1 / 120, {});
+  if (g.state !== 'play') { bad++; console.log('FALLA meta oculta · se activa al pasar por debajo'); }
+  else {
+    p.x = gh.x; p.y = gh.y + gh.h - p.h / 2; p.vx = 0; p.vy = 0;
+    g.update(1 / 120, {});
+    if (g.state !== 'clear' || !g.secretClear) { bad++; console.log('FALLA meta oculta · no se activa al cruzar el poste'); }
+  }
+}
 console.log((bad ? 'FALLAN ' + bad : 'OK') + ' · ' + total + ' niveles comprobados');
 process.exitCode = bad ? 1 : 0;

@@ -322,8 +322,9 @@
     },
 
     // ======================= MODERACIÓN y MENSAJES v4 (kiro/supabase_online_v4.sql) =======================
-    // Si el SQL v4 no está aplicado, estas funciones devuelven error 'no-v4' y la UI lo avisa.
+    // Si falta SQL online, estas funciones devuelven un error de versión y la UI lo avisa.
     _v4err(e) { return e && /function|schema cache|column|does not exist|relation/i.test(e.message || '') ? 'no-v4' : (e && e.message) || 'error'; },
+    _v5err(e) { return e && /sgm_admin_edit_news|function|schema cache/i.test(e.message || '') ? 'no-v5' : Gld._v4err(e); },
     // nº de Void Globs (sanciones) de un usuario por nombre (público, para el perfil)
     async warnCount(username) {
       const c = await getClient(); if (!c) return 0;
@@ -358,6 +359,15 @@
       const cat = (category === 'warn' || category === 'event') ? category : 'update';
       const { error } = await c.rpc('sgm_admin_news', { p_title: title, p_body: body, p_lang: lang, p_category: cat });
       return error ? { ok: false, error: Gld._v4err(error) } : { ok: true };
+    },
+    // ADMIN: editar una noticia global ya publicada (requiere supabase_online_v5.sql).
+    async adminEditNews(id, title, body, category) {
+      const c = await getClient(); if (!c) return { ok: false, error: 'offline' };
+      const lang = (S.i18n && S.i18n.lang === 'en') ? 'en' : 'es';
+      const cat = (category === 'warn' || category === 'event') ? category : 'update';
+      const { data, error } = await c.rpc('sgm_admin_edit_news', { p_id: id, p_title: title, p_body: body, p_lang: lang, p_category: cat });
+      if (error) return { ok: false, error: Gld._v5err(error) };
+      return data === 'not-found' ? { ok: false, error: 'not-found' } : { ok: true };
     },
     // ADMIN: disculpas pendientes (apology con respuesta, sin resolver)
     async adminApologies() {

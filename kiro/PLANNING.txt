@@ -465,7 +465,10 @@ Todo a criterio de KirByte_Bi.
      adminWarn, adminUnblock, adminNews, adminApologies, mailInbox,
      apologize, unseenWarnings), UI en MenuView.messages + boton ✉
      del menu + botones ⚠/🔓 en el perfil de autor + aviso al
-     conectar. SQL en kiro/supabase_online_v4.sql.
+     conectar. La lista de moderacion permite ahora enviar un Void
+     Glob a un autor sin borrar su nivel; borrar el nivel sigue siendo
+     una accion separada. Los Void Globs se guardan en Supabase ligados
+     a la cuenta, no en el ordenador. SQL en kiro/supabase_online_v4.sql.
 [X] NOTA DE IDIOMA de cada correo: se guarda el idioma de ORIGEN
     (columna sgm_mail.lang). La nota "este mensaje se creo en X"
     sale en el idioma del LECTOR, pero el COLOR va por el origen
@@ -475,6 +478,10 @@ Todo a criterio de KirByte_Bi.
       Evento (VERDE: contenido de temporada, p.ej. tandas de
       niveles navidenos de KiroDEV). Selector al redactar + color
       por tipo en la bandeja.
+[X] Edicion de noticias globales: boton ✏ solo para admin y
+    formulario que conserva titulo, cuerpo y categoria.
+    Requiere aplicar kiro/supabase_online_v5.sql en Supabase;
+    el SQL NO se aplica desde este repositorio.
 [ ] FORMATO RICO en los mensajes (estilo Discord): markdown basico
     (negrita, cursiva, enlaces con texto) y sobre todo EMBEBER
     NIVELES visualmente pegando su LINK o ID (tarjeta con

@@ -227,13 +227,13 @@
       // Meta: la Medalla (solo si se cumple la condición de victoria)
       // Monedas púrpura: la Medalla normal no existe hasta juntar las necesarias
       if (this.goal && this.goalLocked && this.purpleCoins >= this.purpleNeed) { this.goalLocked = false; this.emit('goalAppear', { x: this.goal.x, y: this.goal.y + this.goal.h / 2 }); }
-      if (this.goal && !this.goalLocked && this.state === 'play' && p.x + p.w > this.goal.x && p.x < this.goal.x + this.goal.w + 8 && p.y + p.h > this.goal.y) {
+      if (this.goal && !this.goalLocked && this.state === 'play' && p.x + p.w > this.goal.x && p.x < this.goal.x + this.goal.w + 8 && p.y + p.h > this.goal.y && p.y < this.goal.y + this.goal.h) {
         if (this.winMet(false)) this.reachGoal(false);
         else if (!this.winMsgT || this.t - this.winMsgT > 1.2) { this.winMsgT = this.t; this.emit('winLocked', { x: this.goal.x, y: p.y - 24, text: this.winText() }); }
       }
       // Meta OCULTA: pasa el nivel por salida secreta (también sujeta a la condición de victoria)
       const gh = this.goalHidden;
-      if (gh && this.state === 'play' && p.x + p.w > gh.x && p.x < gh.x + gh.w + 8 && p.y + p.h > gh.y) {
+      if (gh && this.state === 'play' && p.x + p.w > gh.x && p.x < gh.x + gh.w + 8 && p.y + p.h > gh.y && p.y < gh.y + gh.h) {
         if (this.winMet(true)) this.reachGoal(true);
         else if (!this.winMsgT || this.t - this.winMsgT > 1.2) { this.winMsgT = this.t; this.emit('winLocked', { x: gh.x, y: p.y - 24, text: this.winText() }); }
       }
@@ -881,11 +881,13 @@
     playerShoot(p) {
       const shots = this.entities.filter((e) => e.friendly && e.type !== 'starwave').length;
       if (shots >= 2) return;
-      const type = p.special === 'caca' ? 'poop' : 'shot';
+      const type = p.special === 'caca' ? 'poop' : p.ch.id === 'black' ? 'blackshot' : p.ch.id === 'gray' ? 'grayshot' : 'shot';
       const s = Ents.create(type, 0, 0);
       s.x = p.face > 0 ? p.x + p.w : p.x - s.w; s.y = p.y + p.h * 0.35;
-      s.vx = p.face * 330 + p.vx * 0.3; s.vy = 80; s.active = true;
+      s.vx = p.face * 330 + p.vx * 0.3; s.vy = p.ch.id === 'gray' ? 0 : 80; s.active = true;
       if (type === 'shot') s.color = p.ch.shot;
+      if (type === 'grayshot') s.color = p.ch.shot;
+      if (type === 'blackshot') s.color = '#ff4df0';
       p.shootCd = 0.22;
       this.spawn(s);
       this.emit('shoot', { x: s.x, y: s.y, type, color: s.color });
