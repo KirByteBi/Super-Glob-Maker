@@ -213,12 +213,14 @@ Reglas generales
       - Volcan/Vortice/Ruinas/Cielo/Agua/Lago/Nieve/Bosque/Playa:
         cada uno con su material propio.
     Verificado (16/16 mapas, 0 fallos en paz y corrupto).
-[ ] Decoraciones de terreno (solo VISUAL, sin colision, como la
-    tuberia decorativa 1x1). Dos familias por tamano/forma:
-    1x1, 2x1, 1x2, 3x1 y 1x3 (la 1x3 reservada a vallas y
-    arbustos). Cada mapa con su set tematico, p. ej.:
-      Gelatin Lake .. arbusto-Glob, cartel roto, frutos, arbusto
-      Urbanistic Road farol (parpadea de noche), viga rota...
+[X] Decoraciones de terreno (solo VISUAL, sin colision), modulo
+    js/view/Decorations.js. 64 adornos cubren los 16 mapas (3-6
+    por mapa), aparecen en la categoria tematica del editor y se
+    dibujan detras del terreno en el juego y el editor. Persisten
+    al guardar y se remapean al cambiar de tema.
+    Formas: 1x1, 2x1, 1x2, 3x1, 1x3 y arcoiris 3x2. Las piezas
+    1x3 tambien se usan para objetos altos (faroles, palmeras,
+    arboles, etc.), no solo vallas y arbustos.
 [X] SUELO TEMATICO POR FORMA (autotiling visual, estilo SMM1/2):
     tile GROUND2 (2o suelo) con el dibujo por mapa segun la forma
     (aislado/fila/columna/bloque/borde). Modulo js/view/GroundStyles.js

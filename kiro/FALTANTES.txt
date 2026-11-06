@@ -146,41 +146,46 @@ B) Monedas ESTRELLA (coleccionables del nivel, estilo Star Coin;
 
 
 --------------------------------------------------------------
- 1c. DECORACIONES DE TERRENO  [HECHO base, mas adornos pendientes]
+ 1c. DECORACIONES DE TERRENO  [HECHO: set completo de 16 mapas]
  -- Modulo aislado js/view/Decorations.js (no toca el dibujo base).
  -- Objeto { type:'deco', x, y, deco:<id> }, SIN colision (el modelo lo
     ignora). Categoria "Decoracion" en la paleta (items por mapa).
     Se dibujan DETRAS del terreno (juego + editor). Persisten al guardar.
-    Hechas de ejemplo: Gelatin Lake (arbusto-Glob, cartel roto, frutos,
-    arbusto) y Urbanistic Road (farol que parpadea de noche, viga rota).
-    PENDIENTE: dibujar el set de adornos del resto de mapas y tamaños.
+    Hechos 64 adornos: 3-6 por mapa en los 16 temas. La paleta cambia
+    segun el mapa y al cambiar de tema se remapean los adornos puestos.
+    Formas usadas: 1x1, 2x1, 1x2, 3x1, 1x3 y el arcoiris 3x2.
+    Las piezas 1x3 tambien cubren objetos altos (faroles, palmeras,
+    arboles, etc.); no se limitan a vallas y arbustos.
+    Cobertura: lake 6, city 4, seaside 5, ruins 4, circus 4, snow 4,
+    vortex 3, underwater 4, jungle 4, sky 3, volcano 3, factory 3,
+    casino 5, clock 3, disco 3, hub 6.
  -- (texto original de referencia abajo)
 --------------------------------------------------------------
 Adornos puramente VISUALES, SIN COLISION (como la tuberia
 decorativa 1x1 que ya existe). No afectan a la partida; solo
 dan vida y tematica a cada mapa.
 
-Dos familias, como en SMM ("decoraciones" y "decoraciones
-menores"). La diferencia es el tamano/forma de la pieza:
+Los adornos usan estos tamanos/formatos:
   - 1x1 ................ adorno pequeno (1 casilla)
   - 2x1 (horizontal) ... pieza ancha de 2
   - 1x2 (vertical) ..... pieza alta de 2
   - 3x1 (horizontal) ... pieza ancha de 3
-  - 1x3 (vertical) ..... pieza alta de 3 (reservada a vallas
-                         y arbustos grandes)
+  - 1x3 (vertical) ..... pieza alta de 3 (incluye vallas,
+                         arbustos y otros objetos altos)
+  - 3x2 ................ arcoiris del mapa de cielo
 
-Cada mapa tiene su propio SET tematico que rellena esas formas.
-Ejemplos:
+Cada mapa tiene su propio SET tematico. Ejemplos:
   - Gelatin Lake .. arbusto con forma de Glob, cartel roto,
                     frutos de comida, arbusto normal
   - Urbanistic Road  farol (parpadea de noche / modo Corrupto),
                     trozo de viga rota, etc.
-  (el resto de mapas tendran su propio set en el mismo estilo)
+  - Los 16 mapas ya tienen su set; ver el catalogo y los recuentos
+    del estado real arriba.
 
-Nota tecnica (lo defino yo al construirlo): cada decoracion se
-guarda como objeto con su posicion y tamano en casillas; la
-vista la dibuja sin que el modelo la considere solida. El editor
-tendra una categoria "Decoracion" en la paleta, por mapa.
+Nota tecnica: cada decoracion se guarda como objeto con su posicion
+y tamano en casillas; la vista la dibuja sin que el modelo la
+considere solida. El editor ya tiene una categoria "Decoracion"
+dinamica por mapa.
 
 
 --------------------------------------------------------------
