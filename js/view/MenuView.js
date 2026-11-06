@@ -857,10 +857,33 @@
       const b = this.openModal('Pausa');
       const m = el('div', 'menu');
       m.appendChild(button('Continuar', 'primary', h.resume));
+      if (h.toggleInfiniteLives) {
+        const label = () => h.infiniteLives ? '♾ Vidas infinitas: Sí' : '♾ Vidas infinitas: No';
+        const lives = button(label(), '', () => {
+          h.infiniteLives = h.toggleInfiniteLives();
+          lives.textContent = S.tr ? S.tr(label()) : label();
+        });
+        m.appendChild(lives);
+      }
       m.appendChild(button('Reiniciar', '', h.restart));
       if (h.edit) m.appendChild(button('Volver al editor', '', h.edit));
       m.appendChild(button(h.exitLabel || 'Salir al menú', 'danger', h.exit));
       b.appendChild(m);
+    }
+
+    playSettings(levelName, infiniteLives, onStart, onCancel) {
+      const b = this.openModal('Ajustes de partida');
+      if (levelName) b.appendChild(el('p', 'small', levelName));
+      const form = el('div', 'form');
+      const label = el('label', '');
+      const text = el('span', '', 'Vidas infinitas (cada jugador lo elige para su partida)');
+      const toggle = document.createElement('input');
+      toggle.type = 'checkbox'; toggle.checked = !!infiniteLives;
+      label.appendChild(text); label.appendChild(toggle); form.appendChild(label); b.appendChild(form);
+      const row = el('div', 'row');
+      row.appendChild(button('▶ Jugar', 'primary', () => { this.closeModal(); onStart(toggle.checked); }));
+      row.appendChild(button('Cancelar', '', () => { this.closeModal(); if (onCancel) onCancel(); }));
+      b.appendChild(row);
     }
 
     result(data, h) {

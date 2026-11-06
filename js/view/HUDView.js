@@ -20,7 +20,7 @@
       if (img) ctx.drawImage(img, 14, 6, 48, 48);
       txt(ctx, p.formName(), 66, 25, 16, p.special ? '#ffe600' : '#fff');
       txt(ctx, p.special ? 'ESPECIAL' : S.Model.Characters.evoLabel(p.evo), 66, 42, 12, p.ch.color);
-      if (!g.testMode) { txt(ctx, '×' + g.lives, 250, 32, 18, '#fff', 'right'); }
+      if (!g.testMode) { txt(ctx, g.infiniteLives ? '∞' : '×' + g.lives, 250, 32, 18, '#fff', 'right'); }
       // monedas
       pill(ctx, 272, 10, 120, 44); Sp.coin(ctx, 296, 32, 11, t * 3); txt(ctx, '×' + String(g.coins).padStart(2, '0'), 314, 32, 20);
       // puntos

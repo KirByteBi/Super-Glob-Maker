@@ -47,7 +47,16 @@
       const menu = this.app.menu;
       if (this.paused) { this.paused = false; menu.closeModal(); return; }
       this.paused = true;
+      const toggleInfiniteLives = this.opts.online ? () => {
+        this.model.infiniteLives = !this.model.infiniteLives;
+        this.opts.infiniteLives = this.model.infiniteLives;
+        this.app.prefs.infiniteLives = this.model.infiniteLives;
+        this.app.savePrefs();
+        return this.model.infiniteLives;
+      } : null;
       menu.pause({
+        infiniteLives: this.model.infiniteLives,
+        toggleInfiniteLives,
         resume: () => { this.paused = false; menu.closeModal(); },
         // en multijugador la carrera sigue: reiniciar vuelve a la salida pero el reloj no para
         restart: () => { menu.closeModal(); this.paused = false; if (this.opts.mp) { this.model.checkpoint = null; this.model.reset(false); } else this.app.restartGame(); },

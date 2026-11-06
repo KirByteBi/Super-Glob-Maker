@@ -14,7 +14,7 @@
       this.menu = new S.View.MenuView(document.getElementById('screen'), document.getElementById('modal'), document.getElementById('toast'));
       this.input = new S.Controller.InputController();
       this.game = null; this.editor = null; this.mode = 'menu';
-      this.prefs = Object.assign({ character: 'green', storyMode: 'peace' }, prefs());
+      this.prefs = Object.assign({ character: 'green', storyMode: 'peace', infiniteLives: false }, prefs());
       this.t = 0; this.last = performance.now();
       S.View.SoundView.init();
       const unlock = () => S.View.SoundView.unlock();
@@ -167,7 +167,7 @@
         cleared: (id, m) => !!this.progress()[id + ':' + m],
         play: (themeId) => {
           const L = S.Model.SampleLevels.build(themeId, mode);
-          this.playLevel(L.toJSON(), { character: this.prefs.character, story: { theme: themeId, mode } });
+          this.playLevel(L.toJSON(), { character: this.prefs.character, story: { theme: themeId, mode } }, () => this.showStory());
         }
       });
     }
@@ -228,7 +228,7 @@
       // Nivel propio del nodo (lección del mundo); si el módulo falla, el genérico de su mapa
       const L = this.storyLevel(worldId, nodeId, mode, node);
       // Los interruptores "!" del mundo (palacio) se conservan entre niveles
-      this.playLevel(L.toJSON(), { character: this.prefs.character, exState: S.Model.StoryMap.exState(worldId).slice(), story: { theme: node.theme, mode, world: worldId, node: nodeId } });
+      this.playLevel(L.toJSON(), { character: this.prefs.character, exState: S.Model.StoryMap.exState(worldId).slice(), story: { theme: node.theme, mode, world: worldId, node: nodeId } }, () => this.showStoryMap(worldId));
     }
 
     // Nivel de un nodo de la Historia: 1º la lista fija (tus ediciones locales o el pack del
@@ -268,7 +268,7 @@
           this.showLevels();
           this.menu.toast(r === 'ok' ? 'Nivel importado' : r === 'full' ? 'Máximo de ' + Storage.limit() + ' niveles alcanzado' : 'No se pudo importar');
         }),
-        play: (l) => this.playLevel(l, {}),
+        play: (l) => this.playLevel(l, {}, () => this.showLevels()),
         edit: (l) => { if (this.lockedDownload(l)) return; this.openEditor(new S.Model.Level(l)); },
         remove: (l) => { Storage.remove(l.id); this.showLevels(); },
         // "Es mío": desbloquea un nivel descargado para editar/publicar.
@@ -487,7 +487,7 @@
       this.menu.toast('Cargando "' + row.name + '"…', 1500);
       S.Model.Gld.getLevel(row.id).then((data) => {
         if (!data) { this.menu.toast('No se pudo cargar el nivel'); return; }
-        this.playLevel(data, { online: { id: row.id, name: row.name, author: row.author, back } });
+        this.playLevel(data, { online: { id: row.id, name: row.name, author: row.author, back } }, back);
       });
     }
 
@@ -542,7 +542,22 @@
     }
 
     // ---------- partidas ----------
-    playLevel(data, opts) {
+    playLevel(data, opts, onCancel) {
+      opts = Object.assign({}, opts || {});
+      if (!opts.online || opts.testMode || opts.mp) {
+        this.startLevel(data, opts);
+        return;
+      }
+      const cancel = onCancel || (opts.online.back ? opts.online.back : () => this.showOnline('home'));
+      this.menu.playSettings(data && data.name, !!this.prefs.infiniteLives, (infiniteLives) => {
+        this.prefs.infiniteLives = infiniteLives;
+        this.savePrefs();
+        opts.infiniteLives = infiniteLives;
+        this.startLevel(data, opts);
+      }, cancel);
+    }
+
+    startLevel(data, opts) {
       this.clearAll();
       this.lastPlay = { data, opts };
       this.game = new S.Controller.GameController(this, data, opts);

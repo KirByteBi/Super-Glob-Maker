@@ -15,6 +15,8 @@
     'Versión 2D · Los Globs y sus amigos': '2D version · The Globs and friends', 'El modo 3D estilo SM64 / Galaxy llegará en la próxima versión.': 'The SM64 / Galaxy style 3D mode is coming in a future version.',
     '← Volver': '← Back', 'Cerrar': 'Close', 'Cancelar': 'Cancel', 'Aceptar': 'OK', 'Sí': 'Yes', 'No': 'No', 'Entendido': 'Got it', '¿Seguro?': 'Are you sure?',
     'Continuar': 'Continue', 'Reiniciar': 'Restart', 'Reintentar': 'Retry', 'Salir al menú': 'Quit to menu', 'Volver al editor': 'Back to editor', 'Pausa': 'Pause',
+    'Ajustes de partida': 'Game settings', 'Vidas infinitas (cada jugador lo elige para su partida)': 'Infinite lives (each player chooses for their own run)',
+    '♾ Vidas infinitas: Sí': '♾ Infinite lives: On', '♾ Vidas infinitas: No': '♾ Infinite lives: Off',
     'Cargando…': 'Loading…', 'Importar': 'Import', 'Exportar': 'Export', '＋ Nuevo': '＋ New', '▶ Jugar': '▶ Play', '✏ Editar': '✏ Edit', '🔒 Editar': '🔒 Edit',
     '🌐 Publicar': '🌐 Publish', '☄ Publicado': '☄ Published', 'Publicado': 'Published', '📄 Copiar': '📄 Copy', '📤 Exportar': '📤 Export', 'Mis niveles': 'My levels',
     'Aún no has guardado niveles. ¡Crea el primero!': "You haven't saved any levels yet. Make your first one!",

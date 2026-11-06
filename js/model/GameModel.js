@@ -16,6 +16,7 @@
       this.mode = this.level.mode;
       this.pal = S.Model.Themes.palette(this.theme, this.mode);
       this.testMode = !!opts.testMode;
+      this.infiniteLives = !!opts.infiniteLives;
       this.charId = opts.character || this.level.character || 'green';
       this.lives = opts.lives != null ? opts.lives : 5;
       this.score = opts.score || 0; this.coins = opts.coins || 0;
@@ -911,8 +912,8 @@
     }
 
     afterDeath() {
-      if (!this.testMode) this.lives--;
-      if (!this.testMode && this.lives <= 0) { this.state = 'gameover'; this.emit('gameover', {}); return; }
+      if (!this.testMode && !this.infiniteLives) this.lives--;
+      if (!this.testMode && !this.infiniteLives && this.lives <= 0) { this.state = 'gameover'; this.emit('gameover', {}); return; }
       this.reset(false);
     }
 
