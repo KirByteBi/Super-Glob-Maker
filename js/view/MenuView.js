@@ -720,7 +720,7 @@
       f.appendChild(inp); f.appendChild(button('Cargar', 'primary', () => h.join(inp.value.trim())));
       menu.appendChild(f);
       b.appendChild(menu);
-      b.appendChild(el('small', 'note', 'Modos: 1 Nivel · Multimundo (varios niveles seguidos) · Torneo (gana quien más puntos tenga y se lleva una 👑 corona). Nunca hay 2 Globs iguales.'));
+      b.appendChild(el('small', 'note multiplayer-modes-note', 'Modos: 1 Nivel · Multimundo (varios niveles seguidos) · Torneo (gana quien más puntos tenga y se lleva una 👑 corona). Nunca hay 2 Globs iguales.'));
       b.appendChild(button('Cerrar', '', () => this.closeModal()));
       setTimeout(() => inp.focus(), 30);
     }

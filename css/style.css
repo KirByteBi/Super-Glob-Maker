@@ -78,6 +78,7 @@ button:focus-visible { outline: 3px solid #ffe600; outline-offset: 2px; }
 .modal-box h2 { margin: 0 0 10px; font-size: 28px; color: #00ff66; -webkit-text-stroke: 2px #000; paint-order: stroke fill; }
 .modal-box h3 { margin: 12px 0 6px; }
 .modal-box .menu .btn { min-width: 260px; }
+.multiplayer-modes-note { display: block; max-width: 100%; white-space: normal; line-height: 1.35; margin: 8px auto; }
 .keys { margin: 0 auto; border-collapse: collapse; text-align: left; }
 .keys td { padding: 3px 10px; border-bottom: 2px dashed #ddd; }
 .keys td.k { font-weight: 900; }
