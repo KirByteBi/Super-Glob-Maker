@@ -199,7 +199,10 @@ niveles + castillo(s) tematico(s).
 
 NAVEGACION: hay CRUCES (el camino se bifurca). Unas rutas son mas
 directas; otras mas largas pero con premios. Algunos caminos y
-nodos empiezan OCULTOS y se abren al descubrir secretos.
+nodos empiezan OCULTOS y se abren al descubrir secretos. Cada
+mundo tiene rutas paralelas opcionales entre niveles: una meta
+oculta revela el camino y un nivel alternativo que luego vuelve a
+unirse con la ruta principal.
 
 TRANSICION ENTRE MUNDOS (ya hecho): superar el CASTILLO FINAL de
 un mundo desbloquea el siguiente.

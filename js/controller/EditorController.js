@@ -54,6 +54,10 @@
     // Antes de guardar se comprueba (a grandes rasgos) que se puede llegar a la Medalla.
     // Si no, avisa y deja guardar igualmente (puede haber trucos que la comprobación no ve).
     save(force) {
+      if (this.story && !this.app.canEditStory()) {
+        this.app.menu.toast('Solo kirbytebi puede editar los niveles de la Historia');
+        return;
+      }
       if (!force && S.Model.LevelCheck) {
         let chk = null;
         try { chk = S.Model.LevelCheck.check(this.model.full()); } catch (e) { chk = null; }
@@ -73,7 +77,21 @@
       if (this.story) {
         const st = this.story, ok = S.Model.StoryPack.saveLocal(st.world, st.node, st.mode, this.model.full().toJSON());
         if (ok) { this.model.dirty = false; this.view.refreshInfo(this.model); }
-        this.app.menu.toast(ok ? '📖 Guardado en la Historia (' + st.world.toUpperCase() + ' · ' + st.node + '). En el mapa, B exporta la lista.' : 'No se pudo guardar (almacenamiento del navegador lleno)', 3200);
+        if (!ok) { this.app.menu.toast('No se pudo guardar localmente (almacenamiento del navegador lleno)', 3200); return; }
+        S.Model.Gld.storyPackSave(st.world, st.node, st.mode, this.model.full().toJSON()).then((r) => {
+          if (r.ok) {
+            S.Model.StoryPack.setCloudLevel(st.world, st.node, st.mode, S.Model.Level.content(this.model.full().toJSON()));
+            this.app.menu.toast('🌐 Guardado globalmente en la Historia (' + st.world.toUpperCase() + ' · ' + st.node + ')', 3200);
+          } else {
+            const reason = r.error === 'no-story-pack' ? 'Falta aplicar kiro/supabase_story_pack.sql en Supabase'
+              : r.error === 'offline' ? 'sin conexión o sesión de cuenta'
+                : r.error;
+            this.app.menu.toast('📖 Guardado solo en este navegador; no se pudo sincronizar (' + reason + ')', 4200);
+          }
+        }).catch((e) => {
+          console.error('No se pudo sincronizar el nivel de Historia:', e);
+          this.app.menu.toast('📖 Guardado solo en este navegador; falló la sincronización', 4200);
+        });
         return;
       }
       const r = Storage.save(this.model.full().toJSON());

@@ -40,6 +40,12 @@
       const ping = () => { if (Storage.isLinked() && S.Model.Gld.configured()) S.Model.Gld.touch().catch(() => {}); };
       // ¿eres admin? (lo decide el servidor) -> sin límites en el editor, Mis niveles y al publicar
       if (Storage.isLinked() && S.Model.Gld.configured()) S.Model.Gld.isAdmin().catch(() => false);
+      if (S.Model.Gld.configured() && S.Model.StoryPack) {
+        S.Model.Gld.storyPackLoad().then((r) => {
+          if (r.ok) S.Model.StoryPack.setCloud(r.levels);
+          else if (r.error !== 'offline') console.warn('No se pudieron cargar las ediciones globales de Historia:', r.error);
+        }).catch((e) => console.warn('No se pudieron cargar las ediciones globales de Historia:', e));
+      }
       setTimeout(ping, 3000); setInterval(ping, 180000);
       // Controles táctiles (móvil/tablet)
       if (S.View.TouchControls) S.View.TouchControls.init(this);
@@ -198,6 +204,21 @@
       }
     }
 
+    pickStoryCharacter() {
+      if (this.mode !== 'map' || this.dialogOpen) return;
+      this.dialogOpen = true;
+      const finish = () => { this.dialogOpen = false; this.input.swallow(); };
+      this.menu.characterPicker(this.prefs.character, (id) => {
+        this.prefs.character = id;
+        savePrefs(this.prefs);
+        finish();
+      }, finish, 'Elige tu Glob');
+    }
+
+    canEditStory() {
+      return !!(S.Model.Gld && S.Model.Gld._admin && String(this._myUser || '').trim().toLowerCase() === 'kirbytebi');
+    }
+
     // Muestra un dialogo/cinematica del Modo Historia (id p.ej. 'w1/intro'). onDone al cerrar.
     // Aislado: si falta el modulo o el guion, llama a onDone directamente (no rompe el flujo).
     showStoryDialog(id, onDone) {
@@ -243,6 +264,7 @@
     }
     // ADMIN: editar un nivel de la Historia. Se guarda en la lista oculta (no en Mis niveles).
     editStoryNode(worldId, nodeId, mode) {
+      if (!this.canEditStory()) { this.menu.toast('Solo kirbytebi puede editar los niveles de la Historia'); return; }
       const node = S.Model.StoryMap.world(worldId).map[nodeId];
       if (!node || node.type === 'start') return;
       const L = this.storyLevel(worldId, nodeId, mode, node);
@@ -252,10 +274,11 @@
     }
     // ADMIN: descarga StoryPackData.js (pack + tus ediciones) para subirlo al repositorio
     exportStoryPack() {
+      if (!this.canEditStory()) { this.menu.toast('Solo kirbytebi puede exportar los niveles de la Historia'); return; }
       const txt = S.Model.StoryPack.exportJS();
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'text/javascript' })); a.download = 'StoryPackData.js';
       document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
-      this.menu.toast('📦 StoryPackData.js descargado (' + S.Model.StoryPack.localCount() + ' niveles editados). Cópialo a js/model/ y súbelo para que lo tengan todos.', 5000);
+      this.menu.toast('📦 StoryPackData.js descargado (' + (S.Model.StoryPack.localCount() + S.Model.StoryPack.cloudCount()) + ' niveles editados). Cópialo a js/model/ y súbelo para que lo tengan todos.', 5000);
     }
 
     showLevels() {

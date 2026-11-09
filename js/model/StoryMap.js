@@ -20,6 +20,7 @@
   // zigzag por filas. Opcionalmente se cuelga un PALACIO secreto de un nivel (cruce + meta oculta).
   // opts.palaceAfter = indice (1-based) del nivel del que sale el camino secreto al palacio;
   // opts.palaceTheme/excolor = tema y color "!" del palacio; el palacio reengancha al nodo siguiente.
+  // parallelRoutes añade niveles secretos opcionales entre dos nodos de la ruta principal.
   function buildWorld(id, name, seq, opts) {
     opts = opts || {};
     const perRow = opts.perRow || 6, nodes = [];
@@ -39,11 +40,24 @@
     if (opts.palaceAfter) {
       const src = nodes[opts.palaceAfter]; // nodo del que sale el camino secreto (1-based -> incluye start en 0)
       if (src) {
-        const pp = pos(opts.palaceAfter); const pal = { id: 'pal', type: 'palace', theme: opts.palaceTheme || src.theme, x: pp.x, y: Math.max(0, pp.y - 1), excolor: opts.excolor != null ? opts.excolor : 1, next: src.next.slice() };
-        src.secretNext = ['pal'];
+        const pp = pos(opts.palaceAfter); const pal = { id: 'pal', type: 'palace', hidden: true, theme: opts.palaceTheme || src.theme, x: pp.x, y: Math.max(0, pp.y - 1), excolor: opts.excolor != null ? opts.excolor : 1, next: src.next.slice() };
+        src.secretNext = (src.secretNext || []).concat('pal');
         nodes.push(pal);
       }
     }
+    (opts.parallelRoutes || []).forEach((route, i) => {
+      const src = nodes.find((n) => n.id === route.from);
+      const dest = src && nodes.find((n) => n.id === (route.to || (src.next || [])[0]));
+      if (!src || !dest) return;
+      const branchId = route.id || ('alt' + (i + 1));
+      nodes.push({
+        id: branchId, type: 'level', hidden: true, theme: route.theme || src.theme,
+        x: Math.round((src.x + dest.x) / 2),
+        y: Math.round((src.y + dest.y) / 2) + (route.side === 'up' ? -1 : 1),
+        next: [dest.id]
+      });
+      src.secretNext = (src.secretNext || []).concat(branchId);
+    });
     return { id, name, cols: perRow, rows: 2 + Math.ceil(seq.length / perRow) * 2, nodes, scenery: opts.scenery || 'isle' };
   }
 
@@ -53,35 +67,35 @@
       { t: 'lake' }, { t: 'lake' }, { t: 'city' }, { t: 'seaside' }, { t: 'lake' },
       { t: 'city' }, { t: 'seaside' }, { t: 'city' }, { t: 'seaside' }, { t: 'lake' },
       { t: 'factory', type: 'castle' }
-    ], { perRow: 6, palaceAfter: 3, palaceTheme: 'lake', excolor: 0, scenery: 'isle' }),
+    ], { perRow: 6, palaceAfter: 3, palaceTheme: 'lake', excolor: 0, parallelRoutes: [{ from: 'n6' }], scenery: 'isle' }),
 
     // 2. Wildsand Leaf — Jungla, Circo, Ruinas, Nieve; castillo Time Attack. 11 niveles.
     buildWorld('w2', 'Mundo 2 · Wildsand Leaf', [
       { t: 'jungle' }, { t: 'ruins' }, { t: 'circus' }, { t: 'snow' }, { t: 'jungle' },
       { t: 'ruins' }, { t: 'circus' }, { t: 'snow' }, { t: 'jungle' }, { t: 'ruins' }, { t: 'snow' },
       { t: 'clock', type: 'castle' }
-    ], { perRow: 7, palaceAfter: 5, palaceTheme: 'jungle', excolor: 1, scenery: 'wild' }),
+    ], { perRow: 7, palaceAfter: 5, palaceTheme: 'jungle', excolor: 1, parallelRoutes: [{ from: 'n8' }], scenery: 'wild' }),
 
     // 3. Wonders Circus — Circo, Casino y bizarros (disco, hub); castillo Fabrica. 10 niveles.
     buildWorld('w3', 'Mundo 3 · Wonders Circus', [
       { t: 'circus' }, { t: 'casino' }, { t: 'disco' }, { t: 'circus' }, { t: 'hub' },
       { t: 'casino' }, { t: 'disco' }, { t: 'circus' }, { t: 'casino' }, { t: 'hub' },
       { t: 'factory', type: 'castle' }
-    ], { perRow: 6, palaceAfter: 4, palaceTheme: 'casino', excolor: 2, scenery: 'circus' }),
+    ], { perRow: 6, palaceAfter: 4, palaceTheme: 'casino', excolor: 2, parallelRoutes: [{ from: 'n8' }], scenery: 'circus' }),
 
     // 4. Tormenta Volcanica — Volcan, Nubes, GL, variados; castillo Fabrica. 10 niveles.
     buildWorld('w4', 'Mundo 4 · Tormenta Volcánica', [
       { t: 'volcano' }, { t: 'sky' }, { t: 'lake' }, { t: 'volcano' }, { t: 'sky' },
       { t: 'underwater' }, { t: 'volcano' }, { t: 'sky' }, { t: 'lake' }, { t: 'volcano' },
       { t: 'factory', type: 'castle' }
-    ], { perRow: 6, palaceAfter: 6, palaceTheme: 'volcano', excolor: 0, scenery: 'volcano' }),
+    ], { perRow: 6, palaceAfter: 6, palaceTheme: 'volcano', excolor: 0, parallelRoutes: [{ from: 'n8' }], scenery: 'volcano' }),
 
     // 5. Ruptura Dimensional — todos los mapas, 3 castillos (tras cada tercio). Final: Vortice.
     buildWorld('w5', 'Mundo 5 · Ruptura Dimensional', [
       { t: 'lake' }, { t: 'city' }, { t: 'seaside' }, { t: 'factory', type: 'castle' },
       { t: 'jungle' }, { t: 'ruins' }, { t: 'circus' }, { t: 'snow' }, { t: 'factory', type: 'castle' },
       { t: 'casino' }, { t: 'disco' }, { t: 'volcano' }, { t: 'sky' }, { t: 'vortex', type: 'castle' }
-    ], { perRow: 5, palaceAfter: 2, palaceTheme: 'hub', excolor: 2, scenery: 'dimension' })
+    ], { perRow: 5, palaceAfter: 2, palaceTheme: 'hub', excolor: 2, parallelRoutes: [{ from: 'n11' }], scenery: 'dimension' })
   ];
 
   const byId = {};
@@ -95,17 +109,24 @@
     world(id) { return WORLDS.find((w) => w.id === id) || WORLDS[0]; },
 
     // ---- progreso ----
-    // Estructura: { "w1/n1": { cleared:true, secret:true }, ex: { "w1": [0,1,0] } }
+    // normal y secret guardan salidas independientes; cleared conserva el estado total.
     progress() { return read(); },
     nodeState(worldId, nodeId) { return read()[worldId + '/' + nodeId] || null; },
     isCleared(worldId, nodeId) { const s = this.nodeState(worldId, nodeId); return !!(s && s.cleared); },
+    isNormal(worldId, nodeId) {
+      const s = this.nodeState(worldId, nodeId);
+      return !!(s && (s.normal === true || (s.normal == null && s.cleared)));
+    },
     isSecret(worldId, nodeId) { const s = this.nodeState(worldId, nodeId); return !!(s && s.secret); },
 
     // Marca un nodo como completado (normal o por meta oculta/palacio).
     markCleared(worldId, nodeId, secret) {
       const p = read(); const key = worldId + '/' + nodeId;
       // normal / secret = qué meta se ha usado alguna vez (los dos huecos del mapa)
-      const s = p[key] || {}; s.cleared = true; if (secret) s.secret = true; else s.normal = true;
+      const s = p[key] || {};
+      if (s.normal == null) s.normal = !!s.cleared;
+      s.cleared = true;
+      if (secret) s.secret = true; else s.normal = true;
       p[key] = s;
       // interruptor "!" persistente del mundo: un palacio activa su color
       const node = this.world(worldId).map[nodeId];
@@ -123,7 +144,7 @@
       const w = this.world(worldId);
       const startCleared = this.isCleared(worldId, 'start');
       for (const n of w.nodes) {
-        if (n.next && n.next.includes(nodeId) && (n.id === 'start' || this.isCleared(worldId, n.id))) return true;
+        if (n.next && n.next.includes(nodeId) && (n.id === 'start' || this.isNormal(worldId, n.id))) return true;
         // un camino secreto solo cuenta si ese nodo se paso por META OCULTA
         if (n.secretNext && n.secretNext.includes(nodeId) && this.isSecret(worldId, n.id)) return true;
       }
@@ -160,12 +181,12 @@
     },
     // ¿El mundo esta completado (su castillo final superado)? Abre el siguiente.
     isWorldComplete(worldId) {
-      const fc = this.finalCastleId(worldId); return fc ? this.isCleared(worldId, fc) : false;
+      const fc = this.finalCastleId(worldId); return fc ? this.isNormal(worldId, fc) : false;
     },
     // Llamar tras superar un nodo: si era el castillo final, desbloquea el mundo siguiente.
     // Devuelve el id del mundo recien desbloqueado (o null).
     onNodeCleared(worldId, nodeId) {
-      if (nodeId !== this.finalCastleId(worldId)) return null;
+      if (nodeId !== this.finalCastleId(worldId) || !this.isNormal(worldId, nodeId)) return null;
       const nx = this.nextWorldId(worldId);
       if (nx && !this.isWorldUnlocked(nx)) { this.unlockWorld(nx); return nx; }
       return null;
@@ -183,7 +204,7 @@
     // La Historia Corrupta se desbloquea al superar el CASTILLO FINAL del ultimo mundo.
     isCorruptUnlocked() {
       const w = this.lastWorldId(); const fc = this.finalCastleId(w);
-      return fc ? this.isCleared(w, fc) : false;
+      return fc ? this.isNormal(w, fc) : false;
     }
   };
 })(window.SGM);

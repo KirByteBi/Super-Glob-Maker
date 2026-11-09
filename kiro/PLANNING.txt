@@ -561,6 +561,9 @@ FASES SUGERIDAS (de menos a mas riesgo):
 [~] Modo Historia (mapamundi SMW): 5 mundos, niveles generados
     por nodo (lecciones), metas ocultas, interruptores "!",
     desbloqueo de nodos y progreso persistido. FUNCIONAL.
+    [ ] Ediciones globales: cliente y SQL preparados en
+        kiro/supabase_story_pack.sql. Aplicar en Supabase para que
+        el owner pueda guardar y todos los jugadores cargar el pack.
     [X] Transicion entre mundos: superar el CASTILLO FINAL de un
         mundo desbloquea el siguiente (p.worlds en sgm.story.v1);
         aviso + opcion de viajar al volver al mapa; cambiar de

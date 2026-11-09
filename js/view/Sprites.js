@@ -366,20 +366,24 @@
   }
 
   // ---------- la Medalla (meta) ----------
-  function goal(ctx, g, t, color) {
+  function goal(ctx, g, t, color, hidden) {
     const px = g.x + g.w / 2, top = g.y;
     rr(ctx, px - 4, top, 8, g.h, 4); fillStroke(ctx, '#f0f0f0', 3.5);
     ctx.beginPath(); ctx.arc(px, top, 8, 0, 7); fillStroke(ctx, color || '#00ff66', 3);
     rr(ctx, px - 22, g.y + g.h - 10, 44, 12, 4); fillStroke(ctx, '#7a8494', 3);
-    medal(ctx, px - 20, top + 20 + (g.medalY || 0), 18, t);
+    medal(ctx, px - 20, top + 20 + (g.medalY || 0), 18, t, hidden);
   }
-  function medal(ctx, cx, cy, r, t) {
+  function medal(ctx, cx, cy, r, t, hidden) {
+    const ribbon = hidden ? '#ff4fd8' : '#ff3b6b';
+    const body = hidden ? '#ff8ae5' : '#ffc400';
+    const inner = hidden ? '#ffd0f5' : '#fff3a0';
     // cinta
-    ctx.beginPath(); ctx.moveTo(cx - r * 0.6, cy - r * 1.6); ctx.lineTo(cx - r * 0.1, cy - r * 0.5); ctx.lineTo(cx + r * 0.3, cy - r * 0.6); ctx.lineTo(cx + r * 0.6, cy - r * 1.6); ctx.closePath(); fillStroke(ctx, '#ff3b6b', 3);
-    ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); fillStroke(ctx, '#ffc400', 3.5);
-    ctx.beginPath(); ctx.arc(cx, cy, r * 0.72, 0, 7); ctx.strokeStyle = '#ff9a00'; ctx.lineWidth = 2.5; ctx.stroke();
-    globPath(ctx, cx - r * 0.55, cy - r * 0.42, r * 1.1, r * 0.8); fillStroke(ctx, '#fff3a0', 2);
+    ctx.beginPath(); ctx.moveTo(cx - r * 0.6, cy - r * 1.6); ctx.lineTo(cx - r * 0.1, cy - r * 0.5); ctx.lineTo(cx + r * 0.3, cy - r * 0.6); ctx.lineTo(cx + r * 0.6, cy - r * 1.6); ctx.closePath(); fillStroke(ctx, ribbon, 3);
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); fillStroke(ctx, body, 3.5);
+    ctx.beginPath(); ctx.arc(cx, cy, r * 0.72, 0, 7); ctx.strokeStyle = hidden ? '#e52bb8' : '#ff9a00'; ctx.lineWidth = 2.5; ctx.stroke();
+    globPath(ctx, cx - r * 0.55, cy - r * 0.42, r * 1.1, r * 0.8); fillStroke(ctx, inner, 2);
     ctx.fillStyle = INK; ctx.fillRect(cx - r * 0.25, cy - r * 0.2, r * 0.16, r * 0.16); ctx.fillRect(cx - r * 0.04, cy - r * 0.02, r * 0.18, r * 0.18);
+    if (hidden) { ctx.font = '900 ' + Math.round(r * 0.68) + 'px "Trebuchet MS",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 2; ctx.strokeStyle = '#000'; ctx.strokeText('?', cx + r * 0.42, cy - r * 0.48); ctx.fillStyle = '#fff'; ctx.fillText('?', cx + r * 0.42, cy - r * 0.48); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; }
     const sh = (t * 1.5) % 3; if (sh < 1) { star(ctx, cx + r * 0.5, cy - r * 0.5, r * 0.4, r * 0.12, 4, 0); ctx.fillStyle = '#fff'; ctx.fill(); }
   }
 
@@ -970,7 +974,7 @@
       const e = { type: item.type, x: -w / 2, y: -h / 2, w, h, t: 0, dir: -1, onGround: true, hp: 3, state: 'hang', skin: (S.Model.Catalog.OBJECTS[item.type] || {}).skin, cx() { return this.x + this.w / 2; }, cy() { return this.y + this.h / 2; } };
       if (item.type === 'start') drawStartMarker(ctx, e, ch);
       else if (item.type === 'goal') { medal(ctx, 0, 6, 16, 0); }
-      else if (item.type === 'goalhidden') { ctx.globalAlpha = 0.6; medal(ctx, 0, 6, 16, 0); ctx.globalAlpha = 1; ctx.fillStyle = '#b44dff'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('?', 0, 10); ctx.textAlign = 'left'; }
+      else if (item.type === 'goalhidden') { ctx.globalAlpha = 0.8; medal(ctx, 0, 6, 16, 0, true); ctx.globalAlpha = 1; }
       else if (item.type === 'checkpoint') { e.h = h; D.checkpoint(ctx, Object.assign(e, { taken: true, x: -10 }), 0, { color: ch && ch.color }); }
       else if (D[item.type]) D[item.type](ctx, e, 0, { pal, color: ch && ch.color });
       else { // Pyce sin dibujo procedural: usar su PNG

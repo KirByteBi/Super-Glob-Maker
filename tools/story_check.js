@@ -79,7 +79,9 @@ for (const w of S.Model.StoryMap.worlds) {
         // "!" del mundo sin activar (lo normal la primera vez): la ruta no debe depender de ellos
         const R = reach(L, swim, [0, 0, 0]);
         if (!end) errs.push('sin meta'); else if (!nearSet(R, end, 2)) errs.push('no se llega a la meta');
-        const gh = L.objects.find((o) => o.type === 'goalhidden'); if (gh && !nearSet(R, gh, 2)) errs.push('no se llega a la meta oculta');
+        const gh = L.objects.find((o) => o.type === 'goalhidden');
+        if (n.secretNext && !gh) errs.push('sin meta oculta para abrir la ruta secreta');
+        if (gh && !nearSet(R, gh, 2)) errs.push('no se llega a la meta oculta');
         const reds = L.tiles.filter((t) => t === TT.RCOIN).length; if (L.win.type === 'redcoins' && reds !== 8) errs.push('monedas rojas: ' + reds);
         const st = L.objects.find((o) => o.type === 'start');
         const enemies = L.objects.filter((o) => { const d = C.OBJECTS[o.type] || {}; return d.tier || d.boss; }).length;
@@ -117,6 +119,29 @@ for (const w of S.Model.StoryMap.worlds) {
     p.x = gh.x; p.y = gh.y + gh.h - p.h / 2; p.vx = 0; p.vy = 0;
     g.update(1 / 120, {});
     if (g.state !== 'clear' || !g.secretClear) { bad++; console.log('FALLA meta oculta · no se activa al cruzar el poste'); }
+  }
+}
+// La meta oculta abre solo la rama secreta; la salida normal conserva la ruta principal.
+{
+  const SM = S.Model.StoryMap;
+  for (const w of SM.worlds) {
+    const src = w.nodes.find((n) => n.secretNext && n.secretNext.length && n.next && n.next.length);
+    if (!src) { bad++; console.log('FALLA ruta secreta · ' + w.id + ' no tiene cruce'); continue; }
+    const baseId = src.next[0], secretId = src.secretNext[0];
+    store['sgm.story.v1'] = '{}';
+    SM.markCleared(w.id, src.id, true);
+    if (!SM.isUnlocked(w.id, secretId)) { bad++; console.log('FALLA ruta secreta · ' + w.id + ' no abre su puente'); }
+    if (SM.isUnlocked(w.id, baseId)) { bad++; console.log('FALLA ruta secreta · ' + w.id + ' abre la ruta principal'); }
+    store['sgm.story.v1'] = '{}';
+    SM.markCleared(w.id, src.id, false);
+    if (!SM.isUnlocked(w.id, baseId)) { bad++; console.log('FALLA ruta principal · ' + w.id + ' no abre con la meta normal'); }
+    if (SM.isUnlocked(w.id, secretId)) { bad++; console.log('FALLA ruta principal · ' + w.id + ' abre la rama secreta'); }
+  }
+  const last = SM.lastWorldId(), finalCastle = SM.finalCastleId(last);
+  store['sgm.story.v1'] = '{}';
+  SM.markCleared(last, finalCastle, true);
+  if (SM.isWorldComplete(last) || SM.isCorruptUnlocked() || SM.onNodeCleared(last, finalCastle)) {
+    bad++; console.log('FALLA meta oculta · completa la Historia principal');
   }
 }
 console.log((bad ? 'FALLAN ' + bad : 'OK') + ' · ' + total + ' niveles comprobados');

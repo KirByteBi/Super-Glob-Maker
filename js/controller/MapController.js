@@ -13,6 +13,13 @@
       this.world = SM.world(this.worldId);
       this.cursor = SM.firstNode(this.worldId); // id del nodo donde esta el Glob
       this.moveCd = 0; this.t = 0;
+      this.onCanvasClick = (e) => {
+        if (this.app.mode !== 'map') return;
+        const rect = this.app.canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) * W / rect.width, y = (e.clientY - rect.top) * H / rect.height;
+        if (x >= 14 && x <= 190 && y >= 46 && y <= 86) { e.preventDefault(); this.app.pickStoryCharacter(); }
+      };
+      this.app.canvas.addEventListener('pointerdown', this.onCanvasClick);
       // Confirmación directa: algunos navegadores pueden perder enterPressed entre dos frames.
       // Enter normal y Enter numérico entran siempre; durante un diálogo no hacen nada aquí.
       this.onConfirm = (e) => {
@@ -26,7 +33,7 @@
       window.addEventListener('keydown', this.onConfirm);
       S.View.SoundView && S.View.SoundView.playMusic && S.View.SoundView.playMusic(S.Model.Themes.get('lake'), 'peace');
     }
-    destroy() { window.removeEventListener('keydown', this.onConfirm); S.View.SoundView && S.View.SoundView.stopMusic && S.View.SoundView.stopMusic(); }
+    destroy() { window.removeEventListener('keydown', this.onConfirm); this.app.canvas.removeEventListener('pointerdown', this.onCanvasClick); S.View.SoundView && S.View.SoundView.stopMusic && S.View.SoundView.stopMusic(); }
 
     // posicion en pixeles del centro de un nodo
     nodePos(n) {
@@ -49,12 +56,13 @@
       this.t += dt; this.moveCd = Math.max(0, this.moveCd - dt);
       if (this.app.dialogOpen) return;                                // diálogo de la Historia abierto
       if (inp.editExitPressed) { this.app.showTitle(); return; }      // Esc vuelve al titulo
+      if (inp.characterPressed) { this.app.pickStoryCharacter(); return; }
       // M: alternar Paz/Corrupto (solo si la Historia Corrupta esta desbloqueada)
       if (inp.altmodePressed && this.moveCd <= 0) { this.toggleMode(); this.moveCd = 0.3; return; }
       // ADMIN: E edita el nivel del nodo (lista oculta de la Historia) · B exporta esa lista
-      const admin = !!(S.Model.Gld && S.Model.Gld._admin);
-      if (admin && inp.editPressed) { this.app.editStoryNode(this.worldId, this.cursor, this.mode); return; }
-      if (admin && inp.packexpPressed) { this.app.exportStoryPack(); return; }
+      const storyEditor = this.app.canEditStory();
+      if (storyEditor && inp.editPressed) { this.app.editStoryNode(this.worldId, this.cursor, this.mode); return; }
+      if (storyEditor && inp.packexpPressed) { this.app.exportStoryPack(); return; }
       // cambiar de mundo (entre los desbloqueados) con correr: Shift/X
       if (inp.runPressed && this.moveCd <= 0) { this.cycleWorld(); this.moveCd = 0.25; return; }
       // mover el cursor al vecino en la direccion pulsada
@@ -187,17 +195,40 @@
       const seg = (a, b, w, col) => { ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); };
       // borde oscuro + relleno claro (efecto camino de tierra)
       [['#5a3a1a', 12], ['#d9b26a', 8]].forEach(([col, w]) => {
-        this.world.nodes.forEach((n) => { const a = this.nodePos(n); (n.next || []).forEach((id) => { const m = this.world.map[id]; if (m) seg(a, this.nodePos(m), w, col); }); });
+        this.world.nodes.forEach((n) => {
+          if (n.hidden && !SM.isUnlocked(this.worldId, n.id)) return;
+          const a = this.nodePos(n);
+          (n.next || []).forEach((id) => { const m = this.world.map[id]; if (m) seg(a, this.nodePos(m), w, col); });
+        });
       });
-      // caminos secretos (descubiertos): punteado violeta encima
-      ctx.setLineDash([3, 10]);
-      this.world.nodes.forEach((n) => { if (!SM.isSecret(this.worldId, n.id)) return; const a = this.nodePos(n); (n.secretNext || []).forEach((id) => { const m = this.world.map[id]; if (m) seg(a, this.nodePos(m), 5, '#c48bff'); }); });
-      ctx.setLineDash([]);
+      // Los caminos alternativos descubiertos se dibujan como puentes sobre el mar.
+      this.world.nodes.forEach((n) => {
+        if (!SM.isSecret(this.worldId, n.id)) return;
+        const a = this.nodePos(n);
+        (n.secretNext || []).forEach((id) => {
+          const m = this.world.map[id]; if (!m) return;
+          const b = this.nodePos(m), dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+          const nx = -dy / len, ny = dx / len;
+          seg(a, b, 15, '#39234f');
+          seg(a, b, 10, '#8a5a42');
+          seg(a, b, 6, '#d6ad70');
+          ctx.strokeStyle = '#51364f'; ctx.lineWidth = 2.5;
+          for (let d = 0; d <= len; d += 10) {
+            const x = a.x + dx * d / len, y = a.y + dy * d / len;
+            ctx.beginPath(); ctx.moveTo(x - nx * 6, y - ny * 6); ctx.lineTo(x + nx * 6, y + ny * 6); ctx.stroke();
+          }
+          ctx.strokeStyle = '#f2d69b'; ctx.lineWidth = 2;
+          [-1, 1].forEach((side) => {
+            ctx.beginPath(); ctx.moveTo(a.x + nx * side * 6, a.y + ny * side * 6); ctx.lineTo(b.x + nx * side * 6, b.y + ny * side * 6); ctx.stroke();
+          });
+        });
+      });
     }
 
     // ---- nodos con icono/miniatura del tema ----
     drawNodes(ctx, t) {
       this.world.nodes.forEach((n) => {
+        if (n.hidden && !SM.isUnlocked(this.worldId, n.id)) return;
         try { this.drawOneNode(ctx, t, n); } catch (e) { const p = this.nodePos(n); ctx.fillStyle = '#ffd000'; ctx.beginPath(); ctx.arc(p.x, p.y, 14, 0, 7); ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#000'; ctx.stroke(); }
       });
     }
@@ -265,14 +296,20 @@
       ctx.fillStyle = '#fff'; ctx.font = '900 20px "Trebuchet MS",sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
       const tr = S.tr || ((s) => s);
       ctx.fillText(tr(this.world.name), 16, 20);
+      const character = S.Model.Characters.get(this.app.prefs.character);
+      rr(ctx, 14, 46, 176, 38, 9); ctx.fillStyle = 'rgba(0,0,0,0.72)'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = character.color; ctx.stroke();
+      const characterImg = S.View.Assets.get(character.paths[0]);
+      if (characterImg) ctx.drawImage(characterImg, 19, 49, 32, 32);
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.font = '900 14px "Trebuchet MS",sans-serif'; ctx.fillStyle = '#fff';
+      ctx.fillText(character.name + ' · G', 54, 65);
       ctx.font = '600 13px "Trebuchet MS",sans-serif'; ctx.textAlign = 'right';
       const multi = SM.unlockedWorlds().length > 1;
       const corruptOn = SM.isCorruptUnlocked && SM.isCorruptUnlocked();
       // admin: recordatorio de E / B y de dónde sale el nivel seleccionado
-      if (S.Model.Gld && S.Model.Gld._admin && S.Model.StoryPack && cur.type !== 'start') {
+      if (this.app.canEditStory() && S.Model.StoryPack && cur.type !== 'start') {
         const src = S.Model.StoryPack.source(this.worldId, cur.id, this.mode);
         ctx.save(); ctx.font = '700 12px "Trebuchet MS",sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = '#ffe600';
-        ctx.fillText('🛡 E: editar nivel · B: exportar lista · ' + (src === 'local' ? '✏ editado aquí' : src === 'pack' ? '📖 lista' : '⚙ generado'), 16, H - 14);
+        ctx.fillText('🛡 E: editar nivel · B: exportar lista · ' + (src === 'local' ? '✏ editado aquí' : src === 'cloud' ? '🌐 global' : src === 'pack' ? '📖 lista' : '⚙ generado'), 16, H - 14);
         ctx.restore();
       }
       ctx.fillText(tr('Flechas: mover · Z/Enter: entrar' + (multi ? ' · X: cambiar mundo' : '') + (corruptOn ? ' · M: Paz/Corrupto' : '') + ' · Esc: salir'), W - 16, 20);

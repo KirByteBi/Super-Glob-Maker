@@ -67,7 +67,7 @@
         return;
       }
       if (o.type === 'goalhidden') {
-        ctx.save(); ctx.globalAlpha = 0.6; Sp.goal(ctx, { x: o.x * T + T / 2 - 4, y: (o.y + 1) * T - 192, w: 8, h: 192, medalY: 0 }, t, '#b44dff'); ctx.restore();
+        ctx.save(); ctx.globalAlpha = 0.8; Sp.goal(ctx, { x: o.x * T + T / 2 - 4, y: (o.y + 1) * T - 192, w: 8, h: 192, medalY: 0 }, t, '#ff4fd8', true); ctx.restore();
         return;
       }
       const e = S.Model.Entities.create(o.type, o.x, o.y, o);

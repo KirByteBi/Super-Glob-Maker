@@ -286,6 +286,20 @@
       Gld._admin = !error && data === true; // caché para las reglas del cliente (el servidor decide de verdad)
       return Gld._admin;
     },
+    async storyPackLoad() {
+      const c = await getClient(); if (!c) return { ok: false, error: 'offline' };
+      const { data, error } = await c.rpc('sgm_story_pack_get');
+      if (error) return { ok: false, error: /sgm_story_pack_get|function|schema cache/i.test(error.message) ? 'no-story-pack' : error.message };
+      return { ok: true, levels: data || {} };
+    },
+    async storyPackSave(world, node, mode, level) {
+      const c = await getClient(); if (!c) return { ok: false, error: 'offline' };
+      const { error } = await c.rpc('sgm_story_pack_save', {
+        p_world: world, p_node: node, p_mode: mode === 'corrupt' ? 'corrupt' : 'peace',
+        p_data: S.Model.Level.content(level)
+      });
+      return error ? { ok: false, error: /sgm_story_pack_save|function|schema cache/i.test(error.message) ? 'no-story-pack' : error.message } : { ok: true };
+    },
     async adminDelete(id) { const c = await getClient(); if (!c) return { ok: false, error: 'offline' }; const { error } = await c.rpc('sgm_admin_delete', { p_level: id }); return error ? { ok: false, error: Gld._v3err(error) } : { ok: true }; },
     async adminGod(id, on) { const c = await getClient(); if (!c) return { ok: false, error: 'offline' }; const { error } = await c.rpc('sgm_admin_god', { p_level: id, p_god: !!on }); return error ? { ok: false, error: Gld._v3err(error) } : { ok: true }; },
     // niveles GOD (destacados por el admin)
