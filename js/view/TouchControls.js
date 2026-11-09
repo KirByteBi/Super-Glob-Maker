@@ -55,22 +55,55 @@
       const cv = app.canvas; let erase = false;
       const eraser = btn(root, 'erase', '🧽', 'Borrar (como el clic derecho)');
       eraser.addEventListener('click', () => { erase = !erase; eraser.classList.toggle('on', erase); });
+      let panMode = false;
+      const camera = btn(root, 'camera', '✋', 'Mover cámara');
+      camera.addEventListener('click', () => { panMode = !panMode; camera.classList.toggle('on', panMode); });
       const fire = (type, t) => cv.dispatchEvent(new MouseEvent(type, { clientX: t.clientX, clientY: t.clientY, button: erase ? 2 : 0, buttons: erase ? 2 : 1, bubbles: true }));
-      cv.addEventListener('touchstart', (e) => { if (app.mode !== 'editor' || e.touches.length !== 1) return; e.preventDefault(); fire('mousedown', e.touches[0]); }, { passive: false });
-      // un dedo = pintar / arrastrar; dos dedos = mover la cámara del editor
+      // En modo cámara, arrastrar con un dedo desplaza el nivel; dos dedos siguen funcionando siempre.
       let pan = null;
+      cv.addEventListener('touchstart', (e) => {
+        if (app.mode !== 'editor') return;
+        e.preventDefault();
+        if (e.touches.length === 2) {
+          const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+          const my = (e.touches[0].clientY + e.touches[1].clientY) / 2, m = app.editor.model;
+          pan = { x: mx, y: my, cx: m.camX, cy: m.camY };
+          window.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+          return;
+        }
+        if (e.touches.length !== 1) return;
+        if (panMode) {
+          const t = e.touches[0], m = app.editor.model;
+          pan = { x: t.clientX, y: t.clientY, cx: m.camX, cy: m.camY };
+          window.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+        } else fire('mousedown', e.touches[0]);
+      }, { passive: false });
       cv.addEventListener('touchmove', (e) => {
         if (app.mode !== 'editor') return; e.preventDefault();
-        if (e.touches.length === 2 && app.editor) {
-          const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2, my = (e.touches[0].clientY + e.touches[1].clientY) / 2, k = S.VIEW_W / cv.getBoundingClientRect().width, m = app.editor.model;
+        if (app.editor && (e.touches.length === 2 || (e.touches.length === 1 && (panMode || pan)))) {
+          const r = cv.getBoundingClientRect(), m = app.editor.model;
+          const mx = e.touches.length === 2 ? (e.touches[0].clientX + e.touches[1].clientX) / 2 : e.touches[0].clientX;
+          const my = e.touches.length === 2 ? (e.touches[0].clientY + e.touches[1].clientY) / 2 : e.touches[0].clientY;
           if (!pan) { window.dispatchEvent(new MouseEvent('mouseup', { bubbles: true })); pan = { x: mx, y: my, cx: m.camX, cy: m.camY }; }
-          m.camX = pan.cx - (mx - pan.x) * k; m.camY = pan.cy - (my - pan.y) * k; app.editor.clampCam(); return;
+          m.camX = pan.cx - (mx - pan.x) * (S.VIEW_W / r.width);
+          m.camY = pan.cy - (my - pan.y) * (S.VIEW_H / r.height);
+          app.editor.clampCam(); return;
         }
         if (e.touches.length !== 1 || pan) return;
         const t = e.touches[0]; cv.dispatchEvent(new MouseEvent('mousemove', { clientX: t.clientX, clientY: t.clientY, buttons: erase ? 2 : 1, bubbles: true }));
       }, { passive: false });
-      cv.addEventListener('touchstart', (e) => { if (e.touches.length === 2) e.preventDefault(); }, { passive: false });
-      cv.addEventListener('touchend', (e) => { if (app.mode !== 'editor') return; e.preventDefault(); if (!e.touches.length) pan = null; window.dispatchEvent(new MouseEvent('mouseup', { bubbles: true })); }, { passive: false });
+      const endTouch = (e) => {
+        if (app.mode !== 'editor') return;
+        e.preventDefault();
+        window.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+        if (!e.touches.length) pan = null;
+        else if (pan && e.touches.length === 1) {
+          const t = e.touches[0], m = app.editor.model;
+          pan = { x: t.clientX, y: t.clientY, cx: m.camX, cy: m.camY };
+        }
+      };
+      cv.addEventListener('touchend', endTouch, { passive: false });
+      cv.addEventListener('touchcancel', endTouch, { passive: false });
       // mostrar lo que toque según la pantalla
       const tick = () => {
         const playing = app.mode === 'game' || app.mode === 'map', ed = app.mode === 'editor';

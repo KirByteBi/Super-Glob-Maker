@@ -115,10 +115,10 @@
   // Cada mundo: idea, dificultad y la lección de cada nivel (n1..nN, en orden del mapa).
   const WORLD_PLAN = {
     w1: { d: 1, lessons: ['basics', 'blocks', 'semis', 'pipes', 'springs', 'moving', 'redcoins', 'keys', 'notes', 'rails'], castle: ['conveyor', 'firebars'] },
-    w2: { d: 2, lessons: ['moving', 'semis', 'notes', 'ice', 'springs', 'cannons', 'donuts', 'ice', 'pipes', 'keys', 'clouds'], castle: ['rails', 'firebars'] },
-    w3: { d: 3, lessons: ['rails', 'ab', 'notes', 'bros', 'pswitch', 'purple', 'conveyor', 'cannons', 'ab', 'keys'], castle: ['firebars', 'bros'] },
-    w4: { d: 4, lessons: ['firebars', 'clouds', 'water', 'cannons', 'rails', 'water', 'donuts', 'clouds', 'bros', 'firebars'], castle: ['conveyor', 'rails'] },
-    w5: { d: 5, lessons: ['rails', 'bros', 'water', 'ab', 'pswitch', 'firebars', 'purple', 'notes', 'clouds', 'cannons', 'donuts', 'keys', 'bros'], castle: ['rails', 'firebars'] }
+    w2: { d: 2, lessons: ['moving', 'semis', 'notes', 'ice', 'springs', 'cannons', 'donuts', 'rails', 'pipes', 'keys', 'clouds'], castle: ['rails', 'firebars'] },
+    w3: { d: 3, lessons: ['rails', 'ab', 'notes', 'bros', 'pswitch', 'purple', 'conveyor', 'cannons', 'firebars', 'keys'], castle: ['firebars', 'bros'] },
+    w4: { d: 4, lessons: ['firebars', 'clouds', 'water', 'cannons', 'rails', 'semis', 'donuts', 'pipes', 'bros', 'keys'], castle: ['conveyor', 'rails'] },
+    w5: { d: 5, lessons: ['rails', 'bros', 'water', 'ab', 'pswitch', 'firebars', 'purple', 'notes', 'clouds', 'cannons', 'donuts', 'keys', 'conveyor'], castle: ['rails', 'firebars'] }
   };
   const LESSON_NAME = {
     basics: 'Primeros pasos', blocks: 'Bloques y cajas', semis: 'Plataformas', pipes: 'Tuberías', springs: 'Muelles', moving: 'Plataformas móviles',
@@ -186,15 +186,15 @@
       const base = swim ? wet : dry;
       const alreadyUsed = new Set(lesson === 'basics' ? ['flat', 'gap', 'blocks', 'semis'] : [L1]);
       const sec = base.filter((r) => !alreadyUsed.has(r) && ROOMS[r]);
-      // elige 1-2 secundarias de forma determinista (mas variedad a mayor dificultad)
-      const nSec = 1 + (d >= 3 ? 1 : 0);
+      // Elige varias salas distintas: la lección principal aparece una sola vez por nivel.
+      const nSec = Math.min(3, sec.length);
       const picks = [];
       for (let k = 0; k < nSec && sec.length; k++) { const j = Math.floor(rnd() * sec.length); picks.push(sec.splice(j, 1)[0]); }
       if (lesson === 'basics') {
         seq.push('flat', 'gap', 'blocks', picks[0] || 'stairs', 'semis');
       } else {
-        // Alterna introducción, lección, variación y remate, evitando encadenar la misma sala.
-        seq.push('flat', L1, picks[0] || 'gap', picks[1] || 'stairs', L1);
+        // Alterna introducción, salas de apoyo distintas, lección y remate sin repetir la lección.
+        seq.push('flat', picks[0] || 'gap', L1, picks[1] || 'stairs', picks[2] || 'blocks');
       }
     } else if (isCastle) {
       const castleRooms = (swim ? ['water', 'semis', 'moving', 'notes', 'clouds'] : ['gap', 'stairs', 'blocks', 'semis', 'moving', 'notes', 'cannons', 'clouds'])

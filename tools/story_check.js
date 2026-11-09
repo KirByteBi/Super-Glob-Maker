@@ -4,7 +4,7 @@
 //  - la meta oculta (si la hay) también es alcanzable
 //  - en Corrupto la superficie bloqueada obliga a ir por el túnel (y aun así se llega)
 //  - 25 s de partida real sin errores
-// Uso: node tools/story_check.js [w1]   (sale con código 1 si algo falla)
+// Uso: node tools/story_check.js [w1] [--generated] [--pack archivo.js]
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..'), store = {};
 const ctx = { console, Math, JSON, Date, localStorage: { getItem: (k) => store[k] || null, setItem: (k, v) => { store[k] = String(v); } } };
@@ -14,6 +14,11 @@ ctx.window = ctx; vm.createContext(ctx);
   'model/SampleLevels.js', 'model/StoryMap.js', 'model/StoryLevels.js', 'model/StoryPackData.js', 'model/StoryPack.js']
   .forEach((f) => { const p = path.join(root, 'js', f); if (fs.existsSync(p)) vm.runInContext(fs.readFileSync(p, 'utf8'), ctx, { filename: f }); });
 const S = ctx.SGM, C = S.Model.Catalog, TT = C.T;
+const packArg = process.argv.indexOf('--pack');
+if (packArg >= 0 && process.argv[packArg + 1]) {
+  const packPath = path.resolve(process.argv[packArg + 1]);
+  vm.runInContext(fs.readFileSync(packPath, 'utf8'), ctx, { filename: packPath });
+}
 
 function reach(L, swim, ex) {
   const W = L.width, H = L.height, Rail = S.Model.Rail;
@@ -24,6 +29,9 @@ function reach(L, swim, ex) {
   // plataformas / raíles / setas = suelo en todo su recorrido; tuberías = sólidas (se pisan)
   const extra = new Set();
   L.objects.forEach((o) => {
+    if (o.type === 'treeplat') {
+      for (let x = o.x; x < o.x + S.Model.Plat.width(o); x++) extra.add(x + ',' + (o.y - 1));
+    }
     if (/^platform|^shroom/.test(o.type)) {
       if (L.get(o.x, o.y) === TT.RAIL) {
         const seen = new Set([o.x + ',' + o.y]), q = [[o.x, o.y]];
@@ -58,7 +66,8 @@ function reach(L, swim, ex) {
 }
 const nearSet = (R, o, r) => { for (let dx = -r; dx <= r; dx++) for (let dy = -3; dy <= 2; dy++) if (R.has((o.x + dx) + ',' + (o.y + dy))) return true; return false; };
 
-const only = process.argv[2];
+const only = process.argv.slice(2).find((arg) => /^w[1-5]$/.test(arg));
+const generated = process.argv.includes('--generated');
 let bad = 0, total = 0;
 // La unicidad se comprueba SIN nombre, id, tema ni modo: dos niveles no pueden tener el mismo
 // diseño jugable aunque su decoración cambie.
@@ -72,7 +81,10 @@ for (const w of S.Model.StoryMap.worlds) {
       const errs = [];
       let L;
       // el que se juega de verdad: el de la lista fija si está, si no el generado
-      try { const d = S.Model.StoryPack && S.Model.StoryPack.get(w.id, n.id, mode); L = d ? new S.Model.Level(d) : S.Model.StoryLevels.build(w.id, n.id, mode); } catch (e) { errs.push('al construir: ' + e.message); }
+      try {
+        const d = !generated && S.Model.StoryPack && S.Model.StoryPack.get(w.id, n.id, mode);
+        L = d ? new S.Model.Level(d) : S.Model.StoryLevels.build(w.id, n.id, mode);
+      } catch (e) { errs.push('al construir: ' + e.message); }
       if (L) {
         const swim = !!S.Model.Themes.get(L.theme).swim;
         const end = L.objects.find((o) => o.type === 'goal' || /^exswitch/.test(o.type));

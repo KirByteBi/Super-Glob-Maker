@@ -247,6 +247,7 @@ button.link.seed-code:hover, button.link.seed-code:focus-visible { text-decorati
 
 /* ---------- controles táctiles (móvil) ---------- */
 body.touch { touch-action: none; overscroll-behavior: none; -webkit-user-select: none; }
+body.touch #stage { touch-action: none; }
 #touch { position: absolute; inset: 0; pointer-events: none; z-index: 30; }
 #touch.hide { display: none; }
 #touch .tc-btn, #touch .tc-pad { pointer-events: auto; touch-action: none; }
@@ -262,6 +263,7 @@ body.touch { touch-action: none; overscroll-behavior: none; -webkit-user-select:
 .tc-acts .shoot { right: calc(3% + 30px); bottom: calc(8% + 100px); width: 62px; height: 62px; background: rgba(255,79,216,.35); }
 .tc-btn.pause { right: 2%; top: 14%; width: 48px; height: 48px; font-size: 18px; }
 .tc-btn.erase { left: 2%; bottom: 3%; width: 56px; height: 56px; display: none; }
-#touch.edit .tc-btn.erase { display: block; }
+#touch.edit .tc-btn.erase, #touch.edit .tc-btn.camera { display: block; }
+#touch .tc-btn.camera { left: 2%; bottom: calc(3% + 66px); width: 56px; height: 56px; display: none; }
 #touch.edit .tc-pad, #touch.edit .tc-acts, #touch.edit .pause { display: none; }
 @media (max-width: 700px) { .tc-pad { width: 120px; height: 120px; } .tc-acts .jump { width: 72px; height: 72px; } }

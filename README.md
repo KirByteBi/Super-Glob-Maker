@@ -44,8 +44,9 @@ En el **editor**:
 - **R** gira las tuberías (vertical ↔ horizontal).
 - **Ctrl+P** prueba el nivel; **Esc** vuelve al editor.
 
-> En móvil se muestran controles táctiles en pantalla (en desarrollo, ver el
-> plan).
+> En móvil se muestran controles táctiles. En el editor, usa el botón de la
+> mano para arrastrar y mover la cámara con un dedo; también puedes desplazarla
+> con dos dedos. Los gestos táctiles no amplían la página accidentalmente.
 
 ---
 
