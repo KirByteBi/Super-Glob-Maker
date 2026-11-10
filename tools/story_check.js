@@ -94,6 +94,11 @@ for (const w of S.Model.StoryMap.worlds) {
         const gh = L.objects.find((o) => o.type === 'goalhidden');
         if (n.secretNext && !gh) errs.push('sin meta oculta para abrir la ruta secreta');
         if (gh && !nearSet(R, gh, 2)) errs.push('no se llega a la meta oculta');
+        const coins = L.objects.filter((o) => /^starcoin/.test(o.type));
+        const expected = mode === 'corrupt' ? 'starcoin_moon' : 'starcoin';
+        if (coins.length !== 3) errs.push('debe haber 3 monedas de Historia');
+        if (coins.some((o) => o.type !== expected)) errs.push('tipo de moneda incorrecto para el modo');
+        if (coins.some((o) => !nearSet(R, o, 2))) errs.push('moneda de Historia fuera de alcance');
         const reds = L.tiles.filter((t) => t === TT.RCOIN).length; if (L.win.type === 'redcoins' && reds !== 8) errs.push('monedas rojas: ' + reds);
         const st = L.objects.find((o) => o.type === 'start');
         const enemies = L.objects.filter((o) => { const d = C.OBJECTS[o.type] || {}; return d.tier || d.boss; }).length;

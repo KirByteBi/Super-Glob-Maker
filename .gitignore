@@ -1,5 +1,9 @@
 # --- Temporales de pruebas (no afectan al juego) ---
 .tmp_test/
+coverage/
+playwright-report/
+test-results/
+.cache/
 
 # --- Sistema operativo ---
 Thumbs.db
@@ -28,3 +32,8 @@ npm-debug.log*
 
 # --- Dependencias (por si algún día se añaden) ---
 node_modules/
+
+# --- Configuración local / secretos ---
+.env
+.env.*
+!.env.example
