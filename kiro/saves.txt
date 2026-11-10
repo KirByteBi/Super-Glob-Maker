@@ -1,1 +1,7 @@
 Skin Creators / Skins:         KirByte_Bi, Nitrogen, Credible
+Mundo	Nivel con la salida oculta	Reto estrella basado en
+1	    N2	                            N6
+2	    N10	                            N5
+3	    N9	                            N4
+4	    N9	                            N8
+5	    N12	                            N11
