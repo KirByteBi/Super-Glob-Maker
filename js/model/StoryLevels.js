@@ -156,7 +156,7 @@
     n7: { title: 'Rosquillas de tres pistas', rooms: ['donuts', 'moving', 'notes', 'donuts'] },
     n8: { title: 'La cumbre de hielo azul', rooms: ['ice', 'clouds', 'rails', 'gap'], tunnel: 1, tunnelCoin: true },
     n9: { title: 'Tuberías de raíces', rooms: ['pipes', 'springs', 'gap', 'blocks'] },
-    n10: { title: 'La llave del mausoleo', rooms: ['keys', 'semis', 'blocks', 'gap'] },
+    n10: { title: 'La llave del mausoleo', rooms: ['keys', 'semis', 'blocks', 'gap'], tunnel: 1 },
     n11: { title: 'El cielo de carámbanos', rooms: ['clouds', 'ice', 'moving', 'clouds'] },
     cas12: { title: 'Reloj a contratiempo', rooms: ['ice', 'conveyor', 'keys', 'cannons', 'firebars'] },
     pal: { title: 'Santuario de las raíces', rooms: ['springs', 'rails', 'semis', 'clouds'] },
@@ -171,7 +171,7 @@
     n6: { title: 'La bóveda de fichas púrpura', rooms: ['purple', 'donuts', 'moving', 'purple'] },
     n7: { title: 'Cinta de lanzamiento', rooms: ['conveyor', 'cannons', 'gap', 'firebars'] },
     n8: { title: 'El circo de los cañones', rooms: ['cannons', 'rails', 'gap', 'notes'], tunnel: 1, tunnelCoin: true },
-    n9: { title: 'Barras sobre la ruleta', rooms: ['firebars', 'ab', 'gap', 'cannons'] },
+    n9: { title: 'Barras sobre la ruleta', rooms: ['firebars', 'ab', 'gap', 'cannons'], tunnel: 2 },
     n10: { title: 'La combinación final', rooms: ['keys', 'notes', 'rails', 'gap'] },
     cas11: { title: 'Fábrica de entradas imposibles', rooms: ['firebars', 'bros', 'cannons', 'keys', 'conveyor'] },
     pal: { title: 'El casino del interruptor', rooms: ['purple', 'keys', 'ab', 'cannons'] },
@@ -186,7 +186,7 @@
     n6: { title: 'Burbujas bajo el abismo', rooms: ['water', 'clouds', 'semis', 'notes'] },
     n7: { title: 'Rosquillas junto a la lava', rooms: ['donuts', 'firebars', 'gap', 'springs'] },
     n8: { title: 'La tubería del ojo del huracán', rooms: ['pipes', 'clouds', 'springs', 'gap'], tunnel: 2, tunnelCoin: true },
-    n9: { title: 'Los obreros del cielo roto', rooms: ['bros', 'clouds', 'gap', 'rails'] },
+    n9: { title: 'Los obreros del cielo roto', rooms: ['bros', 'clouds', 'gap', 'rails'], tunnel: 1 },
     n10: { title: 'La llave del núcleo', rooms: ['keys', 'firebars', 'cannons', 'gap'] },
     cas11: { title: 'Fundición en plena tormenta', rooms: ['conveyor', 'firebars', 'cannons', 'rails', 'keys'] },
     pal: { title: 'El santuario de magma', rooms: ['firebars', 'rails', 'donuts', 'cannons'] },
@@ -204,7 +204,7 @@
     cas9: { title: 'Relojería de la última fábrica', rooms: ['rails', 'firebars', 'keys', 'cannons', 'conveyor'] },
     n10: { title: 'Notas al borde del vacío', rooms: ['notes', 'ab', 'springs', 'gap'] },
     n11: { title: 'Nubes que no están', rooms: ['clouds', 'notes', 'moving', 'gap'], tunnel: 2, tunnelCoin: true },
-    n12: { title: 'Artillería de la fractura', rooms: ['cannons', 'firebars', 'gap', 'rails'] },
+    n12: { title: 'Artillería de la fractura', rooms: ['cannons', 'firebars', 'gap', 'rails'], tunnel: 1 },
     n13: { title: 'Rosquillas sobre el volcán', rooms: ['donuts', 'clouds', 'moving', 'gap'] },
     cas14: { title: 'Vórtice: la última órbita', rooms: ['rails', 'firebars', 'cannons', 'keys', 'conveyor'] },
     pal: { title: 'El interruptor del nexo', rooms: ['keys', 'purple', 'rails', 'cannons'] },
@@ -251,14 +251,17 @@
     const seed = U.strSeed(world.id + '/' + node.id + (corrupt ? '/corrupt' : ''));
     const rnd = U.rng(seed);
     const theme = S.Model.Themes.get(node.theme);
-    const isCastle = node.type === 'castle', isPalace = node.type === 'palace';
-    const authored = world.id === 'w1' ? W1_DESIGN[node.id] : (WORLD_DESIGN[world.id] || {})[node.id];
-    const d = U.clamp(plan.d + (isCastle ? 1 : 0) + (isPalace ? 1 : 0) + (idx > 5 ? 0.5 : 0), 1, 5) | 0;
-    const lesson = isPalace ? 'palace' : isCastle ? 'castle' : plan.lessons[(idx - 1) % plan.lessons.length] || 'basics';
-    const name = authored
+    const isCastle = node.type === 'castle', isPalace = node.type === 'palace', isStar = node.type === 'star';
+    const designNode = isStar ? world.map[node.starOf] : node;
+    const authored = world.id === 'w1' ? W1_DESIGN[designNode.id] : (WORLD_DESIGN[world.id] || {})[designNode.id];
+    const d = isStar ? 5 : U.clamp(plan.d + (isCastle ? 1 : 0) + (isPalace ? 1 : 0) + (idx > 5 ? 0.5 : 0), 1, 5) | 0;
+    const lesson = isStar ? plan.lessons[(idx - 1) % plan.lessons.length] || 'basics' : isPalace ? 'palace' : isCastle ? 'castle' : plan.lessons[(idx - 1) % plan.lessons.length] || 'basics';
+    const name = isStar
+      ? '★ DESAFÍO ESTRELLA · ' + (authored ? authored.title : S.Model.Themes.name(theme, mode)) + (mode === 'corrupt' ? ' · Apagón' : '')
+      : authored
       ? (isCastle ? '🏰 ' : isPalace ? '⚠ ' : '') + authored.title + (mode === 'corrupt' ? ' · Apagón' : '')
       : (isCastle ? '🏰 ' : isPalace ? '⚠ ' : '') + S.Model.Themes.name(theme, mode) + ' · ' + (LESSON_NAME[lesson] || lesson);
-    const B = builder({ id: 'story-' + world.id + '-' + node.id + '-' + mode, name, theme: node.theme, mode, w: 400, time: isCastle ? 400 : 320 });
+    const B = builder({ id: 'story-' + world.id + '-' + node.id + '-' + mode, name, theme: node.theme, mode, w: 400, time: isCastle ? 400 : isStar ? 180 : 320 });
     const c = { d, late: idx > 5, progress: Math.max(0, idx - 1), rnd, seed, pool: POOLS[node.theme] || POOLS.lake, theme: node.theme, ex: world.excolor != null ? world.excolor : (world.nodes.find((n) => n.type === 'palace') || {}).excolor || 0 };
     const swim = !!theme.swim;
     if (swim) B.fill(0, 0, 399, 1, TT.HARD);
@@ -357,11 +360,20 @@
     // meta oculta (si este nodo abre un camino secreto): por las alturas, con bloques ocultos de escalera
     if (node.secretNext && !isPalace) {
       // la ruta secreta va después del último túnel (por encima de un tramo bloqueado no se podría)
-      let sx = x - 40; const lastT = tunnels.length ? tunnels[tunnels.length - 1][1] + 2 : 0;
-      if (sx < lastT) sx = lastT;
-      const len = Math.max(12, Math.min(26, x - 4 - sx));
-      B.set(sx, GY - 4, TT.HIDDEN).set(sx + 2, GY - 8, TT.HIDDEN);
-      B.row(sx + 4, sx + len, GY - 11, TT.SEMI); B.coins(sx + 6, sx + len - 4, GY - 12); B.obj('goalhidden', sx + len - 2, GY - 12);
+      if (node.starHunt) {
+        const hiddenTunnel = roomStarts.find((room) => room.tunnel);
+        if (!hiddenTunnel) throw new Error('La búsqueda estrella necesita un túnel: ' + world.id + '/' + node.id);
+        for (let tx = hiddenTunnel.x + 4; tx <= hiddenTunnel.x + 14; tx++) {
+          if (B.L.get(tx, TUN_TOP + 1) === TT.COIN || B.L.get(tx, TUN_TOP + 1) === TT.BCOIN) B.L.set(tx, TUN_TOP + 1, TT.EMPTY);
+        }
+        B.obj('goalhidden', hiddenTunnel.x + 14, TUN_FLOOR - 1);
+      } else {
+        let sx = x - 40; const lastT = tunnels.length ? tunnels[tunnels.length - 1][1] + 2 : 0;
+        if (sx < lastT) sx = lastT;
+        const len = Math.max(12, Math.min(26, x - 4 - sx));
+        B.set(sx, GY - 4, TT.HIDDEN).set(sx + 2, GY - 8, TT.HIDDEN);
+        B.row(sx + 4, sx + len, GY - 11, TT.SEMI); B.coins(sx + 6, sx + len - 4, GY - 12); B.obj('goalhidden', sx + len - 2, GY - 12);
+      }
     }
     if (lesson === 'redcoins') B.L.win = Level.normWin({ type: 'redcoins', target: node.secretNext ? 'hidden' : 'both' });
     // Zona segura al aparecer y al reaparecer: la densidad nunca pone un enemigo encima de la
@@ -414,6 +426,7 @@
         }
       }
     }
+    if (isStar) L.noPowers = true;
     return L;
   }
 
@@ -421,14 +434,15 @@
     LESSON_NAME, WORLD_PLAN,
     lessonOf(worldId, nodeId) {
       const w = S.Model.StoryMap.world(worldId), n = w.map[nodeId]; if (!n) return null;
-      if (n.type === 'castle') return 'castle'; if (n.type === 'palace') return 'palace';
+      if (n.type === 'castle') return 'castle'; if (n.type === 'palace') return 'palace'; if (n.type === 'star') return 'star';
       const idx = w.nodes.filter((q) => q.type === 'level').indexOf(n) + 1;
       return (WORLD_PLAN[worldId] || WORLD_PLAN.w1).lessons[(idx - 1) % (WORLD_PLAN[worldId] || WORLD_PLAN.w1).lessons.length];
     },
     build(worldId, nodeId, mode) {
       const w = S.Model.StoryMap.world(worldId), n = w.map[nodeId];
       if (!n || n.type === 'start') return null;
-      const idx = n.type === 'level' ? w.nodes.filter((q) => q.type === 'level').indexOf(n) + 1 : w.nodes.length;
+      const base = n.type === 'star' ? w.map[n.starOf] : n;
+      const idx = base && base.type === 'level' ? w.nodes.filter((q) => q.type === 'level').indexOf(base) + 1 : w.nodes.length;
       return buildNode(w, n, mode === 'corrupt' ? 'corrupt' : 'peace', idx);
     }
   };

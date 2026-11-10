@@ -201,31 +201,15 @@
           (n.next || []).forEach((id) => { const m = this.world.map[id]; if (m) seg(a, this.nodePos(m), w, col); });
         });
       });
-      // Los caminos alternativos descubiertos se dibujan como puentes sobre el mar.
+      // Las salidas ocultas revelan caminos negros, como rutas secretas del mapa.
       this.world.nodes.forEach((n) => {
         if (!SM.isSecret(this.worldId, n.id)) return;
         const a = this.nodePos(n);
         (n.secretNext || []).forEach((id) => {
           const m = this.world.map[id]; if (!m) return;
-          const b = this.nodePos(m), dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
-          const nx = -dy / len, ny = dx / len;
-          seg(a, b, 15, '#39234f');
-          seg(a, b, 10, '#8a5a42');
-          seg(a, b, 6, '#d6ad70');
-          ctx.strokeStyle = '#51364f'; ctx.lineWidth = 2.5;
-          for (let d = 0; d <= len; d += 10) {
-            const x = a.x + dx * d / len, y = a.y + dy * d / len;
-            ctx.beginPath(); ctx.moveTo(x - nx * 6, y - ny * 6); ctx.lineTo(x + nx * 6, y + ny * 6); ctx.stroke();
-          }
-          ctx.strokeStyle = '#51364f'; ctx.lineWidth = 3;
-          for (let d = 12; d < len - 8; d += 24) {
-            const x = a.x + dx * d / len, y = a.y + dy * d / len;
-            ctx.beginPath(); ctx.moveTo(x, y + 3); ctx.lineTo(x, y + 13); ctx.stroke();
-          }
-          ctx.strokeStyle = '#f2d69b'; ctx.lineWidth = 2;
-          [-1, 1].forEach((side) => {
-            ctx.beginPath(); ctx.moveTo(a.x + nx * side * 6, a.y + ny * side * 6); ctx.lineTo(b.x + nx * side * 6, b.y + ny * side * 6); ctx.stroke();
-          });
+          const b = this.nodePos(m);
+          seg(a, b, m.type === 'star' ? 13 : 11, '#000');
+          seg(a, b, m.type === 'star' ? 5 : 3, m.type === 'star' ? '#3d2c08' : '#17151b');
         });
       });
     }
@@ -245,7 +229,7 @@
           ctx.strokeStyle = '#555'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(p.x - 8, p.y + 12); ctx.lineTo(p.x - 8, p.y - 14); ctx.stroke();
           ctx.fillStyle = '#2fd46a'; ctx.beginPath(); ctx.moveTo(p.x - 8, p.y - 14); ctx.lineTo(p.x + 10, p.y - 10); ctx.lineTo(p.x - 8, p.y - 6); ctx.closePath(); ctx.fill(); return;
         }
-        const r = n.type === 'castle' ? 24 : n.type === 'palace' ? 20 : 18;
+        const r = n.type === 'castle' ? 24 : n.type === 'palace' || n.type === 'star' ? 20 : 18;
         // marco del nodo
         ctx.save(); ctx.translate(p.x, p.y);
         if (sel) { ctx.shadowColor = '#ffe600'; ctx.shadowBlur = 16; }
@@ -266,6 +250,16 @@
           ctx.fillStyle = '#2a1545'; ctx.fillRect(-r, -r, r * 2, r * 2);
           ctx.fillStyle = '#6a2fbf'; ctx.fillRect(-12, -6, 24, 18); ctx.fillStyle = '#b58cff'; ctx.beginPath(); ctx.moveTo(-14, -6); ctx.lineTo(0, -18); ctx.lineTo(14, -6); ctx.fill();
           ctx.fillStyle = '#fff'; ctx.font = 'bold 15px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('!', 0, 3); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+        } else if (n.type === 'star') {
+          ctx.fillStyle = '#201707'; ctx.fillRect(-r, -r, r * 2, r * 2);
+          ctx.shadowColor = '#ffe600'; ctx.shadowBlur = 12; ctx.fillStyle = '#ffd928';
+          ctx.beginPath();
+          for (let i = 0; i < 10; i++) {
+            const a = -Math.PI / 2 + i * Math.PI / 5, rad = i % 2 ? 8 : 17;
+            ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
+          }
+          ctx.closePath(); ctx.fill(); ctx.shadowBlur = 0;
+          ctx.lineWidth = 2; ctx.strokeStyle = '#fff3a0'; ctx.stroke();
         } else { // nivel: miniatura del fondo del tema
           const th = S.Model.Themes.get(n.theme);
           ctx.save(); ctx.translate(-r + 3, -r + 3); ctx.scale((r - 3) * 2 / W, (r - 3) * 2 / H);
@@ -329,6 +323,7 @@
       let label = '';
       if (cur.type === 'castle') label = '🏰 ' + tr('Castillo') + ' · ' + S.Model.Themes.name(S.Model.Themes.get(cur.theme), this.mode);
       else if (cur.type === 'palace') label = tr('⚠ Palacio del interruptor "!"');
+      else if (cur.type === 'star') label = '⭐ ' + tr('Desafío estrella') + ' · ' + String(cur.starOf || '').toUpperCase();
       else if (cur.type === 'start') label = tr('Salida');
       else { const idx = this.world.nodes.filter((n) => n.type === 'level').indexOf(cur) + 1; label = this.world.id.toUpperCase() + ' - ' + idx + ' · ' + S.Model.Themes.name(S.Model.Themes.get(cur.theme), this.mode); }
       ctx.font = '800 18px "Trebuchet MS",sans-serif'; const tw = ctx.measureText(label).width;

@@ -50,10 +50,17 @@ for (const w of S.Model.StoryMap.worlds) {
         const gh = L.objects.find((o) => o.type === 'goalhidden');
         if (n.secretNext && !gh) errs.push('sin meta oculta para abrir la ruta secreta');
         if (gh && !nearSet(R, gh, 2)) errs.push('no se llega a la meta oculta');
+        if (n.starHunt && gh && gh.y < L.height - 6) errs.push('la búsqueda de la estrella no está escondida en el túnel');
         const coins = L.objects.filter((o) => /^starcoin/.test(o.type));
         const expected = mode === 'corrupt' ? 'starcoin_moon' : 'starcoin';
         if (coins.length !== 3) errs.push('debe haber 3 monedas de Historia');
         if (coins.some((o) => o.type !== expected)) errs.push('tipo de moneda incorrecto para el modo');
+        if (n.starHunt && gh && coins.some((o) => Math.abs(o.x - gh.x) < 4 && Math.abs(o.y - gh.y) < 4)) errs.push('una moneda de Historia delata la meta estrella');
+        if (n.starHunt && gh) {
+          for (let dx = -3; dx <= 3; dx++) for (let dy = -1; dy <= 1; dy++) {
+            if ([TT.COIN, TT.BCOIN, TT.GCOIN, TT.KCOIN].includes(L.get(gh.x + dx, gh.y + dy))) errs.push('monedas guía junto a la meta estrella');
+          }
+        }
         const unreachableCoins = coins.filter((o) => !nearSet(R, o, 2));
         if (unreachableCoins.length) errs.push('moneda(s) de Historia fuera de alcance: ' + unreachableCoins.map((o) => o.x + ',' + o.y).join(' '));
         if (w.id === 'w1' && ['n1', 'n2', 'n5', 'n6', 'n7', 'n8', 'n9', 'n10', 'alt1', 'pal'].includes(n.id)) {
@@ -65,6 +72,9 @@ for (const w of S.Model.StoryMap.worlds) {
           if (!L.name.startsWith('Azoteas a contrarreloj')) errs.push('el nombre no describe el reto de W1-N6');
           if (!L.objects.some((o) => /^platform/.test(o.type))) errs.push('falta la plataforma móvil del reto');
           if (coins.some((o) => o.y >= 16)) errs.push('hay una moneda demasiado fácil, a nivel del suelo');
+        }
+        if (n.type === 'star' && (!L.name.startsWith('★ DESAFÍO ESTRELLA') || L.time > 180 || !L.noPowers)) {
+          errs.push('el nodo estrella no es una variante de reto extremo');
         }
         const reds = L.tiles.filter((t) => t === TT.RCOIN).length; if (L.win.type === 'redcoins' && reds !== 8) errs.push('monedas rojas: ' + reds);
         const st = L.objects.find((o) => o.type === 'start');
@@ -109,7 +119,21 @@ for (const w of S.Model.StoryMap.worlds) {
 {
   const SM = S.Model.StoryMap;
   for (const w of SM.worlds) {
-    const src = w.nodes.find((n) => n.secretNext && n.secretNext.length && n.next && n.next.length);
+      const stars = w.nodes.filter((n) => n.type === 'star');
+      if (stars.length !== 1) { bad++; console.log('FALLA ruta estrella · ' + w.id + ' tiene ' + stars.length + ' estrellas'); }
+      const star = stars[0], source = star && w.nodes.find((n) => (n.secretNext || []).includes(star.id));
+      if (!star || !source || !source.starHunt || !star.hidden || !star.starOf || !w.map[star.starOf] || w.map[star.starOf].type !== 'level') {
+        bad++; console.log('FALLA ruta estrella · ' + w.id + ' no tiene origen secreto/base de nivel válidos');
+      } else {
+        store['sgm.story.v1'] = '{}';
+        if (SM.isUnlocked(w.id, star.id)) { bad++; console.log('FALLA ruta estrella · ' + w.id + ' se revela sin encontrar la meta oculta'); }
+        SM.markCleared(w.id, source.id, false);
+        if (SM.isUnlocked(w.id, star.id)) { bad++; console.log('FALLA ruta estrella · ' + w.id + ' se revela con la meta normal'); }
+        store['sgm.story.v1'] = '{}';
+        SM.markCleared(w.id, source.id, true);
+        if (!SM.isUnlocked(w.id, star.id)) { bad++; console.log('FALLA ruta estrella · ' + w.id + ' no se revela con la meta oculta'); }
+      }
+      const src = w.nodes.find((n) => n.secretNext && n.secretNext.length && n.next && n.next.length);
     if (!src) { bad++; console.log('FALLA ruta secreta · ' + w.id + ' no tiene cruce'); continue; }
     const baseId = src.next[0], secretId = src.secretNext[0];
     store['sgm.story.v1'] = '{}';

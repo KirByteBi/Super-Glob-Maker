@@ -569,6 +569,17 @@ FASES SUGERIDAS (de menos a mas riesgo):
         aviso + opcion de viajar al volver al mapa; cambiar de
         mundo desbloqueado con X/Shift en el mapamundi.
         Verificado (w1->w2, nodos normales no desbloquean).
+    [ ] Ampliar las rutas secretas a los 5 mundos (la imagen del
+        Mundo 1 es referencia visual): dibujar caminos negros que
+        representen desvíos y nodos secretos abiertos al encontrar
+        la meta oculta correspondiente. Cada mundo tendrá además
+        EXACTAMENTE un nivel desafiante marcado con una estrella;
+        puede colocarse en cualquier punto del mapa y será una
+        versión propia, extremadamente difícil, de un nivel tomado
+        de ese mismo mundo. Se desbloquea encontrando la meta oculta
+        de un nivel del mundo: esa salida debe ser SUPER difícil de
+        localizar. No duplicar la estrella ni reutilizar el nodo
+        normal: el reto debe tener nodo/progreso propio.
     [ ] Pulir: jefe por castillo en w5 (los 3 ponen MoonStar por
         usar BOSS[plan.d]); deberia reservar MoonStar al ultimo.
     [ ] UI de los dos huecos (meta normal + oculta) tambien en

@@ -27,7 +27,7 @@ if (worldArg >= 0 && !/^w[1-5]$/.test(selectedWorld || '')) {
   console.error('Uso: node tools/story_export.js --world w1');
   process.exit(1);
 }
-function placeCoins(L, mode) {
+function placeCoins(L, mode, hideTunnelCoin) {
   L.objects = L.objects.filter((o) => !/^starcoin/.test(o.type));
   const swim = !!S.Model.Themes.get(L.theme).swim;
   const R = reach(S, L, swim, [0, 0, 0]);
@@ -49,7 +49,7 @@ function placeCoins(L, mode) {
   };
   pick(Math.floor(W * 0.24), false);
   pick(Math.floor(W * 0.55), false);
-  pick(Math.floor(W * 0.76), true);
+  pick(Math.floor(W * 0.76), !hideTunnelCoin);
   if (chosen.length < 3) {
     for (const p of candidates) {
       if (chosen.every((q) => Math.abs(q.x - p.x) >= 7)) chosen.push(p);
@@ -71,7 +71,7 @@ for (const w of S.Model.StoryMap.worlds) for (const n of w.nodes) {
   for (const m of ['peace', 'corrupt']) {
     const k = Pack.key(w.id, n.id, m); if (!all && !selected && !selectedWorld && levels[k]) continue;
     const L = S.Model.StoryLevels.build(w.id, n.id, m);
-    if (w.id !== 'w1') placeCoins(L, m);
+    if (w.id !== 'w1') placeCoins(L, m, n.starHunt);
     const d = S.Model.Level.content(L.toJSON()); d.id = 'story-' + k.replace(/\//g, '-'); d.name = L.name;
     levels[k] = d; added++;
   }

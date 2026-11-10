@@ -4,7 +4,7 @@
    sincroniza con la cuenta de Glob Defenders cuando hay sesión.
 
    Un nodo:
-     { id, type:'start'|'level'|'palace'|'castle', x, y, theme, mode?,
+     { id, type:'start'|'level'|'palace'|'castle'|'star', x, y, theme, mode?,
        next:[idDestino...],                 // caminos a los que avanza al completar
        secretNext?:[idDestino...],          // caminos que SOLO abre la meta oculta / palacio
        win?, excolor? }                     // (palace) color del interruptor "!"
@@ -22,6 +22,7 @@
   // opts.palaceAfter = indice (1-based) del nivel del que sale el camino secreto al palacio;
   // opts.palaceTheme/excolor = tema y color "!" del palacio; el palacio reengancha al nodo siguiente.
   // parallelRoutes añade niveles secretos opcionales entre dos nodos de la ruta principal.
+  // starRoute crea el único reto estrella del mundo; su origen esconde la salida en un túnel.
   function buildWorld(id, name, seq, opts) {
     opts = opts || {};
     const perRow = opts.perRow || 6, nodes = [];
@@ -59,6 +60,21 @@
       });
       src.secretNext = (src.secretNext || []).concat(branchId);
     });
+    if (opts.starRoute) {
+      const route = opts.starRoute, src = nodes.find((n) => n.id === route.from);
+      const dest = src && nodes.find((n) => n.id === (src.next || [])[0]);
+      const base = nodes.find((n) => n.id === route.base);
+      if (!src || !dest || !base) throw new Error('Ruta estrella no válida en ' + id);
+      const branchId = 'alt2';
+      src.starHunt = true;
+      src.secretNext = (src.secretNext || []).concat(branchId);
+      nodes.push({
+        id: branchId, type: 'star', hidden: true, theme: base.theme, starOf: base.id,
+        x: Math.round((src.x + dest.x) / 2),
+        y: Math.round((src.y + dest.y) / 2) + (route.side === 'up' ? -1 : 1),
+        next: []
+      });
+    }
     return { id, name, cols: perRow, rows: 2 + Math.ceil(seq.length / perRow) * 2, nodes, scenery: opts.scenery || 'isle' };
   }
 
@@ -68,35 +84,35 @@
       { t: 'lake' }, { t: 'lake' }, { t: 'city' }, { t: 'seaside' }, { t: 'lake' },
       { t: 'city' }, { t: 'seaside' }, { t: 'city' }, { t: 'seaside' }, { t: 'lake' },
       { t: 'factory', type: 'castle' }
-    ], { perRow: 6, palaceAfter: 3, palaceTheme: 'lake', excolor: 0, parallelRoutes: [{ from: 'n6' }], scenery: 'isle' }),
+    ], { perRow: 6, palaceAfter: 3, palaceTheme: 'lake', excolor: 0, parallelRoutes: [{ from: 'n6' }], starRoute: { from: 'n2', base: 'n6', side: 'down' }, scenery: 'isle' }),
 
     // 2. Wildsand Leaf — Jungla, Circo, Ruinas, Nieve; castillo Time Attack. 11 niveles.
     buildWorld('w2', 'Mundo 2 · Wildsand Leaf', [
       { t: 'jungle' }, { t: 'ruins' }, { t: 'circus' }, { t: 'snow' }, { t: 'jungle' },
       { t: 'ruins' }, { t: 'circus' }, { t: 'snow' }, { t: 'jungle' }, { t: 'ruins' }, { t: 'snow' },
       { t: 'clock', type: 'castle' }
-    ], { perRow: 7, palaceAfter: 5, palaceTheme: 'jungle', excolor: 1, parallelRoutes: [{ from: 'n8' }], scenery: 'wild' }),
+    ], { perRow: 7, palaceAfter: 5, palaceTheme: 'jungle', excolor: 1, parallelRoutes: [{ from: 'n8' }], starRoute: { from: 'n10', base: 'n5', side: 'down' }, scenery: 'wild' }),
 
     // 3. Wonders Circus — Circo, Casino y bizarros (disco, hub); castillo Fabrica. 10 niveles.
     buildWorld('w3', 'Mundo 3 · Wonders Circus', [
       { t: 'circus' }, { t: 'casino' }, { t: 'disco' }, { t: 'circus' }, { t: 'hub' },
       { t: 'casino' }, { t: 'disco' }, { t: 'circus' }, { t: 'casino' }, { t: 'hub' },
       { t: 'factory', type: 'castle' }
-    ], { perRow: 6, palaceAfter: 4, palaceTheme: 'casino', excolor: 2, parallelRoutes: [{ from: 'n8' }], scenery: 'circus' }),
+    ], { perRow: 6, palaceAfter: 4, palaceTheme: 'casino', excolor: 2, parallelRoutes: [{ from: 'n8' }], starRoute: { from: 'n9', base: 'n4', side: 'down' }, scenery: 'circus' }),
 
     // 4. Tormenta Volcanica — Volcan, Nubes, GL, variados; castillo Fabrica. 10 niveles.
     buildWorld('w4', 'Mundo 4 · Tormenta Volcánica', [
       { t: 'volcano' }, { t: 'sky' }, { t: 'lake' }, { t: 'volcano' }, { t: 'sky' },
       { t: 'underwater' }, { t: 'volcano' }, { t: 'sky' }, { t: 'lake' }, { t: 'volcano' },
       { t: 'factory', type: 'castle' }
-    ], { perRow: 6, palaceAfter: 6, palaceTheme: 'volcano', excolor: 0, parallelRoutes: [{ from: 'n8' }], scenery: 'volcano' }),
+    ], { perRow: 6, palaceAfter: 6, palaceTheme: 'volcano', excolor: 0, parallelRoutes: [{ from: 'n8' }], starRoute: { from: 'n9', base: 'n8', side: 'up' }, scenery: 'volcano' }),
 
     // 5. Ruptura Dimensional — todos los mapas, 3 castillos (tras cada tercio). Final: Vortice.
     buildWorld('w5', 'Mundo 5 · Ruptura Dimensional', [
       { t: 'lake' }, { t: 'city' }, { t: 'seaside' }, { t: 'factory', type: 'castle' },
       { t: 'jungle' }, { t: 'ruins' }, { t: 'circus' }, { t: 'snow' }, { t: 'factory', type: 'castle' },
       { t: 'casino' }, { t: 'disco' }, { t: 'volcano' }, { t: 'sky' }, { t: 'vortex', type: 'castle' }
-    ], { perRow: 5, palaceAfter: 2, palaceTheme: 'hub', excolor: 2, parallelRoutes: [{ from: 'n11' }], scenery: 'dimension' })
+    ], { perRow: 5, palaceAfter: 2, palaceTheme: 'hub', excolor: 2, parallelRoutes: [{ from: 'n11' }], starRoute: { from: 'n12', base: 'n11', side: 'up' }, scenery: 'dimension' })
   ];
 
   const byId = {};
