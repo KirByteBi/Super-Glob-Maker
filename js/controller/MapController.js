@@ -217,6 +217,11 @@
             const x = a.x + dx * d / len, y = a.y + dy * d / len;
             ctx.beginPath(); ctx.moveTo(x - nx * 6, y - ny * 6); ctx.lineTo(x + nx * 6, y + ny * 6); ctx.stroke();
           }
+          ctx.strokeStyle = '#51364f'; ctx.lineWidth = 3;
+          for (let d = 12; d < len - 8; d += 24) {
+            const x = a.x + dx * d / len, y = a.y + dy * d / len;
+            ctx.beginPath(); ctx.moveTo(x, y + 3); ctx.lineTo(x, y + 13); ctx.stroke();
+          }
           ctx.strokeStyle = '#f2d69b'; ctx.lineWidth = 2;
           [-1, 1].forEach((side) => {
             ctx.beginPath(); ctx.moveTo(a.x + nx * side * 6, a.y + ny * side * 6); ctx.lineTo(b.x + nx * side * 6, b.y + ny * side * 6); ctx.stroke();

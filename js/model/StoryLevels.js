@@ -115,11 +115,102 @@
   // Cada mundo: idea, dificultad y la lección de cada nivel (n1..nN, en orden del mapa).
   const WORLD_PLAN = {
     w1: { d: 1, lessons: ['basics', 'blocks', 'semis', 'pipes', 'springs', 'moving', 'redcoins', 'keys', 'notes', 'rails'], castle: ['conveyor', 'firebars'] },
-    w2: { d: 2, lessons: ['moving', 'semis', 'notes', 'ice', 'springs', 'cannons', 'donuts', 'rails', 'pipes', 'keys', 'clouds'], castle: ['rails', 'firebars'] },
-    w3: { d: 3, lessons: ['rails', 'ab', 'notes', 'bros', 'pswitch', 'purple', 'conveyor', 'cannons', 'firebars', 'keys'], castle: ['firebars', 'bros'] },
-    w4: { d: 4, lessons: ['firebars', 'clouds', 'water', 'cannons', 'rails', 'semis', 'donuts', 'pipes', 'bros', 'keys'], castle: ['conveyor', 'rails'] },
-    w5: { d: 5, lessons: ['rails', 'bros', 'water', 'ab', 'pswitch', 'firebars', 'purple', 'notes', 'clouds', 'cannons', 'donuts', 'keys', 'conveyor'], castle: ['rails', 'firebars'] }
+    w2: { d: 2, lessons: ['moving', 'semis', 'notes', 'ice', 'springs', 'cannons', 'donuts', 'ice', 'pipes', 'keys', 'clouds'], castle: ['rails', 'firebars'] },
+    w3: { d: 3, lessons: ['rails', 'ab', 'notes', 'bros', 'pswitch', 'purple', 'conveyor', 'cannons', 'ab', 'keys'], castle: ['firebars', 'bros'] },
+    w4: { d: 4, lessons: ['firebars', 'clouds', 'water', 'cannons', 'rails', 'water', 'donuts', 'clouds', 'bros', 'firebars'], castle: ['conveyor', 'rails'] },
+    w5: { d: 5, lessons: ['rails', 'bros', 'water', 'ab', 'pswitch', 'firebars', 'purple', 'notes', 'clouds', 'cannons', 'donuts', 'keys', 'bros'], castle: ['rails', 'firebars'] }
   };
+  const W1_DESIGN = {
+    n1: { title: 'El salto de los nenúfares', rooms: ['gap', 'semis', 'stairs', 'gap'] },
+    n2: { title: 'La cantera de las cajas', rooms: ['blocks', 'stairs', 'blocks', 'gap'] },
+    n5: { title: 'Impulso sobre el malecón', rooms: ['springs', 'gap', 'moving', 'springs'] },
+    n6: { title: 'Azoteas a contrarreloj', rooms: ['moving', 'semis', 'exbridge', 'moving'] },
+    n7: { title: 'Ocho monedas en la marea', rooms: ['clouds', 'gap', 'semis', 'stairs'] },
+    n8: { title: 'La llave del faro', rooms: ['blocks', 'keys', 'semis', 'gap'] },
+    n9: { title: 'El eco del muelle', rooms: ['notes', 'moving', 'gap', 'notes'] },
+    n10: { title: 'Raíles sobre el lago', rooms: ['rails', 'semis', 'gap', 'rails'] },
+    alt1: { title: 'El desvío de las azoteas', rooms: ['moving', 'clouds', 'rails', 'gap'] },
+    pal: { title: 'El santuario del interruptor', rooms: ['semis', 'moving', 'rails', 'clouds'] },
+    cas11: { title: 'Fábrica PixelStar: último turno', rooms: ['conveyor', 'firebars', 'keys', 'cannons', 'ice'] }
+  };
+  const W1_STARS = {
+    n1: [[1, 5, 13], [2, 9, 16], [3, 1, 16]],
+    n2: [[0, 6, 13], [0, 10, 15], [1, 9, 24]],
+    n5: [[0, 6, 12], [2, 7, 14], [3, 5, 12]],
+    n6: [[0, 5, 12], [1, 10, 14], [3, 8, 12]],
+    n7: [[0, 12, 13], [2, 7, 14], [3, 5, 14]],
+    n8: [[0, 6, 13], [2, 5, 14], [3, 7, 15]],
+    n9: [[0, 7, 14], [1, 8, 14], [3, 11, 16]],
+    n10: [[0, 9, 14], [1, 7, 14], [3, 13, 13]],
+    alt1: [[0, 7, 13], [1, 12, 13], [2, 8, 13]],
+    pal: [[0, 7, 13], [1, 8, 14], [3, 12, 13]],
+    cas11: [[0, 8, 16], [2, 7, 16], [4, 10, 16]]
+  };
+  const W2_DESIGN = {
+    n1: { title: 'Los puentes de liana', rooms: ['moving', 'gap', 'clouds', 'springs'] },
+    n2: { title: 'La escalera de la cripta', rooms: ['stairs', 'blocks', 'semis', 'gap'], tunnel: 1, tunnelCoin: true },
+    n3: { title: 'La carpa que rebota', rooms: ['notes', 'springs', 'donuts', 'moving'] },
+    n4: { title: 'La pista quebradiza', rooms: ['ice', 'moving', 'gap', 'ice'] },
+    n5: { title: 'La copa del árbol', rooms: ['springs', 'clouds', 'rails', 'gap'], tunnel: 2, tunnelCoin: true },
+    n6: { title: 'Cañones de la cámara sellada', rooms: ['cannons', 'blocks', 'gap', 'cannons'] },
+    n7: { title: 'Rosquillas de tres pistas', rooms: ['donuts', 'moving', 'notes', 'donuts'] },
+    n8: { title: 'La cumbre de hielo azul', rooms: ['ice', 'clouds', 'rails', 'gap'], tunnel: 1, tunnelCoin: true },
+    n9: { title: 'Tuberías de raíces', rooms: ['pipes', 'springs', 'gap', 'blocks'] },
+    n10: { title: 'La llave del mausoleo', rooms: ['keys', 'semis', 'blocks', 'gap'] },
+    n11: { title: 'El cielo de carámbanos', rooms: ['clouds', 'ice', 'moving', 'clouds'] },
+    cas12: { title: 'Reloj a contratiempo', rooms: ['ice', 'conveyor', 'keys', 'cannons', 'firebars'] },
+    pal: { title: 'Santuario de las raíces', rooms: ['springs', 'rails', 'semis', 'clouds'] },
+    alt1: { title: 'Ascenso por el telesilla', rooms: ['moving', 'clouds', 'rails', 'gap'], tunnel: 2, tunnelCoin: true }
+  };
+  const W3_DESIGN = {
+    n1: { title: 'La montaña rusa fantasma', rooms: ['rails', 'firebars', 'moving', 'gap'] },
+    n2: { title: 'La apuesta de los bloques A/B', rooms: ['ab', 'keys', 'blocks', 'gap'] },
+    n3: { title: 'El bis del bloque nota', rooms: ['notes', 'pswitch', 'springs', 'notes'] },
+    n4: { title: 'Duelo en la carpa central', rooms: ['bros', 'springs', 'gap', 'blocks'], tunnel: 2, tunnelCoin: true },
+    n5: { title: 'Cambio de pista', rooms: ['pswitch', 'ab', 'conveyor', 'gap'] },
+    n6: { title: 'La bóveda de fichas púrpura', rooms: ['purple', 'donuts', 'moving', 'purple'] },
+    n7: { title: 'Cinta de lanzamiento', rooms: ['conveyor', 'cannons', 'gap', 'firebars'] },
+    n8: { title: 'El circo de los cañones', rooms: ['cannons', 'rails', 'gap', 'notes'], tunnel: 1, tunnelCoin: true },
+    n9: { title: 'Barras sobre la ruleta', rooms: ['firebars', 'ab', 'gap', 'cannons'] },
+    n10: { title: 'La combinación final', rooms: ['keys', 'notes', 'rails', 'gap'] },
+    cas11: { title: 'Fábrica de entradas imposibles', rooms: ['firebars', 'bros', 'cannons', 'keys', 'conveyor'] },
+    pal: { title: 'El casino del interruptor', rooms: ['purple', 'keys', 'ab', 'cannons'] },
+    alt1: { title: 'Carril de la carpa alta', rooms: ['rails', 'moving', 'firebars', 'gap'], tunnel: 2, tunnelCoin: true }
+  };
+  const W4_DESIGN = {
+    n1: { title: 'Las barras del cráter', rooms: ['firebars', 'donuts', 'gap', 'cannons'] },
+    n2: { title: 'Nubes antes del vendaval', rooms: ['clouds', 'rails', 'moving', 'gap'] },
+    n3: { title: 'El acueducto de gelatina', rooms: ['water', 'pipes', 'semis', 'gap'] },
+    n4: { title: 'Artillería entre géiseres', rooms: ['cannons', 'firebars', 'gap', 'rails'] },
+    n5: { title: 'Raíles en la corriente de aire', rooms: ['rails', 'clouds', 'gap', 'moving'] },
+    n6: { title: 'Burbujas bajo el abismo', rooms: ['water', 'clouds', 'semis', 'notes'] },
+    n7: { title: 'Rosquillas junto a la lava', rooms: ['donuts', 'firebars', 'gap', 'springs'] },
+    n8: { title: 'La tubería del ojo del huracán', rooms: ['pipes', 'clouds', 'springs', 'gap'], tunnel: 2, tunnelCoin: true },
+    n9: { title: 'Los obreros del cielo roto', rooms: ['bros', 'clouds', 'gap', 'rails'] },
+    n10: { title: 'La llave del núcleo', rooms: ['keys', 'firebars', 'cannons', 'gap'] },
+    cas11: { title: 'Fundición en plena tormenta', rooms: ['conveyor', 'firebars', 'cannons', 'rails', 'keys'] },
+    pal: { title: 'El santuario de magma', rooms: ['firebars', 'rails', 'donuts', 'cannons'] },
+    alt1: { title: 'Pasarela sobre las nubes', rooms: ['clouds', 'moving', 'rails', 'gap'], tunnel: 1, tunnelCoin: true }
+  };
+  const W5_DESIGN = {
+    n1: { title: 'Raíles entre dos mundos', rooms: ['rails', 'gap', 'springs', 'water'] },
+    n2: { title: 'Los obreros de la grieta', rooms: ['bros', 'blocks', 'gap', 'keys'], tunnel: 1, tunnelCoin: true },
+    n3: { title: 'El rompeolas invertido', rooms: ['water', 'clouds', 'rails', 'gap'] },
+    cas4: { title: 'Turno doble en la fábrica', rooms: ['conveyor', 'firebars', 'keys', 'cannons', 'ice'] },
+    n5: { title: 'A/B entre las raíces', rooms: ['ab', 'rails', 'springs', 'gap'] },
+    n6: { title: 'El interruptor del osario', rooms: ['pswitch', 'keys', 'ab', 'gap'] },
+    n7: { title: 'Las cintas del carnaval roto', rooms: ['firebars', 'cannons', 'conveyor', 'gap'] },
+    n8: { title: 'La bóveda violeta de nieve', rooms: ['purple', 'clouds', 'donuts', 'gap'] },
+    cas9: { title: 'Relojería de la última fábrica', rooms: ['rails', 'firebars', 'keys', 'cannons', 'conveyor'] },
+    n10: { title: 'Notas al borde del vacío', rooms: ['notes', 'ab', 'springs', 'gap'] },
+    n11: { title: 'Nubes que no están', rooms: ['clouds', 'notes', 'moving', 'gap'], tunnel: 2, tunnelCoin: true },
+    n12: { title: 'Artillería de la fractura', rooms: ['cannons', 'firebars', 'gap', 'rails'] },
+    n13: { title: 'Rosquillas sobre el volcán', rooms: ['donuts', 'clouds', 'moving', 'gap'] },
+    cas14: { title: 'Vórtice: la última órbita', rooms: ['rails', 'firebars', 'cannons', 'keys', 'conveyor'] },
+    pal: { title: 'El interruptor del nexo', rooms: ['keys', 'purple', 'rails', 'cannons'] },
+    alt1: { title: 'El carril de la discoteca', rooms: ['keys', 'clouds', 'rails', 'gap'], tunnel: 1, tunnelCoin: true }
+  };
+  const WORLD_DESIGN = { w2: W2_DESIGN, w3: W3_DESIGN, w4: W4_DESIGN, w5: W5_DESIGN };
   const LESSON_NAME = {
     basics: 'Primeros pasos', blocks: 'Bloques y cajas', semis: 'Plataformas', pipes: 'Tuberías', springs: 'Muelles', moving: 'Plataformas móviles',
     redcoins: 'Monedas rojas', keys: 'Llaves y puertas', notes: 'Bloques Nota', rails: 'Raíles', ice: 'Hielo', cannons: 'Cañones', donuts: 'Rosquillas',
@@ -161,9 +252,12 @@
     const rnd = U.rng(seed);
     const theme = S.Model.Themes.get(node.theme);
     const isCastle = node.type === 'castle', isPalace = node.type === 'palace';
+    const authored = world.id === 'w1' ? W1_DESIGN[node.id] : (WORLD_DESIGN[world.id] || {})[node.id];
     const d = U.clamp(plan.d + (isCastle ? 1 : 0) + (isPalace ? 1 : 0) + (idx > 5 ? 0.5 : 0), 1, 5) | 0;
     const lesson = isPalace ? 'palace' : isCastle ? 'castle' : plan.lessons[(idx - 1) % plan.lessons.length] || 'basics';
-    const name = (isCastle ? '🏰 ' : isPalace ? '⚠ ' : '') + S.Model.Themes.name(theme, mode) + ' · ' + (LESSON_NAME[lesson] || lesson);
+    const name = authored
+      ? (isCastle ? '🏰 ' : isPalace ? '⚠ ' : '') + authored.title + (mode === 'corrupt' ? ' · Apagón' : '')
+      : (isCastle ? '🏰 ' : isPalace ? '⚠ ' : '') + S.Model.Themes.name(theme, mode) + ' · ' + (LESSON_NAME[lesson] || lesson);
     const B = builder({ id: 'story-' + world.id + '-' + node.id + '-' + mode, name, theme: node.theme, mode, w: 400, time: isCastle ? 400 : 320 });
     const c = { d, late: idx > 5, progress: Math.max(0, idx - 1), rnd, seed, pool: POOLS[node.theme] || POOLS.lake, theme: node.theme, ex: world.excolor != null ? world.excolor : (world.nodes.find((n) => n.type === 'palace') || {}).excolor || 0 };
     const swim = !!theme.swim;
@@ -178,7 +272,9 @@
     // luego huecos...). Palacios y castillos mantienen su set fijo.
     const main = isPalace ? ['semis', 'moving', 'rails', 'notes', 'clouds'] : isCastle ? plan.castle : [lesson];
     const seq = [];
-    if (!isPalace && !isCastle) {
+    if (authored) {
+      seq.push(...authored.rooms);
+    } else if (!isPalace && !isCastle) {
       const L1 = lesson === 'basics' ? 'flat' : lesson === 'redcoins' ? 'semis' : lesson;
       // pool de secundarias "compatibles" (evita agua en niveles secos, etc.)
       const dry = ['blocks', 'semis', 'springs', 'moving', 'notes', 'stairs', 'gap', 'donuts', 'clouds'];
@@ -186,15 +282,15 @@
       const base = swim ? wet : dry;
       const alreadyUsed = new Set(lesson === 'basics' ? ['flat', 'gap', 'blocks', 'semis'] : [L1]);
       const sec = base.filter((r) => !alreadyUsed.has(r) && ROOMS[r]);
-      // Elige varias salas distintas: la lección principal aparece una sola vez por nivel.
-      const nSec = Math.min(3, sec.length);
+      // elige 1-2 secundarias de forma determinista (mas variedad a mayor dificultad)
+      const nSec = 1 + (d >= 3 ? 1 : 0);
       const picks = [];
       for (let k = 0; k < nSec && sec.length; k++) { const j = Math.floor(rnd() * sec.length); picks.push(sec.splice(j, 1)[0]); }
       if (lesson === 'basics') {
         seq.push('flat', 'gap', 'blocks', picks[0] || 'stairs', 'semis');
       } else {
-        // Alterna introducción, salas de apoyo distintas, lección y remate sin repetir la lección.
-        seq.push('flat', picks[0] || 'gap', L1, picks[1] || 'stairs', picks[2] || 'blocks');
+        // Alterna introducción, lección, variación y remate, evitando encadenar la misma sala.
+        seq.push('flat', L1, picks[0] || 'gap', picks[1] || 'stairs', L1);
       }
     } else if (isCastle) {
       const castleRooms = (swim ? ['water', 'semis', 'moving', 'notes', 'clouds'] : ['gap', 'stairs', 'blocks', 'semis', 'moving', 'notes', 'cannons', 'clouds'])
@@ -203,11 +299,15 @@
       for (let i = 0; i < 4 && castleRooms.length; i++) seq.push(castleRooms.splice(Math.floor(rnd() * castleRooms.length), 1)[0]);
     } else seq.push(...main, 'gap', ...main.slice(0, 2));
     // ¿atajo con bloques "!" del mundo? (niveles a partir de la 2ª mitad)
-    if (!isPalace && idx > 4 && world.nodes.some((n) => n.type === 'palace')) seq.splice(3, 0, 'exbridge');
+    if (!authored && !isPalace && idx > 4 && world.nodes.some((n) => n.type === 'palace')) seq.splice(3, 0, 'exbridge');
     // salas donde va el túnel (rutas alternas): 1 en mundos fáciles, 2 a partir del 3
-    const tunnelAt = new Set([2]); if (d >= 3 && seq.length > 6) tunnelAt.add(4);
+    const tunnelAt = authored
+      ? new Set(authored.tunnel != null ? [authored.tunnel] : (world.id === 'w1' && node.id === 'n2' ? [1] : []))
+      : new Set([2]);
+    if (!authored && d >= 3 && seq.length > 6) tunnelAt.add(4);
     const tunnels = []; // tramos [x0, x1] con túnel (en Corrupto la superficie está cortada)
     let checkpoint = false, redPlaced = 0;
+    const roomStarts = [];
     seq.forEach((room, i) => {
       const checkpointHere = !checkpoint && i === Math.floor(seq.length / 2);
       const hasTunnel = tunnelAt.has(i) && !swim;
@@ -216,6 +316,7 @@
       if (checkpointHere && !hasTunnel) { B.ground(x, x + 5); B.obj('checkpoint', x + 2, GY - 1); x += 6; checkpoint = true; }
       if (hasTunnel) {
         // En la superficie del túnel también hay actividad (en Paz); en Corrupto queda bloqueada.
+        roomStarts.push({ room, x, w: 18, tunnel: true });
         B.ground(x - 6, x - 1); const w = 18; B.ground(x, x + w - 1); B.coins(x + 3, x + w - 4, GY - 4);
         if (!corrupt) { B.row(x + 6, x + 10, GY - 4, TT.SEMI); enemy(B, c, x + 14); }
         tunnel(B, c, x, x + w - 1, corrupt ? (seed + i) % 3 + 3 : 0);
@@ -225,7 +326,21 @@
         return;
       }
       const fn = ROOMS[room] || ROOMS.flat;
+      const roomX = x;
       const w = fn(B, x, c);
+      roomStarts.push({ room, x: roomX, w });
+      if (authored) {
+        const foes = B.L.objects.filter((o) => { const def = C.OBJECTS[o.type] || {}; return def.tier || def.boss; });
+        if (foes.length < 5) {
+          const safe = B.L.objects.filter((o) => o.type === 'start' || o.type === 'checkpoint');
+          for (let fx = roomX + 1; fx < roomX + w - 1; fx++) {
+            if (safe.some((o) => Math.abs(fx - o.x) < (o.type === 'start' ? 6 : 5))) continue;
+            const before = B.L.objects.length;
+            enemy(B, c, fx);
+            if (B.L.objects.length > before) break;
+          }
+        }
+      }
       // Lección "monedas rojas": 8 rojas repartidas por el nivel (la meta oculta las pide)
       if (lesson === 'redcoins' && redPlaced < 8) { const n = Math.min(2, 8 - redPlaced); for (let k = 0; k < n; k++) { const rx = x + 2 + k * 4; let ry = GY - 6; while (ry > 2 && B.L.get(rx, ry)) ry--; B.set(rx, ry, TT.RCOIN); redPlaced++; } }
       x += w;
@@ -263,6 +378,42 @@
     // recortar el ancho y cerrar
     const L = B.L, W = Math.min(400, x);
     if (W < L.width) L.resize(W, H);
+    if (authored) {
+      L.objects = L.objects.filter((o) => !/^starcoin/.test(o.type));
+      const coin = mode === 'corrupt' ? 'starcoin_moon' : 'starcoin';
+      if (world.id === 'w1' && W1_STARS[node.id]) {
+        W1_STARS[node.id].forEach(([roomIndex, dx, y]) => {
+          const room = roomStarts[roomIndex];
+          if (room) L.objects.push({ type: coin, x: room.x + dx, y });
+        });
+      } else {
+        const regular = roomStarts.filter((r) => !r.tunnel), underground = roomStarts.find((r) => r.tunnel);
+        const tunnelCoin = authored.tunnelCoin && underground;
+        const count = tunnelCoin ? 2 : 3, last = regular.length - 1;
+        const indices = count === 2 ? [0, last] : [0, Math.floor(last / 2), last];
+        indices.forEach((index, i) => {
+          const room = regular[index];
+          if (!room) return;
+          const center = room.x + Math.floor(room.w * (i === 0 ? 0.35 : i === 1 ? 0.65 : 0.45));
+          const candidates = [];
+          for (let d = 0; d < room.w; d++) { candidates.push(center + d); if (d) candidates.push(center - d); }
+          const xCoin = candidates.find((x) => x > room.x && x < room.x + room.w - 1 &&
+            !L.get(x, GY - 2) && !L.get(x, GY - 1) && C.isSolid(L.get(x, GY), L) &&
+            !L.objects.some((o) => Math.abs(o.x - x) <= 1 && Math.abs(o.y - (GY - 2)) <= 1));
+          if (xCoin != null) L.objects.push({ type: coin, x: xCoin, y: GY - 2 });
+        });
+        if (tunnelCoin) L.objects.push({ type: coin, x: underground.x + 9, y: TUN_TOP + 1 });
+        const placed = () => L.objects.filter((o) => o.type === coin);
+        for (let y = GY - 2; y >= 8 && placed().length < 3; y--) {
+          for (let x = 12; x < W - 12 && placed().length < 3; x++) {
+            if (L.get(x, y) || L.get(x, y + 1) || !C.isSolid(L.get(x, y + 2), L)) continue;
+            if (L.objects.some((o) => Math.abs(o.x - x) <= 1 && Math.abs(o.y - y) <= 1)) continue;
+            if (placed().some((o) => Math.abs(o.x - x) < 7)) continue;
+            L.objects.push({ type: coin, x, y });
+          }
+        }
+      }
+    }
     return L;
   }
 
