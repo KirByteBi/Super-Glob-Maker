@@ -5,6 +5,9 @@ playwright-report/
 test-results/
 .cache/
 
+# --- Scripts SQL ya aplicados en Supabase ---
+kiro/*.sql
+
 # --- Sistema operativo ---
 Thumbs.db
 ehthumbs.db
