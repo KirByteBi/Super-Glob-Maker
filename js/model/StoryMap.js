@@ -1,6 +1,7 @@
 /* Modelo: MAPAMUNDI del Modo Historia (world-map estilo SMW). AISLADO en su modulo.
    Define MUNDOS con NODOS (inicio, niveles, palacio "!", castillo) colocados en una rejilla,
-   conectados por CAMINOS (con cruces). El progreso vive en localStorage 'sgm.story.v1'.
+   conectados por CAMINOS (con cruces). El progreso vive en localStorage 'sgm.story.v1' y se
+   sincroniza con la cuenta de Glob Defenders cuando hay sesión.
 
    Un nodo:
      { id, type:'start'|'level'|'palace'|'castle', x, y, theme, mode?,
@@ -111,6 +112,41 @@
     // ---- progreso ----
     // normal y secret guardan salidas independientes; cleared conserva el estado total.
     progress() { return read(); },
+    mergeProgress(incoming) {
+      if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) return read();
+      const p = read();
+      const truth = (v) => v === true || v === 1;
+      WORLDS.forEach((w) => {
+        w.nodes.forEach((n) => {
+          const key = w.id + '/' + n.id, src = incoming[key];
+          if (!src || typeof src !== 'object' || Array.isArray(src)) return;
+          const dst = p[key] || {};
+          const normal = truth(dst.normal) || (dst.normal == null && truth(dst.cleared)) || truth(src.normal) || (src.normal == null && truth(src.cleared));
+          const secret = truth(dst.secret) || truth(src.secret);
+          const cleared = truth(dst.cleared) || truth(src.cleared) || normal || secret;
+          if (cleared || normal || secret) p[key] = { cleared, normal, secret };
+        });
+        if (incoming.worlds && truth(incoming.worlds[w.id]) || p.worlds && truth(p.worlds[w.id])) {
+          p.worlds = p.worlds || {};
+          p.worlds[w.id] = true;
+        }
+        const srcEx = incoming.ex && incoming.ex[w.id], dstEx = p.ex && p.ex[w.id];
+        if (Array.isArray(srcEx) || Array.isArray(dstEx)) {
+          p.ex = p.ex || {};
+          p.ex[w.id] = [0, 1, 2].map((i) => truth(srcEx && srcEx[i]) || truth(dstEx && dstEx[i]) ? 1 : 0);
+        }
+        const srcSeen = incoming.seen && incoming.seen[w.id], dstSeen = p.seen && p.seen[w.id];
+        ['intro', 'castle', 'boss'].forEach((kind) => {
+          if (truth(srcSeen && srcSeen[kind]) || truth(dstSeen && dstSeen[kind])) {
+            p.seen = p.seen || {};
+            p.seen[w.id] = p.seen[w.id] || {};
+            p.seen[w.id][kind] = true;
+          }
+        });
+      });
+      write(p);
+      return p;
+    },
     nodeState(worldId, nodeId) { return read()[worldId + '/' + nodeId] || null; },
     isCleared(worldId, nodeId) { const s = this.nodeState(worldId, nodeId); return !!(s && s.cleared); },
     isNormal(worldId, nodeId) {

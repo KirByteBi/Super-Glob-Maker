@@ -26,6 +26,12 @@
       this.menu.loading(0);
       S.View.Assets.loadAll((p) => this.menu.loading(p)).then(() => this.showTitle());
       requestAnimationFrame((ts) => this.loop(ts));
+      if (!this._storyAccountEvents) {
+        this._storyAccountEvents = true;
+        S.events.on('gld:login', () => this.syncStoryProgress());
+        S.events.on('gld:logout', () => { this._storySyncToken = (this._storySyncToken || 0) + 1; });
+      }
+      this.syncStoryProgress();
       // Lee tu usuario de GlD al arrancar (si hay sesión): así tu cuenta se ve en el menú
       // y tus niveles descargados se pueden editar sin tener que entrar antes a Online.
       if (Storage.isLinked() && S.Model.Gld.configured()) {
@@ -49,6 +55,57 @@
       setTimeout(ping, 3000); setInterval(ping, 180000);
       // Controles táctiles (móvil/tablet)
       if (S.View.TouchControls) S.View.TouchControls.init(this);
+    }
+
+    async syncStoryProgress() {
+      const Gld = S.Model.Gld, SM = S.Model.StoryMap, token = this._storySyncToken = (this._storySyncToken || 0) + 1;
+      if (!Storage.isLinked() || !Gld.configured() || !SM) return;
+      try {
+        const user = await Gld.user();
+        if (!user || token !== this._storySyncToken) return;
+        const loaded = await Gld.storyProgressLoad();
+        if (token !== this._storySyncToken) return;
+        if (!loaded.ok) {
+          if (loaded.error !== 'offline' && loaded.error !== 'no-session') this.reportStorySyncError('cargar', loaded.error);
+          return;
+        }
+        SM.mergeProgress(loaded.progress);
+        const saved = await Gld.storyProgressSave(SM.progress());
+        if (token !== this._storySyncToken) return;
+        if (!saved.ok) {
+          if (saved.error !== 'offline' && saved.error !== 'no-session') this.reportStorySyncError('sincronizar', saved.error);
+          return;
+        }
+        SM.mergeProgress(saved.progress);
+      } catch (e) {
+        if (token === this._storySyncToken) this.reportStorySyncError('sincronizar', e);
+      }
+    }
+
+    async saveStoryProgress() {
+      const Gld = S.Model.Gld, SM = S.Model.StoryMap, token = this._storySyncToken || 0;
+      if (!Storage.isLinked() || !Gld.configured() || !SM) return;
+      try {
+        const user = await Gld.user();
+        if (!user || token !== this._storySyncToken) return;
+        const saved = await Gld.storyProgressSave(SM.progress());
+        if (token !== this._storySyncToken) return;
+        if (!saved.ok) {
+          if (saved.error !== 'offline' && saved.error !== 'no-session') this.reportStorySyncError('guardar', saved.error);
+          return;
+        }
+        SM.mergeProgress(saved.progress);
+      } catch (e) {
+        if (token === this._storySyncToken) this.reportStorySyncError('guardar', e);
+      }
+    }
+
+    reportStorySyncError(action, error) {
+      console.warn('No se pudo ' + action + ' el progreso de Historia:', error);
+      if (error === 'no-story-progress' && !this._storySchemaWarned) {
+        this._storySchemaWarned = true;
+        this.menu.toast('Para sincronizar la Historia, aplica kiro/supabase_story_progress.sql en Supabase.', 5000);
+      }
     }
 
     fit() {
@@ -761,6 +818,7 @@
           if (node && node.type === 'castle' && lp.opts.story.mode !== 'corrupt' && SM.seen && !SM.seen(wId, 'boss') && S.Model.StoryDialogs && S.Model.StoryDialogs.has(wId + '/boss')) {
             SM.markSeen(wId, 'boss'); this._pendingBossCinematic = wId + '/boss';
           }
+          this.saveStoryProgress();
         }
       }
       const img = g.player.formPath();

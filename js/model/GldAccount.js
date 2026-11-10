@@ -300,6 +300,20 @@
       });
       return error ? { ok: false, error: /sgm_story_pack_save|function|schema cache/i.test(error.message) ? 'no-story-pack' : error.message } : { ok: true };
     },
+    async storyProgressLoad() {
+      const c = await getClient(); if (!c) return { ok: false, error: 'offline' };
+      if (!(await Gld.user())) return { ok: false, error: 'no-session' };
+      const { data, error } = await c.rpc('sgm_story_progress_get');
+      if (error) return { ok: false, error: /sgm_story_progress_get|function|schema cache/i.test(error.message) ? 'no-story-progress' : error.message };
+      return { ok: true, progress: data || {} };
+    },
+    async storyProgressSave(progress) {
+      const c = await getClient(); if (!c) return { ok: false, error: 'offline' };
+      if (!(await Gld.user())) return { ok: false, error: 'no-session' };
+      const { data, error } = await c.rpc('sgm_story_progress_save', { p_progress: progress || {} });
+      if (error) return { ok: false, error: /sgm_story_progress_save|function|schema cache/i.test(error.message) ? 'no-story-progress' : error.message };
+      return { ok: true, progress: data || {} };
+    },
     async adminDelete(id) { const c = await getClient(); if (!c) return { ok: false, error: 'offline' }; const { error } = await c.rpc('sgm_admin_delete', { p_level: id }); return error ? { ok: false, error: Gld._v3err(error) } : { ok: true }; },
     async adminGod(id, on) { const c = await getClient(); if (!c) return { ok: false, error: 'offline' }; const { error } = await c.rpc('sgm_admin_god', { p_level: id, p_god: !!on }); return error ? { ok: false, error: Gld._v3err(error) } : { ok: true }; },
     // niveles GOD (destacados por el admin)

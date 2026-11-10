@@ -7,6 +7,7 @@ test-results/
 
 # --- Scripts SQL ya aplicados en Supabase ---
 kiro/*.sql
+!kiro/supabase_story_progress.sql
 
 # --- Sistema operativo ---
 Thumbs.db

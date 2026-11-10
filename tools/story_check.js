@@ -128,5 +128,22 @@ for (const w of S.Model.StoryMap.worlds) {
     bad++; console.log('FALLA meta oculta · completa la Historia principal');
   }
 }
+{
+  const SM = S.Model.StoryMap;
+  store['sgm.story.v1'] = JSON.stringify({
+    'w1/n1': { cleared: true, normal: true },
+    worlds: { w2: true }, ex: { w1: [1, 0, 0] }, seen: { w1: { intro: true } }
+  });
+  const merged = SM.mergeProgress({
+    'w1/n1': { cleared: true, secret: true },
+    'w1/n2': { cleared: true, normal: true },
+    worlds: { w3: true }, ex: { w1: [0, 1, 0] }, seen: { w1: { boss: true } }
+  });
+  if (!merged['w1/n1'].normal || !merged['w1/n1'].secret || !merged['w1/n2'].cleared ||
+      !merged.worlds.w2 || !merged.worlds.w3 || merged.ex.w1.join(',') !== '1,1,0' ||
+      !merged.seen.w1.intro || !merged.seen.w1.boss) {
+    bad++; console.log('FALLA sincronización de progreso · no conserva la unión local y remota');
+  }
+}
 console.log((bad ? 'FALLAN ' + bad : 'OK') + ' · ' + total + ' niveles comprobados');
 process.exitCode = bad ? 1 : 0;
