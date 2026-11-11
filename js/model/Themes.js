@@ -15,7 +15,11 @@
     movingShrooms: 'Setas vivas: las setas se mueven',
     mirror: 'Espejo: el nivel se invierte',
     meteors: 'Lluvia de meteoritos',
-    stormClouds: 'Tormenta MadStars: las nubes se deshacen y lanzan rayos'
+    stormClouds: 'Tormenta MadStars: las nubes se deshacen y lanzan rayos',
+    roulette: 'Ruleta loca: cada rato cambia una regla del nivel',
+    timewarp: 'Paradoja: el tiempo va a ratos lento y a ratos rápido',
+    beat: 'A todo volumen: enemigos y plataformas laten al ritmo',
+    medalGate: 'Dimensión sellada: la meta se abre con todas las Monedas Estrella'
   };
 
   const SCALES = {

@@ -297,25 +297,26 @@ Reglas generales
                               y lanzan rayos hacia abajo
 
 MAPAS NUEVOS
-[ ] Gambling Gaming ......... casino de verdad (luces de neon,
-                              mesas, fichas, ruletas, tragaperras,
-                              cartas, dados). No es una casa
-                              encantada: solo ocupa su HUECO de
-                              SMM (el nivel "laberinto con trucos":
-                              puertas trampa, salidas falsas,
-                              caminos que se repiten)
-    Corrupto: cada cierto tiempo gira
-    una ruleta y cambia una regla del nivel (enemigos dobles,
-    cajas con monedas falsas, gravedad invertida un rato...)
-[ ] Time Attack ............. espacio-tiempo (relojes, engranajes,
-                              portales)
-    Corrupto: el tiempo, enemigos y obstaculos va a ratos mas lento y a ratos mas rapido
-[ ] Sound Discotech ......... musical (altavoces, pista de baile,
-                              notas)
-    Corrupto: plataformas y enemigos se mueven al ritmo de la musica
-[ ] Event Hub ............... interdimensional verde
-    Corrupto: la salida esta cerrada y solo se abre recogiendo
-    las Medallas del nivel (como las monedas llave)
+[~] Gambling Gaming ......... casino (paleta, fondo, semisolidos y
+                              decoraciones hechos; falta el diseño
+                              "laberinto con trucos" del nivel).
+    [X] Corrupto (roulette): cada ~8-12s gira una ruleta y cambia
+        una regla (rapido / lento / gravedad baja / normal), que
+        afecta a enemigos y obstaculos. Verificado.
+[~] Time Attack ............. espacio-tiempo (paleta/fondo/semis ok).
+    [X] Corrupto (timewarp): el tiempo, enemigos y obstaculos van
+        a ratos lentos (x0.45) y a ratos rapidos (x1.8). Verificado.
+[~] Sound Discotech ......... musical (paleta/fondo/semis ok).
+    [X] Corrupto (beat): enemigos y plataformas LATEN al ritmo del
+        tempo del tema (golpe fuerte x1.9 en el beat). Verificado.
+[~] Event Hub ............... interdimensional verde.
+    [X] Corrupto (medalGate): la meta esta sellada hasta coger
+        todas las Monedas Estrella (ya estaba implementado).
+  >> Los 3 efectos nuevos (roulette/timewarp/beat) modulan
+     enemySpeedMul/obstacleMul por frame en GameModel
+     (updateNewMapEffects), asi afectan a toda la fauna y
+     obstaculos sin tocar su fisica. Faltan: DISEÑO de los niveles
+     tematicos de estos mapas y pulir visual de cada efecto.
 
 Cada mapa nuevo necesita: paleta Paz/Corrupto, fondo con parallax,
 2 semisolidos, musica, nivel de Modo Historia y su efecto Corrupto.

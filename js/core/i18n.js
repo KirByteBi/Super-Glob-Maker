@@ -88,7 +88,34 @@
     'Semisólido de fondo (pinta un bloque: arriba se pisa, el resto es fondo del mapa)': 'Background semisolid (paint a block: the top is walkable, the rest is map background)', 'Fondo de cueva (sin colisión: para cuevas y túneles)': 'Cave background (no collision: for caves and tunnels)',
     'Raíl (pon encima plataformas, setas, Barras Estelares o Pyces y lo seguirán; las plataformas arrancan al subirte)': 'Rail (put platforms, mushrooms, Star Bars or Pyces on it and they follow it; platforms start when you step on)',
     'Punto de control': 'Checkpoint', 'Muelle': 'Spring', 'Llave': 'Key', 'Puerta': 'Door', 'Puerta con llave': 'Locked door', 'Entrada de tubería': 'Pipe entrance', 'Tubería con tapa': 'Capped pipe', 'Barra Estelar': 'Star Bar', 'Carámbano': 'Icicle',
-    'Plataforma ↔': 'Platform ↔', 'Plataforma ↕': 'Platform ↕', 'Seta móvil ↔': 'Moving mushroom ↔', 'Seta móvil ↕': 'Moving mushroom ↕', 'Moneda Estrella': 'Star Coin'
+    'Plataforma ↔': 'Platform ↔', 'Plataforma ↕': 'Platform ↕', 'Seta móvil ↔': 'Moving mushroom ↔', 'Seta móvil ↕': 'Moving mushroom ↕', 'Moneda Estrella': 'Star Coin',
+
+    // ---- ✉ Mensajes / moderación / sanciones
+    '✉ Mensajes': '✉ Mail', 'No tienes mensajes.': 'You have no messages.', 'Inicia sesión en 🌐 Online para ver tus mensajes.': 'Log in on 🌐 Online to see your messages.',
+    '📣 Publicar noticia (admin)': '📣 Post news (admin)', 'Título': 'Title', 'Texto de la noticia…': 'News text…', '📣 Enviar a todos': '📣 Send to everyone', '📣 Noticia publicada para todos': '📣 News posted for everyone',
+    '🔧 Actualización': '🔧 Update', '⚠ Aviso (rojo)': '⚠ Warning (red)', '🎉 Evento (verde)': '🎉 Event (green)',
+    'Tu cuenta no puede publicar. Pide perdón aquí abajo.': "Your account can't publish. Apologize below.", 'Escribe tu disculpa…': 'Write your apology…', 'Enviar disculpa': 'Send apology',
+    '📨 Disculpa enviada. Espera la revisión de KirByte_Bi.': '📨 Apology sent. Wait for KirByte_Bi to review it.', 'Escribe la contraseña': 'Type the password', 'Comprobando…': 'Checking…', 'Contraseña incorrecta': 'Wrong password',
+    '⚠ Sancionar': '⚠ Penalize', '🔓 Quitar bloqueo': '🔓 Remove ban', '🕳 Aviso de moderación': '🕳 Moderation warning', 'Falta aplicar kiro/supabase_online_v4.sql en el servidor para activar los mensajes.': 'kiro/supabase_online_v4.sql still needs to be applied on the server to enable messages.',
+    '🚫 No puedes publicar': "🚫 You can't publish", 'Tu cuenta está bloqueada para publicar niveles por sanciones de moderación. Pide perdón desde ✉ Mensajes (el correo rojo con el Void Glob).': 'Your account is banned from publishing levels due to moderation penalties. Apologize from ✉ Mail (the red letter with the Void Glob).',
+    // ---- reclamar nivel descargado ("es mío")
+    '🔓 Es mío': "🔓 It's mine", '🔓 Desbloqueado: ya puedes editarlo y publicarlo': '🔓 Unlocked: you can now edit and publish it', 'Desbloquear': 'Unlock', 'Sí, es mío': "Yes, it's mine",
+    '⬇ Recuperado en 📁 Mis niveles (tuyo, editable)': '⬇ Recovered to 📁 My levels (yours, editable)',
+    // ---- norma "sin efectos especiales"
+    'Sin efectos especiales (todos juegan como el verde)': 'No special powers (everyone plays like the green one)',
+    // ---- mapamundi: transicion/modo
+    '¡Vamos!': "Let's go!", '☠ HISTORIA CORRUPTA': '☠ CORRUPT STORY', '☀ Historia Normal': '☀ Normal Story', '🔒 La Historia Corrupta se desbloquea al terminar la Historia Normal': '🔒 The Corrupt Story unlocks when you finish the Normal Story',
+    'Flechas: mover · Z/Enter: entrar · X: cambiar mundo · M: Paz/Corrupto · Esc: salir': 'Arrows: move · Z/Enter: enter · X: change world · M: Peace/Corrupt · Esc: exit',
+    'Flechas: mover · Z/Enter: entrar · X: cambiar mundo · Esc: salir': 'Arrows: move · Z/Enter: enter · X: change world · Esc: exit',
+    'Flechas: mover · Z/Enter: entrar · M: Paz/Corrupto · Esc: salir': 'Arrows: move · Z/Enter: enter · M: Peace/Corrupt · Esc: exit',
+    '☀ NORMAL': '☀ NORMAL', '☠ CORRUPTO': '☠ CORRUPT', 'Saltar ⏭': 'Skip ⏭',
+    // ---- efectos corruptos nuevos (etiquetas)
+    'Ruleta loca: cada rato cambia una regla del nivel': 'Crazy roulette: a level rule changes every so often',
+    'Paradoja: el tiempo va a ratos lento y a ratos rápido': 'Paradox: time goes slow and fast in bursts',
+    'A todo volumen: enemigos y plataformas laten al ritmo': 'Full volume: enemies and platforms pulse to the beat',
+    'Dimensión sellada: la meta se abre con todas las Monedas Estrella': 'Sealed dimension: the goal opens with all Star Coins',
+    // ---- multijugador (planning 5d, textos base)
+    '✉ Invitar a la sala': '✉ Invite to the room', '📋 Copiar seed': '📋 Copy seed', 'Elige tu Glob (sin repetir)': 'Choose your Glob (no repeats)', 'Ese Glob ya lo lleva otro jugador': 'Another player already has that Glob'
   };
   // Patrones para textos con números / nombres
   const P = [

@@ -118,6 +118,8 @@
       // Circo Corrupto: enemigos, plataformas, cintas y cañones a toda velocidad
       this.enemySpeedMul = this.fx.speedUp ? 1.75 : this.fx.glitch ? 1.25 : 1;
       this.obstacleMul = this.fx.speedUp ? 1.9 : 1;
+      // Bases para los efectos de mapas nuevos (timewarp/beat/roulette modulan sobre estas)
+      this._baseEnemyMul = this.enemySpeedMul; this._baseObstMul = this.obstacleMul; this._baseGravMul = this.gravMul;
       this.wind = 0; this.windT = 3; this.currentX = 0; this.currentY = 0; this.convDir = 1; this.glitchT = 5; this.glitchPulse = 0;
       // Efectos de los mapas nuevos (Corrupto)
       this.beatT = 0;        // Sound Discotech: pulso rítmico (0..1), late con la música
@@ -307,6 +309,51 @@
           this.spawn(m); this.emit('meteorWarn', { x: m.x + m.vx * 1.5, y: cam.y + cam.h });
         }
       }
+      this.updateNewMapEffects(dt);
+    }
+
+    // Efectos Corruptos de los MAPAS NUEVOS (modulan enemySpeedMul/obstacleMul por frame,
+    // asi afectan a TODA la fauna y obstaculos sin tocar su fisica). Se parte de una base
+    // (fijada en reset) para no acumular. Si no hay efecto, no toca nada.
+    updateNewMapEffects(dt) {
+      const baseE = this._baseEnemyMul != null ? this._baseEnemyMul : 1;
+      const baseO = this._baseObstMul != null ? this._baseObstMul : 1;
+      // Time Attack (timewarp): a ratos lento, a ratos rapido. Afecta tiempo/enemigos/obstaculos.
+      if (this.fx.timewarp) {
+        this.timeWarpT -= dt;
+        if (this.timeWarpT <= 0) {
+          this.timeWarpT = U.rand(2.5, 4.5);
+          // cicla entre lento (0.45), normal (1) y rapido (1.8)
+          const opts = [0.45, 1, 1.8];
+          this.timeWarp = opts[(opts.indexOf(this.timeWarp) + 1 + (Math.random() < 0.5 ? 0 : 1)) % opts.length];
+          this.emit('timeWarp', { f: this.timeWarp });
+        }
+        this.enemySpeedMul = baseE * this.timeWarp;
+        this.obstacleMul = baseO * this.timeWarp;
+      }
+      // Sound Discotech (beat): plataformas y enemigos PULSAN al ritmo del tempo del tema.
+      if (this.fx.beat) {
+        const tempo = (this.theme.music && this.theme.music.tempo) || 128;
+        const beat = (this.t * tempo / 60) % 1; // 0..1 por pulso
+        this.beatT = beat;
+        const pulse = beat < 0.12 ? 1.9 : 0.75; // golpe fuerte en el "on-beat", calma el resto
+        this.enemySpeedMul = baseE * pulse;
+        this.obstacleMul = baseO * pulse;
+      }
+      // Gambling Gaming (roulette): cada ~8s gira una ruleta y cambia UNA regla del nivel.
+      if (this.fx.roulette) {
+        this.rouletteT -= dt;
+        if (this.rouletteT <= 0) {
+          this.rouletteT = U.rand(8, 12);
+          const rules = ['fast', 'slow', 'lowgrav', 'none'];
+          this.rouletteRule = rules[Math.floor(Math.random() * rules.length)];
+          this.emit('roulette', { rule: this.rouletteRule });
+        }
+        const r = this.rouletteRule;
+        this.enemySpeedMul = baseE * (r === 'fast' ? 1.8 : r === 'slow' ? 0.5 : 1);
+        this.obstacleMul = baseO * (r === 'fast' ? 1.8 : r === 'slow' ? 0.5 : 1);
+        this.gravMul = (r === 'lowgrav') ? 0.5 : (this._baseGravMul != null ? this._baseGravMul : 1);
+      }
     }
 
     // Tipo de líquido en un punto: 'water' | 'lava' | 'poison' | 'jelly' | null
@@ -392,6 +439,7 @@
       this.gravMul = this.fx.lowGravity ? 0.55 : this.fx.abyss ? 0.5 : 1;
       this.enemySpeedMul = this.fx.speedUp ? 1.75 : this.fx.glitch ? 1.25 : 1;
       this.obstacleMul = this.fx.speedUp ? 1.9 : 1;
+      this._baseEnemyMul = this.enemySpeedMul; this._baseObstMul = this.obstacleMul; this._baseGravMul = this.gravMul;
       this.beatT = 0; this.timeWarpT = 4; this.timeWarp = 1; this.rouletteT = 6; this.rouletteRule = null;
       this.gateSealed = !!this.fx.medalGate;
       this.baseLiquid = this.level.height * T + 200; this.liquidY = this.baseLiquid;
