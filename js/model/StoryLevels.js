@@ -72,6 +72,22 @@
   };
   const FLYERS = new Set(['ghost', 'hacker', 'wingel', 'pysh', 'clownpysh', 'axolotl', 'squid', 'umbrella']);
   const BOSS = { 1: 'noeye', 2: 'nosense', 3: 'noeye', 4: 'noir', 5: 'moonstar' };
+  // Jefe de un castillo. MoonStar SOLO en el castillo FINAL del ultimo mundo (w5, el Vortice);
+  // el resto reparte segun el mundo y, si el mundo tiene varios castillos, segun su orden.
+  function chooseBoss(world, node, plan) {
+    const SM = S.Model.StoryMap;
+    const lastW = SM.lastWorldId ? SM.lastWorldId() : 'w5';
+    const finalCas = SM.finalCastleId ? SM.finalCastleId(world.id) : null;
+    if (world.id === lastW && node.id === finalCas) return 'moonstar';
+    // castillos del mundo en orden (por si hay mas de uno, como en w5)
+    const castles = world.nodes.filter((n) => n.type === 'castle');
+    const ci = castles.indexOf(node);
+    // pandilla de jefes "no finales": se turnan NOeye / NOsense / NOIRrupt
+    const pool = ['noeye', 'nosense', 'noir'];
+    // base por mundo + desplazamiento por indice de castillo, para que no se repitan
+    const wi = SM.worldIndex ? SM.worldIndex(world.id) : 0;
+    return pool[(wi + (ci < 0 ? 0 : ci)) % pool.length];
+  }
 
   // ---------------------------------------------------------------- salas
   // Cada sala recibe (B, x, ctx) y devuelve su ancho. ctx = { d: dificultad 1..5, rnd, pool, theme, ex }.
@@ -350,8 +366,11 @@
     });
     // final del nivel
     if (isCastle) {
-      // sala del jefe: arena cerrada por arriba, el jefe delante de la meta
-      B.ground(x, x + 30); B.fill(x, 0, x + 30, 2, TT.HARD); B.obj(BOSS[plan.d] || 'noeye', x + 16, GY - 2); B.box(x + 4, GY - 4, 'flor');
+      // sala del jefe: arena cerrada por arriba, el jefe delante de la meta.
+      // El jefe varia por castillo: MoonStar SOLO en el castillo FINAL del ultimo mundo;
+      // el resto reparte NOeye / NOsense / NOIRrupt segun el mundo y el orden del castillo.
+      const boss = chooseBoss(world, node, plan);
+      B.ground(x, x + 30); B.fill(x, 0, x + 30, 2, TT.HARD); B.obj(boss, x + 16, GY - 2); B.box(x + 4, GY - 4, 'flor');
       x += 22;
     }
     B.ground(x, x + 14);

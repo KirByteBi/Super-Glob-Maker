@@ -556,7 +556,9 @@
 
   // Índice por mapa para el editor/paleta
   function forMap(mapId) { return list.filter((d) => d.map === mapId); }
-  const byId = {}; list.forEach((d) => { byId[d.id] = d; });
+  // OJO: byId se construye AL FINAL (tras todos los add), no aquí, para que las
+  // decoraciones añadidas despues tambien entren en get()/drawObject.
+  const byId = {};
 
   // -------- tamaños que faltaban (2x1, 3x1, 1x3) en varios mapas --------
   // valla con postes redondeados (cabeza biselada) y dos travesaños con sombra
@@ -718,6 +720,182 @@
   add('tk_gears', { name: 'Engranajes', map: 'clock', w: 3, h: 1, draw(ctx, px, py, W, H, t) { [[0.6, 9, 1], [1.6, 12, -1], [2.5, 8, 1]].forEach(([u, r, s]) => { ctx.save(); ctx.translate(px + u * T, py + T * 0.55); ctx.rotate((t || 0) * s); ctx.fillStyle = '#c99a4a'; for (let k = 0; k < 8; k++) { ctx.rotate(Math.PI / 4); ctx.fillRect(-2, -r - 3, 4, 5); } ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.fill(); ink(ctx, 1.5); ctx.stroke(); ctx.restore(); }); } });
   add('di_ball', { name: 'Bola de discoteca', map: 'disco', w: 1, h: 3, draw(ctx, px, py, W, H, t) { rect(ctx, px + T / 2 - 1, py, 2, T * 1.6, '#888'); circle(ctx, px + T / 2, py + T * 2.1, T * 0.4, '#c0c6d0'); ctx.fillStyle = `hsla(${((t || 0) * 120) % 360},90%,70%,0.8)`; for (let k = 0; k < 6; k++) ctx.fillRect(px + T * 0.3 + (k % 3) * 6, py + T * 1.9 + Math.floor(k / 3) * 7, 4, 4); } });
   add('hu_sign', { name: 'Cartel dimensional', map: 'hub', w: 2, h: 1, draw(ctx, px, py, W, H, t) { rr2(ctx, px + 2, py + 4, W * T - 4, T - 10, 4, '#0a3d22'); ctx.fillStyle = Math.sin((t || 0) * 4) > 0 ? '#3fffa0' : '#1f7a44'; ctx.font = 'bold 12px sans-serif'; ctx.fillText('HUB', px + 18, py + 20); } });
+
+  // ======================================================================
+  //  COMPLETAR FORMAS QUE FALTABAN POR MAPA (1x1 · 2x1 · 1x2 · 3x1 · 1x3)
+  //  para que cada mapa tenga un set tematico mas variado. Acabado limpio.
+  // ======================================================================
+  // -- helper: arbusto/seto generico con silueta ondulada (reutilizable) --
+  function bushRow(ctx, px, py, W, col, hiCol) {
+    const by = py + T * 0.92, w = W * T;
+    ctx.fillStyle = 'rgba(0,0,0,0.16)'; ctx.beginPath(); ctx.ellipse(px + w / 2, by + 2, w * 0.4, T * 0.07, 0, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(px + T * 0.1, by); const bumps = W * 2, topY = py + T * 0.3;
+    ctx.quadraticCurveTo(px + T * 0.02, py + T * 0.6, px + T * 0.18, py + T * 0.5);
+    for (let i = 0; i < bumps; i++) { const x0 = px + T * 0.18 + (w - T * 0.36) * (i / bumps), x1 = px + T * 0.18 + (w - T * 0.36) * ((i + 1) / bumps); ctx.quadraticCurveTo((x0 + x1) / 2, topY - (i % 2 ? 0 : T * 0.08), x1, py + T * 0.5); }
+    ctx.quadraticCurveTo(px + w - T * 0.02, py + T * 0.6, px + w - T * 0.1, by); ctx.closePath();
+    ctx.fillStyle = col; ctx.fill(); ink(ctx, 2.5); ctx.stroke();
+    ctx.save(); ctx.clip(); ctx.fillStyle = hiCol || 'rgba(255,255,255,0.14)'; ctx.fillRect(px, py + T * 0.32, w, T * 0.2); ctx.restore();
+  }
+
+  // ---- city 1x2: farola de ciudad ----
+  add('ur_light', { name: 'Farola', map: 'city', w: 1, h: 2, draw(ctx, px, py, W, H, t, mode) {
+    const cx = px + T * 0.5;
+    rr2(ctx, cx - 3, py + T * 0.3, 6, H * T - T * 0.3, 2, '#3a3f4a');
+    ctx.fillStyle = '#2a2d34'; ctx.fillRect(cx - T * 0.18, py + T * 0.2, T * 0.36, T * 0.18);
+    const on = mode !== 'corrupt' ? true : Math.sin((t || 0) * 5) > -0.3;
+    ctx.fillStyle = on ? '#fff2a8' : '#5a5030'; ctx.beginPath(); ctx.arc(cx, py + T * 0.3, 6, 0, 7); ctx.fill();
+    if (on) { ctx.globalAlpha = 0.22; ctx.beginPath(); ctx.arc(cx, py + T * 0.3, 18, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
+    ink(ctx, 2); ctx.stroke();
+  } });
+  // ---- seaside 2x1: hamaca entre dos postes ----
+  add('ss_hammock', { name: 'Hamaca', map: 'seaside', w: 2, h: 1, draw(ctx, px, py, W) {
+    const w = W * T; ctx.strokeStyle = '#8a5a2b'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(px + 6, py + T * 0.2); ctx.lineTo(px + 6, py + T * 0.9); ctx.moveTo(px + w - 6, py + T * 0.2); ctx.lineTo(px + w - 6, py + T * 0.9); ctx.stroke();
+    ctx.fillStyle = '#ff7a8a'; ctx.beginPath(); ctx.moveTo(px + 6, py + T * 0.35); ctx.quadraticCurveTo(px + w / 2, py + T * 0.95, px + w - 6, py + T * 0.35); ctx.lineTo(px + w - 6, py + T * 0.45); ctx.quadraticCurveTo(px + w / 2, py + T, px + 6, py + T * 0.45); ctx.closePath(); ctx.fill(); ink(ctx, 2); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1; for (let i = 1; i < 5; i++) { ctx.beginPath(); ctx.moveTo(px + 6 + (w - 12) * i / 5, py + T * 0.42); ctx.lineTo(px + 6 + (w - 12) * i / 5, py + T * 0.78); ctx.stroke(); }
+  } });
+  // ---- ruins 2x1: losa caida con grietas ----
+  add('ru_slab', { name: 'Losa caída', map: 'ruins', w: 2, h: 1, draw(ctx, px, py, W) {
+    const w = W * T; ctx.save(); ctx.translate(px + w / 2, py + T * 0.7); ctx.rotate(0.06);
+    rr2(ctx, -w / 2 + 4, -T * 0.22, w - 8, T * 0.4, 3, '#c69257');
+    ctx.strokeStyle = U.shade('#c69257', -0.3); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-w / 2 + 10, -4); ctx.lineTo(-6, 2); ctx.lineTo(4, -5); ctx.lineTo(w / 2 - 10, 3); ctx.stroke();
+    ctx.restore();
+  } });
+  // ---- circus 2x1: trampolín de feria ----
+  add('ci_tramp', { name: 'Trampolín', map: 'circus', w: 2, h: 1, draw(ctx, px, py, W) {
+    const w = W * T, cx = px + w / 2;
+    ctx.fillStyle = '#2a2d34'; rr2(ctx, px + 6, py + T * 0.55, 6, T * 0.4, 2, '#2a2d34'); rr2(ctx, px + w - 12, py + T * 0.55, 6, T * 0.4, 2, '#2a2d34');
+    ctx.fillStyle = '#e8323f'; ctx.beginPath(); ctx.ellipse(cx, py + T * 0.5, w * 0.42, T * 0.16, 0, 0, 7); ctx.fill(); ink(ctx, 2.5); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.beginPath(); ctx.ellipse(cx - w * 0.12, py + T * 0.46, w * 0.12, T * 0.05, 0, 0, 7); ctx.fill();
+  } });
+  // ---- snow 2x1: muñeco tumbado / montón de nieve ----
+  add('sn_mound', { name: 'Montón de nieve', map: 'snow', w: 2, h: 1, draw(ctx, px, py, W) {
+    const w = W * T; ctx.fillStyle = '#eef6ff'; ctx.beginPath(); ctx.moveTo(px + 4, py + T); ctx.quadraticCurveTo(px + w * 0.25, py + T * 0.35, px + w * 0.5, py + T * 0.5); ctx.quadraticCurveTo(px + w * 0.75, py + T * 0.62, px + w - 4, py + T); ctx.closePath(); ctx.fill(); ink(ctx, 2); ctx.stroke();
+    ctx.fillStyle = 'rgba(159,198,232,0.5)'; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(px + w * (0.2 + i * 0.2), py + T * 0.85, 2, 0, 7); ctx.fill(); }
+  } });
+  // ---- vortex 2x1 y 3x1 ----
+  add('vo_rift', { name: 'Grieta del vacío', map: 'vortex', w: 2, h: 1, draw(ctx, px, py, W, H, t) {
+    const w = W * T, g = 0.5 + 0.5 * Math.sin((t || 0) * 2);
+    ctx.fillStyle = U.rgba('#ff4df0', 0.12 + g * 0.18); ctx.beginPath(); ctx.ellipse(px + w / 2, py + T * 0.5, w * 0.42, T * 0.3, 0, 0, 7); ctx.fill();
+    ctx.strokeStyle = U.mix('#6a2fbf', '#ff4df0', g); ctx.lineWidth = 3; ctx.beginPath();
+    ctx.moveTo(px + 4, py + T * 0.5); for (let i = 1; i <= 8; i++) ctx.lineTo(px + 4 + (w - 8) * i / 8, py + T * 0.5 + (i % 2 ? -1 : 1) * T * 0.14); ctx.stroke();
+  } });
+  add('vo_pillars', { name: 'Pilares rotos', map: 'vortex', w: 3, h: 1, draw(ctx, px, py, W) {
+    for (let i = 0; i < W; i++) { const h = T * (0.5 + U.hash2(i, 5) * 0.45); rr2(ctx, px + i * T + T * 0.25, py + T - h, T * 0.5, h, 3, U.shade('#140b20', 0.14)); ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.fillRect(px + i * T + T * 0.28, py + T - h + 2, 3, h - 4); }
+  } });
+  // ---- underwater 1x3 y 3x1 ----
+  add('uw_kelp', { name: 'Kelp alto', map: 'underwater', w: 1, h: 3, draw(ctx, px, py, W, H, t) {
+    const cx = px + T * 0.5, h = H * T;
+    for (const off of [-5, 5]) { ctx.strokeStyle = off < 0 ? '#2f8f5b' : '#3fae6a'; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(cx + off, py + h); for (let i = 1; i <= 7; i++) ctx.lineTo(cx + off + Math.sin(i * 0.8 + (t || 0) * 1.5) * 6, py + h - i * h / 7); ctx.stroke(); }
+  } });
+  add('uw_reefbed', { name: 'Lecho de coral', map: 'underwater', w: 3, h: 1, draw(ctx, px, py, W) {
+    const w = W * T; ctx.fillStyle = U.shade('#ff7ab8', -0.1); ctx.beginPath(); ctx.moveTo(px, py + T); for (let i = 0; i <= W * 2; i++) ctx.lineTo(px + w * i / (W * 2), py + T - T * (0.3 + U.hash2(i, 2) * 0.4)); ctx.lineTo(px + w, py + T); ctx.closePath(); ctx.fill(); ink(ctx, 2); ctx.stroke();
+    ['#ffd0e8', '#ff9ecb'].forEach((c, k) => { for (let i = 0; i < W; i++) { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(px + T * (0.5 + i) + k * 6, py + T * 0.6, 2.5, 0, 7); ctx.fill(); } });
+  } });
+  // ---- jungle 1x2 y 3x1 ----
+  add('ju_flower', { name: 'Flor selvática', map: 'jungle', w: 1, h: 2, draw(ctx, px, py, W, H, t) {
+    const cx = px + T * 0.5, botY = py + H * T;
+    ctx.strokeStyle = '#2f8f5b'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(cx, botY); ctx.quadraticCurveTo(cx + Math.sin((t || 0)) * 4, py + T * 0.9, cx, py + T * 0.7); ctx.stroke();
+    ctx.fillStyle = '#2f8f5b'; ctx.beginPath(); ctx.ellipse(cx - 8, py + T * 1.2, 8, 4, -0.5, 0, 7); ctx.fill();
+    const pet = '#ff5fa8'; for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3 + (t || 0) * 0.3; ctx.fillStyle = pet; ctx.beginPath(); ctx.ellipse(cx + Math.cos(a) * 7, py + T * 0.6 + Math.sin(a) * 7, 5, 3, a, 0, 7); ctx.fill(); }
+    ctx.fillStyle = '#ffd000'; ctx.beginPath(); ctx.arc(cx, py + T * 0.6, 4, 0, 7); ctx.fill(); ink(ctx, 1.5); ctx.stroke();
+  } });
+  add('ju_logs', { name: 'Troncos caídos', map: 'jungle', w: 3, h: 1, draw(ctx, px, py, W) {
+    const w = W * T; rr2(ctx, px + 2, py + T * 0.55, w - 4, T * 0.4, 6, '#6b3f22');
+    ctx.fillStyle = U.shade('#6b3f22', 0.15); ctx.fillRect(px + 4, py + T * 0.58, w - 8, 3);
+    ctx.strokeStyle = U.shade('#6b3f22', -0.3); ctx.lineWidth = 1.5; for (let i = 1; i < W; i++) { ctx.beginPath(); ctx.moveTo(px + i * T, py + T * 0.55); ctx.lineTo(px + i * T, py + T * 0.95); ctx.stroke(); }
+    ctx.fillStyle = '#c9a26a'; ctx.beginPath(); ctx.ellipse(px + 3, py + T * 0.75, 3, T * 0.18, 0, 0, 7); ctx.fill(); // veta del corte
+  } });
+  // ---- sky 1x1, 1x2, 3x1 ----
+  add('sk_star', { name: 'Estrellita', map: 'sky', w: 1, h: 1, draw(ctx, px, py, W, H, t) {
+    const cx = px + T * 0.5, cy = py + T * 0.5, g = 0.6 + 0.4 * Math.sin((t || 0) * 3 + cx);
+    ctx.fillStyle = U.rgba('#fff2a8', 0.6 + g * 0.4); ctx.beginPath(); for (let k = 0; k < 10; k++) { const r = k % 2 ? T * 0.1 : T * 0.26, a = -Math.PI / 2 + k * Math.PI / 5; ctx.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); } ctx.closePath(); ctx.fill(); ink(ctx, 1.5); ctx.stroke();
+  } });
+  add('sk_sun', { name: 'Solecito', map: 'sky', w: 1, h: 2, draw(ctx, px, py, W, H, t) {
+    const cx = px + T * 0.5, cy = py + T * 0.6;
+    ctx.strokeStyle = '#ffd000'; ctx.lineWidth = 3; ctx.lineCap = 'round'; for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4 + (t || 0) * 0.3; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * T * 0.34, cy + Math.sin(a) * T * 0.34); ctx.lineTo(cx + Math.cos(a) * T * 0.46, cy + Math.sin(a) * T * 0.46); ctx.stroke(); }
+    ctx.fillStyle = '#ffe24a'; ctx.beginPath(); ctx.arc(cx, cy, T * 0.26, 0, 7); ctx.fill(); ink(ctx, 2); ctx.stroke();
+    ctx.fillStyle = '#c99a00'; ctx.beginPath(); ctx.arc(cx - 5, cy - 2, 1.6, 0, 7); ctx.arc(cx + 5, cy - 2, 1.6, 0, 7); ctx.fill();
+  } });
+  add('sk_rainbow2', { name: 'Arcoíris largo', map: 'sky', w: 3, h: 1, draw(ctx, px, py, W, H) {
+    const cols = ['#ff4d4d', '#ff9a55', '#ffd000', '#2fb36b', '#2f7bff', '#9a4dff'];
+    cols.forEach((c, i) => { ctx.strokeStyle = c; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(px + W * T / 2, py + T * 1.4, W * T / 2 - 6 - i * 4, Math.PI, 0); ctx.stroke(); });
+  } });
+  // ---- volcano 1x3 y 3x1 ----
+  add('vl_column', { name: 'Columna basáltica', map: 'volcano', w: 1, h: 3, draw(ctx, px, py, W, H, t) {
+    const cx = px + T * 0.5, h = H * T, g = 0.5 + 0.5 * Math.sin((t || 0) * 2);
+    rr2(ctx, cx - T * 0.2, py, T * 0.4, h, 2, '#3a2420');
+    ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.fillRect(cx - T * 0.18, py, 3, h);
+    ctx.strokeStyle = U.rgba(U.mix('#7a2a10', '#ff6a1f', g), 0.8); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx, py + T * 0.3); for (let i = 1; i <= 5; i++) ctx.lineTo(cx + (i % 2 ? 3 : -3), py + T * 0.3 + i * (h - T * 0.6) / 5); ctx.stroke();
+  } });
+  add('vl_crags', { name: 'Riscos ígneos', map: 'volcano', w: 3, h: 1, draw(ctx, px, py, W, H, t) {
+    const w = W * T, g = 0.5 + 0.5 * Math.sin((t || 0) * 2);
+    ctx.fillStyle = '#3a2420'; ctx.beginPath(); ctx.moveTo(px, py + T); for (let i = 0; i <= W * 2; i++) ctx.lineTo(px + w * i / (W * 2), py + T - T * (0.25 + U.hash2(i, 7) * 0.5)); ctx.lineTo(px + w, py + T); ctx.closePath(); ctx.fill(); ink(ctx, 2); ctx.stroke();
+    ctx.fillStyle = U.rgba('#ff6a1f', 0.4 + g * 0.4); for (let i = 0; i < W; i++) ctx.fillRect(px + T * (0.4 + i), py + T * 0.75, T * 0.2, 2);
+  } });
+  // ---- casino 2x1 y 1x3 ----
+  add('ca_cards', { name: 'Cartas', map: 'casino', w: 2, h: 1, draw(ctx, px, py, W) {
+    const bx = px + T * 0.5, by = py + T * 0.35;
+    [['#fff', -0.3, 0], ['#fff', -0.05, 6], ['#fff', 0.2, 12]].forEach(([c, rot, dx]) => { ctx.save(); ctx.translate(bx + dx, by + T * 0.3); ctx.rotate(rot); rr2(ctx, -T * 0.18, -T * 0.26, T * 0.36, T * 0.52, 3, c); ctx.fillStyle = (dx === 6) ? '#2a2a2a' : '#c0282f'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.fillText((dx === 0 ? 'A' : dx === 6 ? 'K' : 'Q'), 0, 4); ctx.restore(); });
+    ctx.textAlign = 'left';
+  } });
+  add('ca_sign', { name: 'Letrero de neón', map: 'casino', w: 1, h: 3, draw(ctx, px, py, W, H, t) {
+    const cx = px + T * 0.5, g = 0.5 + 0.5 * Math.sin((t || 0) * 4);
+    rr2(ctx, cx - 3, py, 6, H * T, 2, '#2a2d34');
+    ['#ff4d4d', '#ffd000', '#2fd46a'].forEach((c, i) => { ctx.fillStyle = U.rgba(c, 0.5 + g * 0.5); ctx.beginPath(); ctx.arc(cx, py + T * (0.5 + i), T * 0.3, 0, 7); ctx.fill(); ink(ctx, 1.5); ctx.stroke(); });
+  } });
+  // ---- clock 2x1 y 1x3 ----
+  add('tk_pendulum', { name: 'Péndulo', map: 'clock', w: 2, h: 1, draw(ctx, px, py, W, H, t) {
+    const cx = px + W * T / 2, a = Math.sin((t || 0) * 1.5) * 0.5;
+    ctx.fillStyle = '#8a6a4a'; ctx.fillRect(cx - W * T / 2 + 4, py + 2, W * T - 8, 5);
+    ctx.strokeStyle = '#c99a4a'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(cx, py + 5); ctx.lineTo(cx + Math.sin(a) * T * 0.7, py + 5 + Math.cos(a) * T * 0.7); ctx.stroke();
+    ctx.fillStyle = '#ffd000'; ctx.beginPath(); ctx.arc(cx + Math.sin(a) * T * 0.7, py + 5 + Math.cos(a) * T * 0.7, 5, 0, 7); ctx.fill(); ink(ctx, 1.5); ctx.stroke();
+  } });
+  add('tk_tower', { name: 'Torre del reloj', map: 'clock', w: 1, h: 3, draw(ctx, px, py, W, H, t) {
+    const cx = px + T * 0.5;
+    rr2(ctx, cx - T * 0.28, py + T * 0.4, T * 0.56, H * T - T * 0.4, 3, '#5a6b7a');
+    ctx.fillStyle = '#3d4a57'; ctx.beginPath(); ctx.moveTo(cx - T * 0.32, py + T * 0.4); ctx.lineTo(cx, py); ctx.lineTo(cx + T * 0.32, py + T * 0.4); ctx.closePath(); ctx.fill(); ink(ctx, 2); ctx.stroke();
+    const cy = py + T * 0.8; ctx.fillStyle = '#eee'; ctx.beginPath(); ctx.arc(cx, cy, T * 0.2, 0, 7); ctx.fill(); ink(ctx, 1.5); ctx.stroke();
+    const am = (t || 0) * 1.5; ctx.strokeStyle = '#2a2a2a'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(am) * T * 0.12, cy + Math.sin(am) * T * 0.12); ctx.stroke();
+  } });
+  // ---- disco 2x1 y 3x1 ----
+  add('di_floor', { name: 'Pista de baile', map: 'disco', w: 2, h: 1, draw(ctx, px, py, W, H, t) {
+    const w = W * T; for (let i = 0; i < W * 2; i++) for (let j = 0; j < 2; j++) { const hue = ((i + j) * 50 + (t || 0) * 120) % 360; ctx.fillStyle = `hsl(${hue},80%,55%)`; ctx.fillRect(px + i * T * 0.5, py + T * 0.5 + j * T * 0.25, T * 0.5 - 1, T * 0.25 - 1); }
+    ink(ctx, 2); ctx.strokeRect(px, py + T * 0.5, w, T * 0.5);
+  } });
+  add('di_speakers3', { name: 'Muro de altavoces', map: 'disco', w: 3, h: 1, draw(ctx, px, py, W, H, t) {
+    const g = 0.5 + 0.5 * Math.sin((t || 0) * 6);
+    for (let i = 0; i < W; i++) { rr2(ctx, px + i * T + 3, py + 4, T - 6, T - 8, 3, '#211436'); ctx.fillStyle = U.mix('#120a22', '#ff2fd6', 0.3 + g * 0.4); ctx.beginPath(); ctx.arc(px + i * T + T / 2, py + T / 2, T * 0.22 + g * 2, 0, 7); ctx.fill(); ctx.fillStyle = '#00e5ff'; ctx.beginPath(); ctx.arc(px + i * T + T / 2, py + T * 0.26, 2.5, 0, 7); ctx.fill(); }
+  } });
+  // ---- hub 1x3 y 3x1 ----
+  add('hu_pillar', { name: 'Pilar dimensional', map: 'hub', w: 1, h: 3, draw(ctx, px, py, W, H, t) {
+    const cx = px + T * 0.5, h = H * T, g = 0.5 + 0.5 * Math.sin((t || 0) * 2);
+    rr2(ctx, cx - T * 0.22, py, T * 0.44, h, 3, '#0a3d22');
+    ctx.strokeStyle = U.rgba('#3fffa0', 0.4 + g * 0.4); ctx.lineWidth = 2; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(cx - T * 0.18, py + h * (i + 0.5) / 4); ctx.lineTo(cx + T * 0.18, py + h * (i + 0.5) / 4); ctx.stroke(); }
+    ctx.fillStyle = U.rgba('#7affd0', 0.5 + g * 0.5); ctx.beginPath(); ctx.arc(cx, py + T * 0.3, 4, 0, 7); ctx.fill();
+  } });
+  add('hu_arch', { name: 'Arco de energía', map: 'hub', w: 3, h: 1, draw(ctx, px, py, W, H, t) {
+    const w = W * T, g = 0.5 + 0.5 * Math.sin((t || 0) * 2.5);
+    ctx.strokeStyle = U.rgba('#3fffa0', 0.5 + g * 0.4); ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(px + w / 2, py + T, w * 0.42, Math.PI, 0); ctx.stroke();
+    ctx.strokeStyle = U.rgba('#7affd0', 0.3 + g * 0.3); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(px + w / 2, py + T, w * 0.42 - 5, Math.PI, 0); ctx.stroke();
+    for (let i = 0; i <= 4; i++) { const a = Math.PI + Math.PI * i / 4; ctx.fillStyle = U.rgba('#3fffa0', 0.4 + g * 0.5); ctx.beginPath(); ctx.arc(px + w / 2 + Math.cos(a) * w * 0.42, py + T + Math.sin(a) * w * 0.42, 2.5, 0, 7); ctx.fill(); }
+  } });
+  // ---- factory 1x3 y 3x1 ----
+  add('fa_column', { name: 'Columna industrial', map: 'factory', w: 1, h: 3, draw(ctx, px, py, W, H) {
+    const cx = px + T * 0.5, h = H * T;
+    rr2(ctx, cx - T * 0.24, py, T * 0.48, h, 2, '#565f6e');
+    ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fillRect(cx - T * 0.2, py, 4, h);
+    ctx.fillStyle = '#2a2f38'; for (let i = 0; i < Math.round(H * 2); i++) { ctx.beginPath(); ctx.arc(cx - T * 0.14, py + 8 + i * T * 0.5, 1.4, 0, 7); ctx.arc(cx + T * 0.14, py + 8 + i * T * 0.5, 1.4, 0, 7); ctx.fill(); }
+  } });
+  add('fa_conveyor', { name: 'Cinta de fábrica', map: 'factory', w: 3, h: 1, draw(ctx, px, py, W, H, t) {
+    const w = W * T; rr2(ctx, px + 2, py + T * 0.45, w - 4, T * 0.45, 4, '#384357');
+    ctx.fillStyle = '#2a2f38'; ctx.beginPath(); ctx.arc(px + T * 0.5, py + T * 0.67, T * 0.16, 0, 7); ctx.arc(px + w - T * 0.5, py + T * 0.67, T * 0.16, 0, 7); ctx.fill();
+    ctx.strokeStyle = U.rgba('#00e5ff', 0.7); ctx.lineWidth = 2; const off = ((t || 0) * 30) % (T * 0.5); for (let x = px + off; x < px + w; x += T * 0.5) { ctx.beginPath(); ctx.moveTo(x, py + T * 0.5); ctx.lineTo(x + 5, py + T * 0.5); ctx.stroke(); }
+  } });
+  // ---- lago: ya tiene las 5 formas; añadimos una 2x1 extra para variedad no hace falta ----
+
+  // byId se construye AHORA, con TODAS las decoraciones ya registradas.
+  list.forEach((d) => { byId[d.id] = d; });
 
   // Re-mapea las decoraciones YA COLOCADAS cuando el nivel cambia de mapa.
   // Cada deco del mapa viejo se cambia por una del mapa nuevo RESPETANDO la dimensión

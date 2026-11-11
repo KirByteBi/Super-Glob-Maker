@@ -1,0 +1,189 @@
+==============================================================
+  SUPER GLOB MAKER - MODO 3D (plan de diseño)
+==============================================================
+Vision: un modo 3D estilo Super Mario 64 / Super Mario Galaxy,
+con Globs, Pyces y Medallas en vez de estrellas. DOS submodos:
+
+  · CLASICO 3D  -> tipo SM64: mundos "planos", gravedad normal
+                   hacia abajo, suelo y bloques, cámara orbital.
+  · GALAXIA     -> tipo SMG: planetoides con GRAVEDAD ESFERICA;
+                   caminas por superficies curvas, saltas entre
+                   mini-planetas.
+
+Reutiliza TODO lo que se pueda del 2D (menus, cuenta GlD, sonido,
+i18n, personajes). El 3D es un MODO mas, no un juego aparte.
+
+[NOTA] Primero el CLASICO 3D (mas simple). Galaxia se construye
+ENCIMA cambiando solo el modelo de gravedad.
+
+
+--------------------------------------------------------------
+ 0. DECISIONES BASE
+--------------------------------------------------------------
+- MOTOR: three.js por CDN bajo demanda (igual que supabase-js:
+  se carga solo al entrar al Modo 3D; si no hay red, aviso y se
+  vuelve al menu). Version fijada (r160+ o la que elijamos),
+  modulo UMD global THREE.
+- UBICACION: mismo proyecto. Carpeta js/3d/ con su propio MVC.
+  El menu principal tiene el boton "🌌 Modo 3D" (ya existe como
+  "proximamente"); al pulsarlo se abre el submenu 3D.
+- RENDER: un <canvas> 3D propio (WebGL) superpuesto; el canvas 2D
+  y el DOM de menus siguen como estan. El bucle del AppController
+  delega en el controlador 3D cuando mode === '3d'.
+- ARTE: modelos .glb hechos en Blender (pendrive) con SCRIPTS
+  Python que yo escribo y TU ejecutas. Mientras no haya modelos,
+  se usan PRIMITIVAS (cajas/esferas de three.js) como marcador.
+- VERIFICACION: la logica (gravedad, colision, carga de modulos,
+  matematicas) se prueba con tests headless en node. El render y
+  el "feel" los juzga el usuario en el navegador.
+
+
+--------------------------------------------------------------
+ 1. ARQUITECTURA (archivos nuevos, todos en js/3d/)
+--------------------------------------------------------------
+Patron: mismo estilo que el 2D (IIFE sobre window.SGM, submodulos
+en S.G3 = { Model, View, Controller } para no chocar con el 2D).
+
+  js/3d/core3d.js       Carga three.js (CDN), namespace S.G3,
+                        utilidades (vectores, lerp, clamp3).
+  js/3d/Scene3D.js      (View) escena, luces, cielo, cámara,
+                        renderer; dibuja el mundo cada frame.
+  js/3d/Assets3D.js     (View) carga .glb (GLTFLoader por CDN) o
+                        primitivas si falta el modelo. Cache.
+  js/3d/Player3D.js     (Model) el Glob: posicion, velocidad,
+                        estado (suelo/aire), saltos, culetazo.
+  js/3d/Physics3D.js    (Model) gravedad + colision. DOS modos:
+                        'flat' (gravedad -Y) y 'sphere' (hacia el
+                        centro del planeta mas cercano).
+  js/3d/World3D.js      (Model) el nivel 3D: lista de bloques /
+                        planetas / medallas / enemigos / meta.
+                        Serializable a JSON (como Level 2D).
+  js/3d/Camera3D.js     (View/Controller) cámara orbital que
+                        sigue al Glob; en Galaxia se orienta con
+                        la gravedad local (el "arriba" cambia).
+  js/3d/Input3D.js      (Controller) teclado/raton (+ gamepad):
+                        mover relativo a la cámara, saltar, correr,
+                        culetazo, girar cámara.
+  js/3d/Game3D.js       (Controller) orquesta: update fisica +
+                        cámara + enemigos + render. Victoria al
+                        coger la Medalla.
+  js/3d/Editor3D.js     (Controller) editor por bloques (FASE 5).
+  js/3d/levels3d.js     (Model) niveles de ejemplo 3D.
+
+Enganche en el AppController (2D): nuevo metodo show3D() que crea
+el Game3D y pone this.mode = '3d'; el loop() llama a
+this.g3.update(dt, inp)/render(t) cuando mode === '3d'. Con guarda:
+si three.js no carga, toast y showTitle().
+
+
+--------------------------------------------------------------
+ 2. FORMATO DE NIVEL 3D (World3D, JSON)
+--------------------------------------------------------------
+{
+  mode: 'flat' | 'galaxy',
+  theme: 'lake' | ... (reusa paletas 2D para colores/cielo),
+  spawn: { x, y, z },
+  blocks: [ { type, x, y, z, w, h, d } ],   // cajas solidas
+  planets: [ { x, y, z, r, gravity, theme } ], // solo galaxy
+  medals: [ { x, y, z, kind } ],   // Medallas (= estrellas SM64)
+  pyces:  [ { type, x, y, z } ],   // enemigos (reusan ids 2D)
+  goal:   { x, y, z },             // meta / portal de salida
+  deco:   [ { type, x, y, z } ]    // decoraciones 3D
+}
+Coordenadas en UNIDADES de mundo (1 unidad = 1 bloque). Y = arriba
+en 'flat'. En 'galaxy' no hay "arriba" global: lo define el planeta.
+
+
+--------------------------------------------------------------
+ 3. CLASICO 3D (SM64) - lo primero a construir
+--------------------------------------------------------------
+FISICA (Physics3D modo 'flat'):
+  - Gravedad constante hacia -Y.
+  - Colision contra cajas (AABB): el Glob es una capsula/esfera.
+  - Suelo: detecta si hay bloque justo debajo -> onGround.
+MOVIMIENTO (Player3D):
+  - Andar/correr en el plano XZ, relativo a la cámara.
+  - Salto simple. Salto TRIPLE (3 saltos encadenados corriendo).
+  - Culetazo (ground pound): caer rapido, rompe ciertos bloques.
+  - Salto de pared (wall jump): rebotar al tocar pared en el aire.
+CAMARA (Camera3D): orbital detras del Glob; el raton/flechas la
+  giran; colisiona con paredes para no atravesarlas (fase 2.5).
+OBJETIVO: coger la MEDALLA del nivel (como una estrella de SM64).
+  Puede haber varias medallas por nivel (misiones), opcional.
+
+
+--------------------------------------------------------------
+ 4. GALAXIA (SMG) - fase posterior
+--------------------------------------------------------------
+Se construye cambiando SOLO la gravedad y la orientacion:
+  - Physics3D modo 'sphere': la gravedad apunta del Glob al
+    CENTRO del planeta mas cercano (o el que lo "captura").
+  - El "arriba" del Glob y de la cámara = direccion opuesta a la
+    gravedad local. Caminas por la superficie curva.
+  - Saltar entre planetas: al salir del radio de un planeta,
+    vuelo libre hasta que otro te captura (como SMG).
+  - Mini-planetas de formas variadas (esfera, cilindro, cubo
+    redondeado) -> cada uno con su campo de gravedad.
+Lo demas (saltos, culetazo, medallas) se reutiliza del Clasico.
+
+
+--------------------------------------------------------------
+ 5. BLENDER (modelos .glb) - scripts que yo escribo, tu ejecutas
+--------------------------------------------------------------
+Flujo: yo escribo scripts Python para Blender (headless):
+    blender --background --python tools/blender/<script>.py
+Cada script crea un modelo y lo EXPORTA a models/<nombre>.glb.
+Tu lo ejecutas en el Blender del pendrive y me dices si salio.
+
+Modelos previstos (empezar por los imprescindibles):
+  - glob.glb .......... el Glob jugable (esfera-gota con cara;
+                        reusa la forma de los sprites).
+  - block.glb ......... bloque basico (y variantes: duro, ?, etc).
+  - medal.glb ......... la Medalla (estrella de SM64).
+  - planet_sphere.glb . planeta esferico (Galaxia).
+  - pyce.glb .......... enemigo generico (placeholder comun).
+Mientras no existan, Assets3D usa primitivas de three.js del
+color del personaje/tema, asi el motor es jugable desde el dia 1.
+
+
+--------------------------------------------------------------
+ 6. EDITOR 3D (fase final)
+--------------------------------------------------------------
+Colocar bloques/planetas/medallas/enemigos en una rejilla 3D:
+  - Rejilla y cursor 3D; colocar/borrar con clic.
+  - Capas de altura (subir/bajar el plano de edicion).
+  - Guardar en el mismo sistema de niveles (World3D JSON) y, con
+    cuenta GlD, publicar (reusa Supabase; tabla aparte o un campo
+    'dim:3' en sgm_levels). Decidir al llegar.
+
+
+--------------------------------------------------------------
+ 7. FASES (orden de construccion y lo que se puede verificar)
+--------------------------------------------------------------
+  F0. [este documento] diseño.
+  F1. Motor base: core3d + Scene3D + Game3D + Input3D. Glob como
+      primitiva, suelo, cámara orbital, mover+saltar. Engancha en
+      AppController (boton 🌌). Verificable: carga, no peta, JSON.
+  F2. Physics3D 'flat': gravedad, colision AABB, salto triple,
+      culetazo, wall jump. Verificable: tests de fisica headless.
+  F3. Medallas + meta + victoria + enemigos basicos (Pyces que
+      patrullan). Un nivel de ejemplo jugable.
+  F4. Blender: scripts .glb de glob/block/medal; enchufar.
+  F5. Galaxia: Physics3D 'sphere', cámara orientada, salto entre
+      planetas. Planeta de ejemplo.
+  F6. Editor 3D por bloques.
+  F7. Pulido: temas/paletas, decoraciones 3D, sonido, HUD.
+
+Riesgo/coste: F1-F3 son de codigo puro (yo las hago y verifico la
+logica). F4 necesita tu Blender. F5 es matematica de gravedad
+(verificable). F6-F7 son las mas largas.
+
+
+--------------------------------------------------------------
+ 8. LO QUE NECESITO DE TI
+--------------------------------------------------------------
+  - Confirmar: three.js por CDN (sin instalar nada). [por defecto SI]
+  - Ejecutar los scripts de Blender cuando lleguemos a F4 y
+    decirme el resultado (o pasar capturas).
+  - Probar en el navegador cada fase (el "feel" lo juzgas tu).
+  - Decidir en F6 si los niveles 3D se publican en la misma nube.

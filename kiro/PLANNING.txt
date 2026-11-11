@@ -214,13 +214,16 @@ Reglas generales
         cada uno con su material propio.
     Verificado (16/16 mapas, 0 fallos en paz y corrupto).
 [X] Decoraciones de terreno (solo VISUAL, sin colision), modulo
-    js/view/Decorations.js. 64 adornos cubren los 16 mapas (3-6
-    por mapa), aparecen en la categoria tematica del editor y se
-    dibujan detras del terreno en el juego y el editor. Persisten
-    al guardar y se remapean al cambiar de tema.
-    Formas: 1x1, 2x1, 1x2, 3x1, 1x3 y arcoiris 3x2. Las piezas
-    1x3 tambien se usan para objetos altos (faroles, palmeras,
-    arboles, etc.), no solo vallas y arbustos.
+    js/view/Decorations.js. 90 adornos cubren los 16 mapas con las
+    5 formas CADA uno (1x1, 2x1, 1x2, 3x1, 1x3), set tematico
+    propio y acabado limpio (volumen, sombra, detalle). Aparecen
+    en la categoria tematica del editor y se dibujan detras del
+    terreno; persisten al guardar y se remapean al cambiar de tema.
+    Verificado: todas en byId, todas dibujan (0 en blanco),
+    cobertura de formas 16/16.
+    [BUG corregido: byId se construia a mitad del archivo y ~15
+     decos salian EN BLANCO al colocarlas; ahora se arma tras
+     todos los add().]
 [X] SUELO TEMATICO POR FORMA (autotiling visual, estilo SMM1/2):
     tile GROUND2 (2o suelo) con el dibujo por mapa segun la forma
     (aislado/fila/columna/bloque/borde). Modulo js/view/GroundStyles.js
@@ -581,8 +584,11 @@ FASES SUGERIDAS (de menos a mas riesgo):
         de un nivel del mundo: esa salida debe ser SUPER difícil de
         localizar. No duplicar la estrella ni reutilizar el nodo
         normal: el reto debe tener nodo/progreso propio.
-    [ ] Pulir: jefe por castillo en w5 (los 3 ponen MoonStar por
-        usar BOSS[plan.d]); deberia reservar MoonStar al ultimo.
+    [X] Jefe por castillo: MoonStar SOLO en el castillo FINAL del
+        ultimo mundo (w5, el Vortice); el resto reparte NOeye /
+        NOsense / NOIRrupt por mundo y orden de castillo. Los 3
+        castillos de w5 tienen jefes distintos. Verificado
+        (chooseBoss en StoryLevels).
     [ ] UI de los dos huecos (meta normal + oculta) tambien en
         Mis niveles.
     [ ] Limpiar doble sistema: SampleLevels.js (grid 16 temas) y
