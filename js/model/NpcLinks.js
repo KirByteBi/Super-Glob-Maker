@@ -52,6 +52,11 @@
 
   // Texto legible de un enlace guardado (si el objeto ya no existe, lo indica)
   function label(opts, l) {
+    // "cualquier enemigo de tipo X": key = 'type:<tipo>'
+    if (String(l.key).indexOf('type:') === 0) {
+      const tp = String(l.key).slice(5), def = S.Model.Catalog.OBJECTS[tp] || {};
+      return (l.ev === 'hurt' ? 'Recibir daño de cualquier ' : 'Derrotar cualquier ') + (def.name || tp) + (l.o ? ' · una vez' : '');
+    }
     const o = opts.find((q) => q.ev === l.ev && q.key === l.key);
     if (o) return o.label + (l.o ? ' · una vez' : '');
     if (l.ev === 'kills') return 'Al derrotar ' + l.key + ' enemigos' + (l.o ? ' · una vez' : '');

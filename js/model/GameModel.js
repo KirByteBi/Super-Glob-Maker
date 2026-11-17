@@ -759,7 +759,7 @@
       });
     }
     hurtPlayer(src) {
-      if (src && src.tx != null) this.npcEvent('hurt', src.tx + ',' + src.ty);
+      if (src && src.tx != null) { this.npcEvent('hurt', src.tx + ',' + src.ty); this.npcEvent('hurt', 'type:' + src.type); }
       const r = this.player.hurt();
       if (r === true) this.die('enemy');
       else if (r === 'shrink') this.emit('shrink', { x: this.player.x, y: this.player.y });

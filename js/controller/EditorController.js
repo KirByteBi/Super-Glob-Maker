@@ -202,6 +202,24 @@
           drawLinks();
         }));
         box.appendChild(killRow);
+        // Cualquier enemigo de un tipo (los que hay en el nivel)
+        const typeRow = S.View.el('div', 'row');
+        const enemyTypes = [...new Set(m.level.objects.map((q) => q.type).filter((t) => S.Model.Catalog.ENEMY_TYPES.indexOf(t) !== -1))];
+        const selType = document.createElement('select');
+        enemyTypes.forEach((t) => { const op = document.createElement('option'); op.value = t; op.textContent = S.Model.Catalog.OBJECTS[t].name; selType.appendChild(op); });
+        const selEnemyEv = document.createElement('select');
+        [['defeat', 'al derrotarlo'], ['hurt', 'al recibir su daño']].forEach(([v, tx]) => { const op = document.createElement('option'); op.value = v; op.textContent = tx; selEnemyEv.appendChild(op); });
+        typeRow.appendChild(S.View.el('span', 'small', 'Cualquier enemigo de tipo'));
+        typeRow.appendChild(selType);
+        typeRow.appendChild(selEnemyEv);
+        typeRow.appendChild(S.View.button('Añadir', '', () => {
+          if (!selType.value || links.length >= 10) return;
+          const key = 'type:' + selType.value;
+          if (links.some((l) => l.ev === selEnemyEv.value && l.key === key)) return;
+          links.push({ ev: selEnemyEv.value, key, t: '', o: false });
+          drawLinks();
+        }));
+        box.appendChild(typeRow);
         drawLinks();
         ta.addEventListener('input', drawLinks);
         const row = S.View.el('div', 'row');
