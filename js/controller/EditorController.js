@@ -154,29 +154,29 @@
         const linkBox = S.View.el('div', 'npc-links');
         const drawLinks = () => {
           linkBox.innerHTML = '';
-          linkBox.appendChild(S.View.el('p', 'small', links.length ? 'Enlaces:' : 'Sin enlaces: solo dice la primera frase.'));
+          linkBox.appendChild(S.View.el('p', 'small', links.length ? 'Enlaces:' : 'Sin enlaces: solo dice la primera frase. Para enlazar, usa la herramienta de enlace: clic en el NPC y luego en una tubería, puerta, enemigo o bloque.'));
           links.forEach((l, i) => {
             const r = S.View.el('div', 'row');
-            r.appendChild(S.View.el('span', '', S.Model.NpcLinks.label(opts, l) + ' → frase ' + l.n));
+            r.appendChild(S.View.el('span', '', S.Model.NpcLinks.label(opts, l)));
+            // frase que dice al dispararse este enlace
+            const selN = document.createElement('select');
+            for (let k = 1; k <= 10; k++) { const op = document.createElement('option'); op.value = String(k); op.textContent = 'frase ' + k; selN.appendChild(op); }
+            selN.value = String(l.n);
+            selN.onchange = () => { l.n = +selN.value; };
+            r.appendChild(selN);
+            // enemigo: derrotado o daño recibido
+            if (l.ev === 'defeat' || l.ev === 'hurt') {
+              const selEv = document.createElement('select');
+              [['defeat', 'al derrotarlo'], ['hurt', 'al recibir daño']].forEach(([v, t]) => { const op = document.createElement('option'); op.value = v; op.textContent = t; selEv.appendChild(op); });
+              selEv.value = l.ev;
+              selEv.onchange = () => { l.ev = selEv.value; drawLinks(); };
+              r.appendChild(selEv);
+            }
             r.appendChild(S.View.button('Quitar', 'danger', () => { links.splice(i, 1); drawLinks(); }));
             linkBox.appendChild(r);
           });
         };
-        const selTarget = document.createElement('select');
-        opts.forEach((o, i) => { const op = document.createElement('option'); op.value = String(i); op.textContent = o.label; selTarget.appendChild(op); });
-        const selLine = document.createElement('select');
-        for (let k = 1; k <= 10; k++) { const op = document.createElement('option'); op.value = String(k); op.textContent = 'frase ' + k; selLine.appendChild(op); }
-        selLine.value = '2';
-        const addRow = S.View.el('div', 'row');
-        addRow.appendChild(selTarget); addRow.appendChild(selLine);
-        addRow.appendChild(S.View.button('Añadir enlace', '', () => {
-          const o = opts[+selTarget.value];
-          if (!o || links.length >= 10) return;
-          links.push({ ev: o.ev, key: o.key, n: +selLine.value });
-          drawLinks();
-        }));
         box.appendChild(linkBox);
-        box.appendChild(addRow);
         drawLinks();
         const row = S.View.el('div', 'row');
         row.appendChild(S.View.button('Guardar', 'primary', () => {

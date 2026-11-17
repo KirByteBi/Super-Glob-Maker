@@ -251,6 +251,19 @@
       // una tubería se puede pinchar en cualquier casilla suya (boca o cuerpo)
       const hitPipe = !this.level.objectAt(x, y) && S.Model.Pipe.at(this.level, x, y);
       if (hitPipe) { x = hitPipe.x; y = hitPipe.y; }
+      // NPC: la herramienta de enlace lo toma como origen; el siguiente clic es el destino (tubería, puerta, enemigo o bloque)
+      const npcOrigin = this.level.objectAt(x, y);
+      if (this.linkFrom && this.linkFrom.fam === 'npc') {
+        const from = this.linkFrom; this.linkFrom = null;
+        const src = this.level.objectAt(from.x, from.y), tg = S.Model.NpcLinks.targetAt(this.level, x, y);
+        if (!src || src.type !== 'npc' || !tg) { this.emit('linkBad', {}); return 'bad'; }
+        src.lk = src.lk || [];
+        if (src.lk.length >= 10) { this.emit('linkBad', {}); return 'bad'; }
+        if (!src.lk.some((l) => l.ev === tg.ev && l.key === tg.key)) src.lk.push({ ev: tg.ev, key: tg.key, n: 2 });
+        this.changed = true;
+        return 'npc';
+      }
+      if (npcOrigin && npcOrigin.type === 'npc') { this.linkFrom = { z: this.activeZone, x, y, fam: 'npc' }; this.emit('linkFrom', { x, y }); return 'from'; }
       const o = this.level.objectAt(x, y);
       if (!o || !famOf(o.type)) { if (this.linkFrom) { this.linkFrom = null; } this.emit('linkBad', {}); return 'bad'; }
       // 1er clic: marcar origen (zona + coords + familia)

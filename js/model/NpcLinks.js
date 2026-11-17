@@ -31,11 +31,26 @@
     return out;
   }
 
+  // Destino de un enlace de NPC en la casilla (x, y), o null si no se puede enlazar ahí.
+  // Lo usa la herramienta de enlace: primero clic en el NPC y después en el destino.
+  function targetAt(L, x, y) {
+    const C = S.Model.Catalog, o = L.objectAt(x, y);
+    if (o && (o.type === 'warp' || o.type === 'lockwarp')) return { ev: 'exit', key: K(o.x, o.y), label: 'Salir de tubería (' + o.x + ',' + o.y + ')' };
+    if (o && (o.type === 'door' || o.type === 'lockdoor')) return { ev: 'exit', key: K(o.x, o.y), label: 'Salir de puerta (' + o.x + ',' + o.y + ')' };
+    if (o && C.ENEMY_TYPES.indexOf(o.type) !== -1) return { ev: 'defeat', key: K(o.x, o.y), label: 'Derrotar a ' + C.OBJECTS[o.type].name + ' (' + o.x + ',' + o.y + ')' };
+    const t = L.get(x, y);
+    if (t && !o) {
+      const name = (C.TILE_NAMES && C.TILE_NAMES[t]) || '';
+      if (C.isContainer(t) || BLOCK_NAME.test(name)) return { ev: 'hit', key: K(x, y), label: 'Golpear ' + (name || 'bloque') + ' (' + x + ',' + y + ')' };
+    }
+    return null;
+  }
+
   // Texto legible de un enlace guardado (si el objeto ya no existe, lo indica)
   function label(opts, l) {
     const o = opts.find((q) => q.ev === l.ev && q.key === l.key);
     return o ? o.label : l.ev + ' en ' + l.key + ' (ya no existe)';
   }
 
-  S.Model.NpcLinks = { options, label };
+  S.Model.NpcLinks = { options, label, targetAt };
 })(window.SGM);
