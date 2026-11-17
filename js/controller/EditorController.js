@@ -239,7 +239,7 @@
   function exists(L, l) {
     const k = String(l.key);
     if (k.indexOf('type:') === 0) return L.objects.some((q) => q.type === k.slice(5));
-    if (l.ev === 'kills') return true;
+    if (l.ev === 'kills' || l.ev === 'coins' || l.ev === 'powerups') return true;
     if (l.ev === 'hit' || l.ev === 'brick') { const p = k.split(','); return !!L.get(+p[0], +p[1]); }
     const p = k.split(',');
     return L.objects.some((q) => q.x === +p[0] && q.y === +p[1]);
@@ -266,7 +266,19 @@
     box.appendChild(list);
     box.appendChild(addBox);
 
-    let custom = 7; // número personalizado de derrotas (se conserva al repintar)
+    const custom = { kills: 7, coins: 10, powerups: 2 }; // números personalizados (se conservan al repintar)
+    // Fila de requisito por contador: "Al <pre> <N> <unidad>", con botones de N y personalizado − N +
+    const counterRow = (pre, ev, unit, presets) => {
+      const row = S.View.el('div', 'row');
+      row.appendChild(S.View.el('span', 'small', pre));
+      presets.forEach((n) => row.appendChild(S.View.button(n + ' ' + unit, '', () => add(ev, String(n)))));
+      const shown = S.View.el('span', '', String(custom[ev]));
+      row.appendChild(S.View.button('−', '', () => { custom[ev] = Math.max(1, custom[ev] - 1); shown.textContent = String(custom[ev]); }));
+      row.appendChild(shown);
+      row.appendChild(S.View.button('+', '', () => { custom[ev] = Math.min(999, custom[ev] + 1); shown.textContent = String(custom[ev]); }));
+      row.appendChild(S.View.button('Añadir ' + unit, 'primary', () => add(ev, String(custom[ev]))));
+      return row;
+    };
     const add = (ev, key) => {
       if (links.length >= 10 || links.some((l) => l.ev === ev && l.key === key)) return;
       links.push({ ev, key, t: '', o: false });
@@ -305,17 +317,9 @@
         });
         addBox.appendChild(row);
       }
-      const kills = S.View.el('div', 'row');
-      kills.appendChild(S.View.el('span', 'small', 'Al derrotar enemigos:'));
-      [3, 5, 10, 20].forEach((n) => kills.appendChild(S.View.button(String(n), '', () => add('kills', String(n)))));
-      // Personalizado: - N + y añadir (rango 1 a 999)
-      const shownN = S.View.el('span', '', String(custom));
-      kills.appendChild(S.View.button('−', '', () => { custom = Math.max(1, custom - 1); shownN.textContent = String(custom); }));
-      kills.appendChild(shownN);
-      kills.appendChild(S.View.button('+', '', () => { custom = Math.min(999, custom + 1); shownN.textContent = String(custom); }));
-      kills.appendChild(S.View.button('Añadir personalizado', 'primary', () => add('kills', String(custom))));
-      // solo si el nivel tiene enemigos (si no, no hay nada que derrotar)
-      if (enemyTypes.length) addBox.appendChild(kills);
+      if (enemyTypes.length) addBox.appendChild(counterRow('Al derrotar', 'kills', 'enemigos', [3, 5, 10, 20]));
+      addBox.appendChild(counterRow('Al juntar', 'coins', 'monedas', [5, 10, 20, 50]));
+      addBox.appendChild(counterRow('Al recoger', 'powerups', 'powerups', [1, 2, 3, 5]));
     };
 
     draw();

@@ -95,7 +95,7 @@
       this.starTotal = this.level.objects.filter((o) => (C.OBJECTS[o.type] || {}).collect).length;
       this.stars = 0;
       // Enemigos derrotados y si el jugador ha saltado (para las condiciones de victoria)
-      this.kills = 0; this.jumped = false; this.npcFired = {};
+      this.kills = 0; this.jumped = false; this.npcFired = {}; this.powerupsGot = 0;
       this.level.ab = [0, 0, 0];
       // Interruptores "!": estado persistente de la partida (se conserva al cambiar de zona)
       this.exState = this.exState || [0, 0, 0];
@@ -143,7 +143,7 @@
     addCoin(x, y) {
       // Glob Ducky: +1 a cada moneda que coge
       const bonus = (this.player && this.player.ch.coinBonus) || 0;
-      this.coins += 1 + bonus; this.score += 100 * (1 + bonus); this.emit('coin', { x, y });
+      const coinsBefore = this.coins; this.coins += 1 + bonus; this.score += 100 * (1 + bonus); this.emit('coin', { x, y }); this.npcCrossed('coins', coinsBefore, this.coins);
       while (this.coins >= 100) { this.coins -= 100; this.oneUp(x, y); }
     }
     oneUp(x, y) { this.lives++; this.emit('oneUp', { x, y }); }
@@ -744,6 +744,14 @@
 
     // Enlaces de los NPC: si hay un NPC enlazado a este evento y casilla, muestra la frase elegida.
     // ev: 'exit' (salir de tubería/puerta), 'defeat', 'hurt', 'hit'. key: 'x,y' de la casilla del objeto.
+    // Requisitos por contador (monedas, powerups): dispara cada enlace cuyo número N se ha cruzado (from < N <= to)
+    npcCrossed(ev, from, to) {
+      if (!this.level || !this.level.objects) return;
+      this.level.objects.forEach((o) => {
+        if (o.type !== 'npc' || !o.lk) return;
+        o.lk.forEach((l) => { const N = +l.key; if (l.ev === ev && N > from && N <= to) this.npcEvent(ev, l.key); });
+      });
+    }
     npcEvent(ev, key) {
       if (!this.level || !this.level.objects) return;
       this.level.objects.forEach((o) => {
@@ -820,7 +828,7 @@
     collectItem(e) {
       // NPC enlazados: llave, powerup (incluye cápsulas de personaje)
       if (e.type === 'key') this.npcEvent('key', e.tx + ',' + e.ty);
-      else if (['evo', 'flor', 'caca', 'vacio', 'brillo', 'miniglob'].indexOf(e.type) !== -1 || /^cap_/.test(e.type)) this.npcEvent('powerup', e.tx + ',' + e.ty);
+      else if (['evo', 'flor', 'caca', 'vacio', 'brillo', 'miniglob'].indexOf(e.type) !== -1 || /^cap_/.test(e.type)) this.npcEvent('powerup', e.tx + ',' + e.ty); { const before = this.powerupsGot || 0; this.powerupsGot = before + 1; this.npcCrossed('powerups', before, before + 1); }
       const p = this.player;
       e.remove = true;
       const at = { x: e.cx(), y: e.cy() };
