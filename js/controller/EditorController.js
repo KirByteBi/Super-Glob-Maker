@@ -334,8 +334,8 @@
         addBox.appendChild(row);
       }
       if (enemyTypes.length) addBox.appendChild(counterRow('Al derrotar', 'kills', 'enemigos', [3, 5, 10, 20]));
-      addBox.appendChild(counterRow('Al juntar', 'coins', 'monedas', [5, 10, 20, 50]));
       addBox.appendChild(powerRow());
+      addBox.appendChild(counterRow('Al juntar', 'coins', 'monedas', [5, 10, 20, 50]));
     };
 
     draw();
