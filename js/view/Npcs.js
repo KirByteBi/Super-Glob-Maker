@@ -34,13 +34,12 @@
   ];
   const byId = {};
   // Tamaño en casillas (ancho x alto). 2x2 si lleva decoración (transporte, arma, ambiente); 1x2 la flor.
-  // PENDIENTES DE REVISAR (puestos en 1x1 sin mirarlos): marina_1..4, marron_4, naranja_2..4, bomba_2.
   const TILES = {
     blanca_1: [1, 1], blanca_2: [2, 2], blanca_3: [2, 2], rosa_1: [1, 1], rosa_2: [1, 1], rosa_3: [1, 1],
-    marina_1: [1, 1], marina_2: [1, 1], marina_3: [1, 1], marina_4: [1, 1],
-    marron_1: [1, 1], marron_2: [1, 1], marron_3: [1, 2], marron_4: [1, 1],
-    naranja_1: [1, 1], naranja_2: [1, 1], naranja_3: [1, 1], naranja_4: [1, 1],
-    bomba_1: [1, 1], bomba_2: [1, 1], bomba_3: [2, 2]
+    marina_1: [1, 1], marina_2: [2, 2], marina_3: [2, 2], marina_4: [2, 2],
+    marron_1: [1, 1], marron_2: [1, 1], marron_3: [1, 2], marron_4: [2, 2],
+    naranja_1: [1, 1], naranja_2: [1, 1], naranja_3: [2, 2], naranja_4: [2, 2],
+    bomba_1: [1, 1], bomba_2: [2, 2], bomba_3: [2, 2]
   };
   LIST.forEach((n) => { byId[n.id] = n; n.w = TILES[n.id][0]; n.h = TILES[n.id][1]; });
 
