@@ -534,18 +534,21 @@
           // Destino en otra zona: recargar esa zona y salir en el gizmo destino
           if (w.toZone) {
             const d = this.enterZone(w.toZone.z, w.toZone.i, w.fam);
+            this.lastOut = d;
             if (d) {
               if (d.family === 'pipe') placeAtPipe(d); else { p.x = d.cx() - p.w / 2; p.y = d.y + d.h - p.h; d.open = 1; }
               if (d.locked) { d.locked = false; this.unlocked[this.zone + ':' + d.tx + ',' + d.ty] = true; } // sales por ella: queda abierta
             }
           } else {
             const d = w.to;
+            this.lastOut = d;
             // salir en la boca de la tubería destino (según orientación) o delante de la puerta destino
             if (d.family === 'pipe') placeAtPipe(d);
             else { p.x = d.cx() - p.w / 2; p.y = d.y + d.h - p.h; d.open = 1; }
             if (d.locked) { d.locked = false; this.unlocked[this.zone + ':' + d.tx + ',' + d.ty] = true; }
           }
           w.phase = 'out'; w.t = 0;
+          if (this.lastOut && this.lastOut.tx != null) this.npcEvent('exit', this.lastOut.tx + ',' + this.lastOut.ty);
           this.updateCamera(1);
           this.emit(pipe ? 'pipeOut' : 'doorOut', { x: p.x + p.w / 2, y: p.y });
         }
@@ -739,7 +742,19 @@
       for (const e of this.entities) if (e.type === 'firebar' && e.active && e.hits(p)) { this.hurtPlayer(); break; }
     }
 
-    hurtPlayer() {
+    // Enlaces de los NPC: si hay un NPC enlazado a este evento y casilla, muestra la frase elegida.
+    // ev: 'exit' (salir de tubería/puerta), 'defeat', 'hurt', 'hit'. key: 'x,y' de la casilla del objeto.
+    npcEvent(ev, key) {
+      if (!this.level || !this.level.objects) return;
+      this.level.objects.forEach((o) => {
+        if (o.type !== 'npc' || !o.say || !o.say.length || !o.lk) return;
+        const hit = o.lk.find((l) => l.ev === ev && l.key === key);
+        if (!hit) return;
+        this.npcBubble = { text: o.say[(hit.n || 1) - 1] || o.say[0], x: o.x * T + T / 2, y: o.y * T - 40, until: Date.now() + 2600 };
+      });
+    }
+    hurtPlayer(src) {
+      if (src && src.tx != null) this.npcEvent('hurt', src.tx + ',' + src.ty);
       const r = this.player.hurt();
       if (r === true) this.die('enemy');
       else if (r === 'shrink') this.emit('shrink', { x: this.player.x, y: this.player.y });
@@ -792,7 +807,7 @@
           if (!e.boss) this.addScore(100, e);
           p.vy = this.inputJump ? -560 : -400; p.pound = 0; p.jumpHeld = true; p.y = e.y - p.h;
           if (p.special === 'vacio') p.airJumps = 1;
-        } else if (e.harmful) this.hurtPlayer();
+        } else if (e.harmful) this.hurtPlayer(e);
         if (this.state !== 'play') return;
       }
     }
@@ -845,6 +860,7 @@
 
     hitBlock(x, y, canBreak, fromBelow) {
       const t = this.level.get(x, y);
+      this.npcEvent('hit', x + ',' + y);
       const key = x + ',' + y;
       const content = this.level.contents[key];
       const bumpEnemies = () => {

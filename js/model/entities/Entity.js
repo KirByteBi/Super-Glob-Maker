@@ -65,7 +65,7 @@
       return g.level.get(cx, by) === C.T.LIQUID;
     }
     onWall(w) { this.dir = -w; }
-    onStomp(g) { this.squashed = true; this.dying = 0.45; this.vx = 0; g.emit('stomp', { x: this.x + this.w / 2, y: this.y + this.h / 2 }); }
+    onStomp(g) { this.squashed = true; this.dying = 0.45; this.vx = 0; g.emit('stomp', { x: this.x + this.w / 2, y: this.y + this.h / 2 }); if (g.npcEvent) g.npcEvent('defeat', this.tx + ',' + this.ty); }
     kill(g, silent) {
       if (this.dying > 0) return;
       this.flipDie = true; this.dying = 1.4; this.vy = -360; this.vx = (Math.random() < 0.5 ? -1 : 1) * 60;
@@ -73,7 +73,7 @@
       this.died(g);
     }
     // Se llama una sola vez al morir (para recompensas, restos, etc.)
-    died(g) { if (this.deadDone) return; this.deadDone = true; if (this.onDeath) this.onDeath(g); }
+    died(g) { if (this.deadDone) return; this.deadDone = true; if (g && g.npcEvent) g.npcEvent('defeat', this.tx + ',' + this.ty); if (this.onDeath) this.onDeath(g); if (g && g.npcEvent) g.npcEvent('defeat', this.tx + ',' + this.ty); }
     hitByShot(g) { this.kill(g); return true; }
     cx() { return this.x + this.w / 2; }
     cy() { return this.y + this.h / 2; }

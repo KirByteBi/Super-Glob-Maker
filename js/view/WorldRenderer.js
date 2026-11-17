@@ -68,6 +68,52 @@
     } catch (e) { /* un NPC roto no debe romper el render */ }
   }
 
+  // Burbuja con la frase por defecto (primera línea) de los NPC cercanos al Glob (3 casillas).
+  // Las demás líneas son para cuando el NPC esté enlazado a algo (aún no implementado).
+  // Burbuja de texto encima de un NPC: (cx, top) es el punto de encima de su cabeza
+  function drawBubble(ctx, text, cx, top) {
+    const Sp = S.View.Sprites;
+    ctx.save();
+    ctx.font = '800 14px "Trebuchet MS",sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const w = Math.min(260, ctx.measureText(text).width + 22), h = 26, x = cx - w / 2, y = top - h - 8;
+    Sp.rr(ctx, x, y, w, h, 8);
+    Sp.fillStroke(ctx, '#ffffff', 2.5);
+    ctx.beginPath(); ctx.moveTo(cx - 6, y + h); ctx.lineTo(cx, y + h + 8); ctx.lineTo(cx + 6, y + h); ctx.closePath();
+    ctx.fillStyle = '#ffffff'; ctx.fill();
+    ctx.fillStyle = '#1a1033';
+    ctx.fillText(text, cx, y + h / 2 + 1, 250);
+    ctx.restore();
+  }
+
+  function drawNpcTalk(ctx, g, t) {
+    try {
+      // Reacción a un enlace (salir, derrotar, daño, bloque): tiene prioridad unos segundos
+      const b = g.npcBubble;
+      if (b && Date.now() < b.until) { drawBubble(ctx, b.text, b.x, b.y); return; }
+      const p = g.player;
+      if (!p) return;
+      const px = p.x + p.w / 2, py = p.y + p.h / 2, Sp = S.View.Sprites;
+      g.level.objects.forEach((o) => {
+        if (o.type !== 'npc' || !o.say || !o.say.length) return;
+        const cx = o.x * T + T / 2, top = o.y * T - 40;
+        if (Math.hypot(cx - px, (top + 20) - py) > 3 * T) return;
+        const text = o.say[0];
+        ctx.save();
+        ctx.font = '800 14px "Trebuchet MS",sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        const w = Math.min(260, ctx.measureText(text).width + 22), h = 26, x = cx - w / 2, y = top - h - 8;
+        Sp.rr(ctx, x, y, w, h, 8);
+        Sp.fillStroke(ctx, '#ffffff', 2.5);
+        ctx.beginPath(); ctx.moveTo(cx - 6, y + h); ctx.lineTo(cx, y + h + 8); ctx.lineTo(cx + 6, y + h); ctx.closePath();
+        ctx.fillStyle = '#ffffff'; ctx.fill();
+        ctx.fillStyle = '#1a1033';
+        ctx.fillText(text, cx, y + h / 2 + 1, 250);
+        ctx.restore();
+      });
+    } catch (e) { /* una frase no debe romper la partida */ }
+  }
+
   function drawPlayer(ctx, p, t, game) {
     const Sp = S.View.Sprites;
     if (p.inv > 0 && Math.floor(p.inv * 15) % 2 === 0 && !p.dead) return;
@@ -169,6 +215,8 @@
       // Multijugador: los demás Globs (semitransparentes y con su nombre encima)
       if (g.ghosts && g.ghosts.length) g.ghosts.forEach((gh) => drawGhost(ctx, gh, t));
       drawPlayer(ctx, g.player, t, g);
+      // Frase por defecto de los NPC: la primera de su lista, visible cuando te acercas
+      drawNpcTalk(ctx, g, t);
       // Niebla (Rebel) y tinta (Squid) por ENCIMA de todo: su gracia es tapar la vista
       g.entities.forEach((e) => { if (e.type === 'sprayfog' && onCam(e)) S.View.Sprites.drawEntity(ctx, e, t, opt); });
       if (g.liquidY < g.baseLiquid) {

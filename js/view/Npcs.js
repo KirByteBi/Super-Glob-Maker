@@ -33,7 +33,16 @@
     { id: 'bomba_3', name: 'Nuclear Glob (EVO3)', src: 'Globs/NPCs/Instantanea Explosiva/Nuclear Glob (EVO3).png' }
   ];
   const byId = {};
-  LIST.forEach((n) => { byId[n.id] = n; });
+  // Tamaño en casillas (ancho x alto). 2x2 si lleva decoración (transporte, arma, ambiente); 1x2 la flor.
+  // PENDIENTES DE REVISAR (puestos en 1x1 sin mirarlos): marina_1..4, marron_4, naranja_2..4, bomba_2.
+  const TILES = {
+    blanca_1: [1, 1], blanca_2: [2, 2], blanca_3: [2, 2], rosa_1: [1, 1], rosa_2: [1, 1], rosa_3: [1, 1],
+    marina_1: [1, 1], marina_2: [1, 1], marina_3: [1, 1], marina_4: [1, 1],
+    marron_1: [1, 1], marron_2: [1, 1], marron_3: [1, 2], marron_4: [1, 1],
+    naranja_1: [1, 1], naranja_2: [1, 1], naranja_3: [1, 1], naranja_4: [1, 1],
+    bomba_1: [1, 1], bomba_2: [1, 1], bomba_3: [2, 2]
+  };
+  LIST.forEach((n) => { byId[n.id] = n; n.w = TILES[n.id][0]; n.h = TILES[n.id][1]; });
 
   // id -> { status: 'loading'|'ok'|'fail', canvas }
   const cache = {};
@@ -98,11 +107,12 @@
     drawObject(ctx, o, t) {
       const c = canvasOf(o.npc);
       if (!c) return;
-      const cx = o.x * T + T / 2, by = (o.y + 1) * T;
+      const n = byId[o.npc] || { w: 1, h: 1 }, side = 48 * Math.max(n.w, n.h);
+      const cx = o.x * T + (n.w * T) / 2, by = (o.y + 1) * T;
       const bob = Math.sin((t || 0) * 2.2 + o.x) * 1.2;
       ctx.save();
       ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(c, cx - SIZE / 2, by - SIZE + bob, SIZE, SIZE);
+      ctx.drawImage(c, cx - side / 2, by - side + bob, side, side);
       ctx.restore();
     },
     // Icono en el selector del editor, dentro de un cuadro size×size en (x, y)

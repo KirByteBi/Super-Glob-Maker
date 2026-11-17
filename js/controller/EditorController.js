@@ -148,10 +148,40 @@
         ta.rows = 6; ta.maxLength = 1200; ta.style.width = '100%';
         ta.value = (npc.say || []).join('\n');
         box.appendChild(ta);
+        // Enlaces: a qué reacciona el NPC y qué frase dice
+        const links = (npc.lk || []).map((l) => ({ ev: l.ev, key: l.key, n: l.n || 1 }));
+        const opts = S.Model.NpcLinks.options(m.level);
+        const linkBox = S.View.el('div', 'npc-links');
+        const drawLinks = () => {
+          linkBox.innerHTML = '';
+          linkBox.appendChild(S.View.el('p', 'small', links.length ? 'Enlaces:' : 'Sin enlaces: solo dice la primera frase.'));
+          links.forEach((l, i) => {
+            const r = S.View.el('div', 'row');
+            r.appendChild(S.View.el('span', '', S.Model.NpcLinks.label(opts, l) + ' → frase ' + l.n));
+            r.appendChild(S.View.button('Quitar', 'danger', () => { links.splice(i, 1); drawLinks(); }));
+            linkBox.appendChild(r);
+          });
+        };
+        const selTarget = document.createElement('select');
+        opts.forEach((o, i) => { const op = document.createElement('option'); op.value = String(i); op.textContent = o.label; selTarget.appendChild(op); });
+        const selLine = document.createElement('select');
+        for (let k = 1; k <= 10; k++) { const op = document.createElement('option'); op.value = String(k); op.textContent = 'frase ' + k; selLine.appendChild(op); }
+        selLine.value = '2';
+        const addRow = S.View.el('div', 'row');
+        addRow.appendChild(selTarget); addRow.appendChild(selLine);
+        addRow.appendChild(S.View.button('Añadir enlace', '', () => {
+          const o = opts[+selTarget.value];
+          if (!o || links.length >= 10) return;
+          links.push({ ev: o.ev, key: o.key, n: +selLine.value });
+          drawLinks();
+        }));
+        linkBox.appendChild(addRow);
+        drawLinks();
+        box.appendChild(linkBox);
         const row = S.View.el('div', 'row');
         row.appendChild(S.View.button('Guardar', 'primary', () => {
           const lines = ta.value.split('\n').map((s) => s.trim()).filter(Boolean).slice(0, 10).map((s) => S.Model.TextFilter.clean(s));
-          m.mutate((L) => { const o = L.objectAt(c.x, c.y); if (o && o.type === 'npc') { if (lines.length) o.say = lines; else delete o.say; } });
+          m.mutate((L) => { const o = L.objectAt(c.x, c.y); if (o && o.type === 'npc') { if (lines.length) o.say = lines; else delete o.say; if (links.length) o.lk = links.slice(); else delete o.lk; } });
           menu.closeModal();
         }));
         row.appendChild(S.View.button('Cancelar', '', () => menu.closeModal()));

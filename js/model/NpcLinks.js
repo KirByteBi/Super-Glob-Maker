@@ -1,0 +1,41 @@
+/* Modelo: opciones de enlace para los NPC.
+   Un enlace es { ev, key, n }: ev = evento, key = 'x,y' de la casilla del objeto, n = número de frase que dice.
+   Eventos:
+     exit   -> salir de una tubería o puerta
+     defeat -> derrotar a un enemigo
+     hurt   -> recibir daño de un enemigo
+     hit    -> golpear un bloque */
+(function (S) {
+  'use strict';
+  const K = (x, y) => x + ',' + y;
+  const BLOCK_NAME = /bloque|ladrillo|caja|block|brick/i;
+
+  // Todo lo que se puede enlazar en el nivel actual
+  function options(L) {
+    const C = S.Model.Catalog, out = [];
+    L.objects.forEach((o) => {
+      if (o.type === 'warp' || o.type === 'lockwarp') out.push({ ev: 'exit', key: K(o.x, o.y), label: 'Salir de tubería (' + o.x + ',' + o.y + ')' });
+      else if (o.type === 'door' || o.type === 'lockdoor') out.push({ ev: 'exit', key: K(o.x, o.y), label: 'Salir de puerta (' + o.x + ',' + o.y + ')' });
+      else if (C.ENEMY_TYPES.indexOf(o.type) !== -1) {
+        const name = C.OBJECTS[o.type].name;
+        out.push({ ev: 'defeat', key: K(o.x, o.y), label: 'Derrotar a ' + name + ' (' + o.x + ',' + o.y + ')' });
+        out.push({ ev: 'hurt', key: K(o.x, o.y), label: 'Recibir daño de ' + name + ' (' + o.x + ',' + o.y + ')' });
+      }
+    });
+    for (let y = 0; y < L.height; y++) for (let x = 0; x < L.width; x++) {
+      const t = L.get(x, y);
+      if (!t) continue;
+      const name = (C.TILE_NAMES && C.TILE_NAMES[t]) || '';
+      if (C.isContainer(t) || BLOCK_NAME.test(name)) out.push({ ev: 'hit', key: K(x, y), label: 'Golpear ' + (name || 'bloque') + ' (' + x + ',' + y + ')' });
+    }
+    return out;
+  }
+
+  // Texto legible de un enlace guardado (si el objeto ya no existe, lo indica)
+  function label(opts, l) {
+    const o = opts.find((q) => q.ev === l.ev && q.key === l.key);
+    return o ? o.label : l.ev + ' en ' + l.key + ' (ya no existe)';
+  }
+
+  S.Model.NpcLinks = { options, label };
+})(window.SGM);
