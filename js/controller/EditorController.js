@@ -150,7 +150,7 @@
         ta.value = (npc.say || []).join('\n');
         box.appendChild(ta);
         // Enlaces: a qué reacciona el NPC y qué frase dice
-        const links = (npc.lk || []).map((l) => ({ ev: l.ev, key: l.key, n: l.n || 1 }));
+        const links = (npc.lk || []).map((l) => ({ ev: l.ev, key: l.key, t: l.t || '' }));
         const opts = S.Model.NpcLinks.options(m.level);
         const linkBox = S.View.el('div', 'npc-links');
         const drawLinks = () => {
@@ -161,12 +161,12 @@
           links.forEach((l, i) => {
             const r = S.View.el('div', 'row');
             r.appendChild(S.View.el('span', '', S.Model.NpcLinks.label(opts, l)));
-            // frase que dice al dispararse este enlace
-            const selN = document.createElement('select');
-            for (let k = 1; k <= 10; k++) { const op = document.createElement('option'); op.value = String(k); op.textContent = k + ': ' + (txt[k - 1] || '(sin escribir)'); selN.appendChild(op); }
-            selN.value = String(l.n);
-            selN.onchange = () => { l.n = +selN.value; };
-            r.appendChild(selN);
+            // frase que dice este enlace al dispararse (vacía = no dice nada)
+            const inpT = document.createElement('input');
+            inpT.type = 'text'; inpT.maxLength = 120; inpT.size = 30; inpT.placeholder = 'frase de este enlace';
+            inpT.value = l.t || '';
+            inpT.oninput = () => { l.t = inpT.value; };
+            r.appendChild(inpT);
             // enemigo: derrotado o daño recibido
             if (l.ev === 'defeat' || l.ev === 'hurt') {
               const selEv = document.createElement('select');
@@ -184,8 +184,8 @@
         ta.addEventListener('input', drawLinks);
         const row = S.View.el('div', 'row');
         row.appendChild(S.View.button('Guardar', 'primary', () => {
-          const lines = ta.value.split('\n').map((s) => s.trim()).filter(Boolean).slice(0, 10).map((s) => S.Model.TextFilter.clean(s));
-          m.mutate((L) => { const o = L.objectAt(c.x, c.y); if (o && o.type === 'npc') { if (lines.length) o.say = lines; else delete o.say; if (links.length) o.lk = links.slice(); else delete o.lk; } });
+          const lines = ta.value.split('\n').map((s) => s.trim()).filter(Boolean).slice(0, 1).map((s) => S.Model.TextFilter.clean(s));
+          m.mutate((L) => { const o = L.objectAt(c.x, c.y); if (o && o.type === 'npc') { if (lines.length) o.say = lines; else delete o.say; if (links.length) o.lk = links.map((l) => ({ ev: l.ev, key: l.key, t: S.Model.TextFilter.clean(l.t || '') })); else delete o.lk; } });
           menu.closeModal();
         }));
         row.appendChild(S.View.button('Cancelar', '', () => menu.closeModal()));

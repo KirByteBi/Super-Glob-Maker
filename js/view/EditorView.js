@@ -51,8 +51,8 @@
           ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
           ctx.setLineDash([]);
           ctx.font = '900 12px "Trebuchet MS",sans-serif'; ctx.textAlign = 'center';
-          ctx.lineWidth = 3; ctx.strokeStyle = '#000'; ctx.strokeText('frase ' + l.n, (ax + bx) / 2, (ay + by) / 2);
-          ctx.fillStyle = '#ffe600'; ctx.fillText('frase ' + l.n, (ax + bx) / 2, (ay + by) / 2);
+          ctx.lineWidth = 3; ctx.strokeStyle = '#000'; ctx.strokeText((l.t || '(sin frase)').slice(0, 16), (ax + bx) / 2, (ay + by) / 2);
+          ctx.fillStyle = '#ffe600'; ctx.fillText((l.t || '(sin frase)').slice(0, 16), (ax + bx) / 2, (ay + by) / 2);
           ctx.restore();
         });
       });

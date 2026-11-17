@@ -749,8 +749,8 @@
       this.level.objects.forEach((o) => {
         if (o.type !== 'npc' || !o.say || !o.say.length || !o.lk) return;
         const hit = o.lk.find((l) => l.ev === ev && l.key === key);
-        if (!hit) return;
-        this.npcBubble = { text: o.say[(hit.n || 1) - 1] || o.say[0], x: o.x * T + T / 2, y: o.y * T - 40, until: Date.now() + 2600 };
+        if (!hit || !hit.t) return; // cada enlace dice su propia frase; sin frase no dice nada
+        this.npcBubble = { text: hit.t, x: o.x * T + T / 2, y: o.y * T - 40, until: Date.now() + 2600 };
       });
     }
     hurtPlayer(src) {
