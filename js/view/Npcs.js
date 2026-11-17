@@ -43,7 +43,7 @@
   };
   // Píxeles de dibujo por casilla (por defecto 48). DJ y Nuclear se dibujan a 32 para que su imagen
   // quepa en la huella 2×2 y no parezca 3×3 o 3×4.
-  const PXT = { naranja_4: 32, bomba_3: 32 };
+  const PXT = { blanca_2: 32, blanca_3: 32, marina_2: 32, marina_3: 32, naranja_3: 32, naranja_4: 32, bomba_2: 32, bomba_3: 32 };
   LIST.forEach((n) => { byId[n.id] = n; n.w = TILES[n.id][0]; n.h = TILES[n.id][1]; n.px = PXT[n.id] || 48; });
 
   // id -> { status: 'loading'|'ok'|'fail', canvas }
