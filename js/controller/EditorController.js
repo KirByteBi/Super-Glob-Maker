@@ -135,6 +135,28 @@
         this.painting = true; this.erasing = e.button === 2;
         this.lastCell = null; this.paint(c);
       });
+      // Doble clic sobre un NPC: escribir lo que dice (una frase por línea)
+      on(cv, 'dblclick', (e) => {
+        if (this.app.menu.modal.style.display === 'flex') return;
+        const c = this.cellAt(e);
+        const npc = m.level.objectAt(c.x, c.y);
+        if (!npc || npc.type !== 'npc') return;
+        const menu = this.app.menu, def = S.View.Npcs.get(npc.npc);
+        const box = menu.openModal('NPC: ' + (def ? def.name : 'sin imagen'));
+        box.appendChild(S.View.el('p', 'small', 'Una frase por línea (máximo 10). Las frases inapropiadas se cambian por "Hello World!".'));
+        const ta = document.createElement('textarea');
+        ta.rows = 6; ta.maxLength = 1200; ta.style.width = '100%';
+        ta.value = (npc.say || []).join('\n');
+        box.appendChild(ta);
+        const row = S.View.el('div', 'row');
+        row.appendChild(S.View.button('Guardar', 'primary', () => {
+          const lines = ta.value.split('\n').map((s) => s.trim()).filter(Boolean).slice(0, 10).map((s) => S.Model.TextFilter.clean(s));
+          m.mutate((L) => { const o = L.objectAt(c.x, c.y); if (o && o.type === 'npc') { if (lines.length) o.say = lines; else delete o.say; } });
+          menu.closeModal();
+        }));
+        row.appendChild(S.View.button('Cancelar', '', () => menu.closeModal()));
+        box.appendChild(row);
+      });
       on(window, 'mousemove', (e) => {
         if (this.panning) {
           const r = cv.getBoundingClientRect(), k = S.VIEW_W / r.width;
