@@ -291,7 +291,7 @@
     constructor(tx, ty, o, type) { super(type, tx, ty); this.gizmo = true; this.gravity = 0; this.tiles = false; this.exk = S.Model.Catalog.OBJECTS[type].exk; this.pressed = false; }
     think() {}
     physics() {}
-    onTouch(g) { if (!this.pressed) { this.pressed = true; g.pressExclaim(this.exk, this.cx(), this.cy()); } return true; }
+    onTouch(g) { if (!this.pressed) { this.pressed = true; g.pressExclaim(this.exk, this.cx(), this.cy()); g.npcEvent('exclaim', this.tx + ',' + this.ty); } return true; }
   }
   S.Model.ExSwitch = ExSwitch;
   ['exswitch0', 'exswitch1', 'exswitch2'].forEach((k) => reg(k, class extends ExSwitch { constructor(tx, ty, o) { super(tx, ty, o, k); } }));

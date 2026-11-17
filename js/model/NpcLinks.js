@@ -37,11 +37,15 @@
     const C = S.Model.Catalog, o = L.objectAt(x, y);
     if (o && (o.type === 'warp' || o.type === 'lockwarp')) return { ev: 'exit', key: K(o.x, o.y), label: 'Salir de tubería (' + o.x + ',' + o.y + ')' };
     if (o && (o.type === 'door' || o.type === 'lockdoor')) return { ev: 'exit', key: K(o.x, o.y), label: 'Salir de puerta (' + o.x + ',' + o.y + ')' };
+    if (o && o.type === 'key') return { ev: 'key', key: K(o.x, o.y), label: 'Recoger llave (' + o.x + ',' + o.y + ')' };
+    if (o && (['evo', 'flor', 'caca', 'vacio', 'brillo', 'miniglob'].indexOf(o.type) !== -1 || /^cap_/.test(o.type))) return { ev: 'powerup', key: K(o.x, o.y), label: 'Coger powerup (' + o.x + ',' + o.y + ')' };
+    if (o && (o.type === 'goal' || o.type === 'goalhidden')) return { ev: o.type, key: K(o.x, o.y), label: (o.type === 'goal' ? 'Tocar meta (' : 'Tocar meta oculta (') + o.x + ',' + o.y + ')' };
+    if (o && /^exswitch/.test(o.type)) return { ev: 'exclaim', key: K(o.x, o.y), label: 'Pulsar interruptor ! (' + o.x + ',' + o.y + ')' };
     if (o && C.ENEMY_TYPES.indexOf(o.type) !== -1) return { ev: 'defeat', key: K(o.x, o.y), label: 'Derrotar a ' + C.OBJECTS[o.type].name + ' (' + o.x + ',' + o.y + ')' };
     const t = L.get(x, y);
     if (t && !o) {
       const name = (C.TILE_NAMES && C.TILE_NAMES[t]) || '';
-      if (C.isContainer(t) || BLOCK_NAME.test(name)) return { ev: 'hit', key: K(x, y), label: 'Golpear ' + (name || 'bloque') + ' (' + x + ',' + y + ')' };
+      if (C.isContainer(t) || BLOCK_NAME.test(name)) return { ev: t === C.T.BRICK ? 'brick' : 'hit', key: K(x, y), label: 'Golpear ' + (name || 'bloque') + ' (' + x + ',' + y + ')' };
     }
     return null;
   }
@@ -49,7 +53,11 @@
   // Texto legible de un enlace guardado (si el objeto ya no existe, lo indica)
   function label(opts, l) {
     const o = opts.find((q) => q.ev === l.ev && q.key === l.key);
-    return o ? o.label : l.ev + ' en ' + l.key + ' (ya no existe)';
+    if (o) return o.label + (l.o ? ' · una vez' : '');
+    if (l.ev === 'kills') return 'Al derrotar ' + l.key + ' enemigos' + (l.o ? ' · una vez' : '');
+    const NAMES = { key: 'Recoger llave', powerup: 'Coger powerup', brick: 'Golpear ladrillo', goal: 'Tocar meta', goalhidden: 'Tocar meta oculta', exclaim: 'Pulsar interruptor !' };
+    if (NAMES[l.ev]) return NAMES[l.ev] + ' (' + l.key + ')' + (l.o ? ' · una vez' : '');
+    return l.ev + ' en ' + l.key + ' (ya no existe)';
   }
 
   S.Model.NpcLinks = { options, label, targetAt };

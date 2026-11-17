@@ -150,7 +150,7 @@
         ta.value = (npc.say || []).join('\n');
         box.appendChild(ta);
         // Enlaces: a qué reacciona el NPC y qué frase dice
-        const links = (npc.lk || []).map((l) => ({ ev: l.ev, key: l.key, t: l.t || '' }));
+        const links = (npc.lk || []).map((l) => ({ ev: l.ev, key: l.key, t: l.t || '', o: !!l.o }));
         const opts = S.Model.NpcLinks.options(m.level);
         const linkBox = S.View.el('div', 'npc-links');
         const drawLinks = () => {
@@ -167,6 +167,13 @@
             inpT.value = l.t || '';
             inpT.oninput = () => { l.t = inpT.value; };
             r.appendChild(inpT);
+            // "una vez": este enlace solo dice su frase la primera vez en cada intento
+            const chkOnce = document.createElement('input');
+            chkOnce.type = 'checkbox'; chkOnce.checked = !!l.o; chkOnce.title = 'Solo una vez por intento';
+            chkOnce.onchange = () => { l.o = chkOnce.checked; drawLinks(); };
+            const lblOnce = S.View.el('label', 'small', ' una vez ');
+            lblOnce.prepend(chkOnce);
+            r.appendChild(lblOnce);
             // enemigo: derrotado o daño recibido
             if (l.ev === 'defeat' || l.ev === 'hurt') {
               const selEv = document.createElement('select');
@@ -180,12 +187,27 @@
           });
         };
         box.appendChild(linkBox);
+        // Enlace por derrotas: no depende de un objeto, sino del número de enemigos derrotados
+        const killRow = S.View.el('div', 'row');
+        const inpKills = document.createElement('input');
+        inpKills.type = 'number'; inpKills.min = '1'; inpKills.max = '999'; inpKills.value = '5'; inpKills.style.width = '70px';
+        killRow.appendChild(S.View.el('span', 'small', 'Al derrotar'));
+        killRow.appendChild(inpKills);
+        killRow.appendChild(S.View.el('span', 'small', 'enemigos'));
+        killRow.appendChild(S.View.button('Añadir', '', () => {
+          const n = Math.max(1, Math.min(999, inpKills.value | 0));
+          if (links.length >= 10) return;
+          if (links.some((l) => l.ev === 'kills' && l.key === String(n))) return;
+          links.push({ ev: 'kills', key: String(n), t: '', o: false });
+          drawLinks();
+        }));
+        box.appendChild(killRow);
         drawLinks();
         ta.addEventListener('input', drawLinks);
         const row = S.View.el('div', 'row');
         row.appendChild(S.View.button('Guardar', 'primary', () => {
           const lines = ta.value.split('\n').map((s) => s.trim()).filter(Boolean).slice(0, 1).map((s) => S.Model.TextFilter.clean(s));
-          m.mutate((L) => { const o = L.objectAt(c.x, c.y); if (o && o.type === 'npc') { if (lines.length) o.say = lines; else delete o.say; if (links.length) o.lk = links.map((l) => ({ ev: l.ev, key: l.key, t: S.Model.TextFilter.clean(l.t || '') })); else delete o.lk; } });
+          m.mutate((L) => { const o = L.objectAt(c.x, c.y); if (o && o.type === 'npc') { if (lines.length) o.say = lines; else delete o.say; if (links.length) o.lk = links.map((l) => ({ ev: l.ev, key: l.key, t: S.Model.TextFilter.clean(l.t || ''), o: !!l.o })); else delete o.lk; } });
           menu.closeModal();
         }));
         row.appendChild(S.View.button('Cancelar', '', () => menu.closeModal()));

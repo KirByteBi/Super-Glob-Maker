@@ -95,7 +95,7 @@
       this.starTotal = this.level.objects.filter((o) => (C.OBJECTS[o.type] || {}).collect).length;
       this.stars = 0;
       // Enemigos derrotados y si el jugador ha saltado (para las condiciones de victoria)
-      this.kills = 0; this.jumped = false;
+      this.kills = 0; this.jumped = false; this.npcFired = {};
       this.level.ab = [0, 0, 0];
       // Interruptores "!": estado persistente de la partida (se conserva al cambiar de zona)
       this.exState = this.exState || [0, 0, 0];
@@ -223,7 +223,7 @@
       // Cuenta enemigos derrotados (para la condición de victoria "Derrotar enemigos").
       // Un enemigo cuenta una sola vez, cuando entra en su animación de muerte.
       this.entities.forEach((e) => {
-        if (e.enemy && !e.boss && e.type !== 'eshot' && (e.dying > 0 || e.squashed) && !e._counted) { e._counted = true; this.kills++; }
+        if (e.enemy && !e.boss && e.type !== 'eshot' && (e.dying > 0 || e.squashed) && !e._counted) { e._counted = true; this.kills++; this.npcEvent('kills', String(this.kills)); }
       });
       this.entities = this.entities.filter((e) => !e.remove);
 
@@ -750,6 +750,11 @@
         if (o.type !== 'npc' || !o.say || !o.say.length || !o.lk) return;
         const hit = o.lk.find((l) => l.ev === ev && l.key === key);
         if (!hit || !hit.t) return; // cada enlace dice su propia frase; sin frase no dice nada
+        // "una vez": cada enlace marcado así solo habla una vez por intento (se reinicia al morir)
+        const fireKey = o.x + ',' + o.y + '|' + ev + '|' + key;
+        this.npcFired = this.npcFired || {};
+        if (hit.o && this.npcFired[fireKey]) return;
+        this.npcFired[fireKey] = true;
         this.npcBubble = { text: hit.t, x: o.x * T + T / 2, y: o.y * T - 40, until: Date.now() + 2600 };
       });
     }
@@ -813,6 +818,9 @@
     }
 
     collectItem(e) {
+      // NPC enlazados: llave, powerup (incluye cápsulas de personaje)
+      if (e.type === 'key') this.npcEvent('key', e.tx + ',' + e.ty);
+      else if (['evo', 'flor', 'caca', 'vacio', 'brillo', 'miniglob'].indexOf(e.type) !== -1 || /^cap_/.test(e.type)) this.npcEvent('powerup', e.tx + ',' + e.ty);
       const p = this.player;
       e.remove = true;
       const at = { x: e.cx(), y: e.cy() };
@@ -861,6 +869,7 @@
     hitBlock(x, y, canBreak, fromBelow) {
       const t = this.level.get(x, y);
       this.npcEvent('hit', x + ',' + y);
+      if (t === TT.BRICK) this.npcEvent('brick', x + ',' + y);
       const key = x + ',' + y;
       const content = this.level.contents[key];
       const bumpEnemies = () => {
@@ -1021,6 +1030,8 @@
     }
 
     reachGoal(secret) {
+      const goalObj = this.level.objects.find((o) => o.type === (secret ? 'goalhidden' : 'goal'));
+      if (goalObj) this.npcEvent(secret ? 'goalhidden' : 'goal', goalObj.x + ',' + goalObj.y);
       const p = this.player, g = secret && this.goalHidden ? this.goalHidden : this.goal;
       this.secretClear = !!secret;
       this.clearGoal = g; // meta usada en la animación de clear

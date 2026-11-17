@@ -53,7 +53,7 @@
         // frases del NPC (una por línea en el editor, máximo 10)
         if (Array.isArray(o.say)) ob.say = o.say.slice(0, 10).map(String);
         // enlaces del NPC: { ev, key, n } (n = número de frase que dice)
-        if (Array.isArray(o.lk)) ob.lk = o.lk.filter((l) => l && typeof l.key === 'string' && ['exit', 'defeat', 'hurt', 'hit'].indexOf(l.ev) !== -1).slice(0, 10).map((l) => ({ ev: l.ev, key: l.key, t: String(l.t || '').slice(0, 120) }));
+        if (Array.isArray(o.lk)) ob.lk = o.lk.filter((l) => l && typeof l.key === 'string' && ['exit', 'defeat', 'hurt', 'hit', 'key', 'powerup', 'brick', 'goal', 'goalhidden', 'exclaim', 'kills'].indexOf(l.ev) !== -1).slice(0, 10).map((l) => ({ ev: l.ev, key: String(l.key), t: String(l.t || '').slice(0, 120), o: !!l.o }));
         // enlaces del NPC: evento ('exit', 'defeat', 'hurt', 'hit'), casilla del objeto y nº de frase
         // semisólido del mapa (seta / árbol / cadena): ancho de su base en casillas (2-24)
         if (ob.type === 'treeplat') ob.w = Math.max(2, Math.min(24, (o.w | 0) || 3));
@@ -257,7 +257,7 @@
           if (o.deco) j.deco = o.deco;
           if (o.npc) j.npc = o.npc;
           if (Array.isArray(o.say) && o.say.length) j.say = o.say.slice(0, 10).map(String);
-          if (Array.isArray(o.lk) && o.lk.length) j.lk = o.lk.map((l) => ({ ev: l.ev, key: l.key, t: String(l.t || '').slice(0, 120) }));
+          if (Array.isArray(o.lk) && o.lk.length) j.lk = o.lk.map((l) => ({ ev: l.ev, key: l.key, t: String(l.t || '').slice(0, 120), o: !!l.o }));
           return j;
         }), contents: Object.assign({}, this.contents),
         win: Object.assign({ type: this.win.type, n: this.win.n }, this.win.target ? { target: this.win.target } : {}),
