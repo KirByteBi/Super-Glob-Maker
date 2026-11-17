@@ -23,6 +23,7 @@
       this.offs.push(S.events.on('editor:filled', (d) => app.menu.toast('Caja rellenada con ' + nameOf(d.type), 1200)));
       this.offs.push(S.events.on('editor:collectMix', () => app.menu.toast('Usa un solo tipo de Moneda Estrella por nivel (mezclarlas sería muy confuso)', 1800)));
       this.offs.push(S.events.on('editor:linkFrom', () => app.menu.toast('Origen marcado. Clica el destino (puedes cambiar de zona).', 1800)));
+      this.offs.push(S.events.on('editor:npcLink', (d) => app.menu.toast(d.text, 2600)));
       this.offs.push(S.events.on('editor:linkDone', (d) => app.menu.toast('Enlazado a ' + (d.z === 0 ? 'Base' : 'Sub ' + d.z) + ' (#' + (d.i + 1) + ')', 1500)));
       this.offs.push(S.events.on('editor:linkBad', () => app.menu.toast('Para enlazar, clica dos tuberías (o dos puertas).', 1600)));
     }
@@ -154,13 +155,15 @@
         const linkBox = S.View.el('div', 'npc-links');
         const drawLinks = () => {
           linkBox.innerHTML = '';
+          // frases tal como están escritas ahora mismo en el cuadro (sin guardar todavía)
+          const txt = ta.value.split('\n').map((s) => s.trim()).filter(Boolean);
           linkBox.appendChild(S.View.el('p', 'small', links.length ? 'Enlaces:' : 'Sin enlaces: solo dice la primera frase. Para enlazar, usa la herramienta de enlace: clic en el NPC y luego en una tubería, puerta, enemigo o bloque.'));
           links.forEach((l, i) => {
             const r = S.View.el('div', 'row');
             r.appendChild(S.View.el('span', '', S.Model.NpcLinks.label(opts, l)));
             // frase que dice al dispararse este enlace
             const selN = document.createElement('select');
-            for (let k = 1; k <= 10; k++) { const op = document.createElement('option'); op.value = String(k); op.textContent = 'frase ' + k; selN.appendChild(op); }
+            for (let k = 1; k <= 10; k++) { const op = document.createElement('option'); op.value = String(k); op.textContent = k + ': ' + (txt[k - 1] || '(sin escribir)'); selN.appendChild(op); }
             selN.value = String(l.n);
             selN.onchange = () => { l.n = +selN.value; };
             r.appendChild(selN);
@@ -178,6 +181,7 @@
         };
         box.appendChild(linkBox);
         drawLinks();
+        ta.addEventListener('input', drawLinks);
         const row = S.View.el('div', 'row');
         row.appendChild(S.View.button('Guardar', 'primary', () => {
           const lines = ta.value.split('\n').map((s) => s.trim()).filter(Boolean).slice(0, 10).map((s) => S.Model.TextFilter.clean(s));

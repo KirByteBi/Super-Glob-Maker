@@ -39,6 +39,23 @@
       S.View.WorldRenderer.drawTiles(ctx, L, pal, cam, t, { editor: true, contents: L.contents, ch, midPass: npcMid });
       // objetos (las decoraciones y los semisólidos del mapa ya se pintaron detrás del terreno)
       L.objects.forEach((o) => { if (o.type !== 'deco' && o.type !== 'treeplat' && o.type !== 'npc') this.drawObject(ctx, o, pal, ch, t); });
+      // Enlaces de NPC: línea discontinua hasta su destino (si está en esta zona) con el número de frase
+      L.objects.forEach((o) => {
+        if (o.type !== 'npc' || !o.lk) return;
+        o.lk.forEach((l) => {
+          const parts = l.key.split(','), tx = +parts[0], ty = +parts[1];
+          if (!(L.objectAt(tx, ty) || L.get(tx, ty))) return;
+          const k = S.TILE, ax = o.x * k + k / 2, ay = o.y * k + k / 2, bx = tx * k + k / 2, by = ty * k + k / 2;
+          ctx.save();
+          ctx.strokeStyle = '#ffe600'; ctx.lineWidth = 2.5; ctx.setLineDash([7, 5]);
+          ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.font = '900 12px "Trebuchet MS",sans-serif'; ctx.textAlign = 'center';
+          ctx.lineWidth = 3; ctx.strokeStyle = '#000'; ctx.strokeText('frase ' + l.n, (ax + bx) / 2, (ay + by) / 2);
+          ctx.fillStyle = '#ffe600'; ctx.fillText('frase ' + l.n, (ax + bx) / 2, (ay + by) / 2);
+          ctx.restore();
+        });
+      });
       // cursor
       if (this.hover && L.inBounds(this.hover.x, this.hover.y)) {
         const hx = this.hover.x * T, hy = this.hover.y * T;

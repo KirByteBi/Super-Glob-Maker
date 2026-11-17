@@ -269,8 +269,10 @@
         if (!src || src.type !== 'npc' || !tg) { this.emit('linkBad', {}); return 'bad'; }
         src.lk = src.lk || [];
         if (src.lk.length >= 10) { this.emit('linkBad', {}); return 'bad'; }
-        if (!src.lk.some((l) => l.ev === tg.ev && l.key === tg.key)) src.lk.push({ ev: tg.ev, key: tg.key, n: 2 });
+        if (src.lk.some((l) => l.ev === tg.ev && l.key === tg.key)) { this.emit('npcLink', { text: 'Ese enlace ya existe' }); return 'dup'; }
+        src.lk.push({ ev: tg.ev, key: tg.key, n: 2 });
         this.changed = true;
+        this.emit('npcLink', { text: 'NPC enlazado: ' + tg.label + '. Frase 2 (cámbiala con doble clic en el NPC)' });
         return 'npc';
       }
       if (npcOrigin && npcOrigin.type === 'npc') { this.linkFrom = { z: this.activeZone, x, y, fam: 'npc' }; this.emit('linkFrom', { x, y }); return 'from'; }
