@@ -61,7 +61,10 @@
     if (o) return o.label + (l.o ? ' · una vez' : '');
     if (l.ev === 'kills') return 'Al derrotar ' + l.key + ' enemigos' + (l.o ? ' · una vez' : '');
     if (l.ev === 'coins') return 'Al juntar ' + l.key + ' monedas' + (l.o ? ' · una vez' : '');
-    if (l.ev === 'powerups') return 'Al recoger ' + l.key + ' powerups' + (l.o ? ' · una vez' : '');
+    if (l.ev === 'powerups') {
+      const p = String(l.key).split('|'), tp = p[1] || '*', def = S.Model.Catalog.OBJECTS[tp] || {};
+      return 'Al recoger ' + p[0] + ' ' + (tp === '*' ? 'powerups' : (def.name || tp)) + (l.o ? ' · una vez' : '');
+    }
     const NAMES = { key: 'Recoger llave', powerup: 'Coger powerup', brick: 'Golpear ladrillo', goal: 'Tocar meta', goalhidden: 'Tocar meta oculta', exclaim: 'Pulsar interruptor !' };
     if (NAMES[l.ev]) return NAMES[l.ev] + ' (' + l.key + ')' + (l.o ? ' · una vez' : '');
     return l.ev + ' en ' + l.key + ' (ya no existe)';

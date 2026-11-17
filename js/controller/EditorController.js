@@ -285,6 +285,22 @@
       draw();
     };
 
+    // Fila de powerups: primero el tipo (botones), después la cantidad (N, personalizado − N +)
+    let ptype = '*';
+    const POWER_TYPES = ['evo', 'flor', 'caca', 'vacio', 'brillo', 'miniglob'];
+    const powerRow = () => {
+      const row = S.View.el('div', 'row');
+      row.appendChild(S.View.el('span', 'small', 'Al recoger'));
+      const tipos = [['*', 'cualquier powerup']].concat(POWER_TYPES.filter((t) => S.Model.Catalog.OBJECTS[t]).map((t) => [t, S.Model.Catalog.OBJECTS[t].name]));
+      tipos.forEach(([t, nm]) => row.appendChild(S.View.button(nm, t === ptype ? 'primary' : '', () => { ptype = t; draw(); })));
+      [1, 2, 3, 5].forEach((n) => row.appendChild(S.View.button(String(n), '', () => add('powerups', n + '|' + ptype))));
+      const shown = S.View.el('span', '', String(custom.powerups));
+      row.appendChild(S.View.button('−', '', () => { custom.powerups = Math.max(1, custom.powerups - 1); shown.textContent = String(custom.powerups); }));
+      row.appendChild(shown);
+      row.appendChild(S.View.button('+', '', () => { custom.powerups = Math.min(999, custom.powerups + 1); shown.textContent = String(custom.powerups); }));
+      row.appendChild(S.View.button('Añadir', 'primary', () => add('powerups', custom.powerups + '|' + ptype)));
+      return row;
+    };
     const draw = () => {
       list.innerHTML = '';
       const shown = links.filter((l) => exists(L, l));
@@ -319,7 +335,7 @@
       }
       if (enemyTypes.length) addBox.appendChild(counterRow('Al derrotar', 'kills', 'enemigos', [3, 5, 10, 20]));
       addBox.appendChild(counterRow('Al juntar', 'coins', 'monedas', [5, 10, 20, 50]));
-      addBox.appendChild(counterRow('Al recoger', 'powerups', 'powerups', [1, 2, 3, 5]));
+      addBox.appendChild(powerRow());
     };
 
     draw();
