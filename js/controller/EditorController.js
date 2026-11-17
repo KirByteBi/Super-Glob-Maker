@@ -175,9 +175,9 @@
           links.push({ ev: o.ev, key: o.key, n: +selLine.value });
           drawLinks();
         }));
-        linkBox.appendChild(addRow);
-        drawLinks();
         box.appendChild(linkBox);
+        box.appendChild(addRow);
+        drawLinks();
         const row = S.View.el('div', 'row');
         row.appendChild(S.View.button('Guardar', 'primary', () => {
           const lines = ta.value.split('\n').map((s) => s.trim()).filter(Boolean).slice(0, 10).map((s) => S.Model.TextFilter.clean(s));
