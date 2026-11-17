@@ -72,17 +72,26 @@
   // Las demás líneas son para cuando el NPC esté enlazado a algo (aún no implementado).
   // Burbuja de texto encima de un NPC: (cx, top) es el punto de encima de su cabeza
   function drawBubble(ctx, text, cx, top) {
-    const Sp = S.View.Sprites;
+    const Sp = S.View.Sprites, MAX = 240, LH = 18;
     ctx.save();
     ctx.font = '800 14px "Trebuchet MS",sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    const w = Math.min(260, ctx.measureText(text).width + 22), h = 26, x = cx - w / 2, y = top - h - 8;
+    // los mensajes largos se parten por palabras en varias líneas para que se lean enteros
+    const words = String(text).split(' '), lines = [];
+    let cur = '';
+    words.forEach((word) => {
+      const trial = cur ? cur + ' ' + word : word;
+      if (cur && ctx.measureText(trial).width > MAX) { lines.push(cur); cur = word; } else cur = trial;
+    });
+    if (cur) lines.push(cur);
+    const widest = Math.max.apply(null, lines.map((l) => ctx.measureText(l).width));
+    const w = Math.min(MAX, widest) + 22, h = lines.length * LH + 10, x = cx - w / 2, y = top - h - 8;
     Sp.rr(ctx, x, y, w, h, 8);
     Sp.fillStroke(ctx, '#ffffff', 2.5);
     ctx.beginPath(); ctx.moveTo(cx - 6, y + h); ctx.lineTo(cx, y + h + 8); ctx.lineTo(cx + 6, y + h); ctx.closePath();
     ctx.fillStyle = '#ffffff'; ctx.fill();
     ctx.fillStyle = '#1a1033';
-    ctx.fillText(text, cx, y + h / 2 + 1, 250);
+    lines.forEach((l, i) => ctx.fillText(l, cx, y + 5 + LH * i + LH / 2));
     ctx.restore();
   }
 

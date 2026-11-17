@@ -136,100 +136,10 @@
         this.painting = true; this.erasing = e.button === 2;
         this.lastCell = null; this.paint(c);
       });
-      // Doble clic sobre un NPC: escribir lo que dice (una frase por línea)
+      // Doble clic sobre un NPC: cuadro de frases y enlaces (ver al final de este archivo)
       on(cv, 'dblclick', (e) => {
         if (this.app.menu.modal.style.display === 'flex') return;
-        const c = this.cellAt(e);
-        const npc = m.level.objectAt(c.x, c.y);
-        if (!npc || npc.type !== 'npc') return;
-        const menu = this.app.menu, def = S.View.Npcs.get(npc.npc);
-        const box = menu.openModal('NPC: ' + (def ? def.name : 'sin imagen'));
-        box.appendChild(S.View.el('p', 'small', 'Una frase por línea (máximo 10). Las frases inapropiadas se cambian por "Hello World!".'));
-        const ta = document.createElement('textarea');
-        ta.rows = 6; ta.maxLength = 1200; ta.style.width = '100%';
-        ta.value = (npc.say || []).join('\n');
-        box.appendChild(ta);
-        // Enlaces: a qué reacciona el NPC y qué frase dice
-        const links = (npc.lk || []).map((l) => ({ ev: l.ev, key: l.key, t: l.t || '', o: !!l.o }));
-        const opts = S.Model.NpcLinks.options(m.level);
-        const linkBox = S.View.el('div', 'npc-links');
-        const drawLinks = () => {
-          linkBox.innerHTML = '';
-          // frases tal como están escritas ahora mismo en el cuadro (sin guardar todavía)
-          const txt = ta.value.split('\n').map((s) => s.trim()).filter(Boolean);
-          linkBox.appendChild(S.View.el('p', 'small', links.length ? 'Enlaces:' : 'Sin enlaces: solo dice la primera frase. Para enlazar, usa la herramienta de enlace: clic en el NPC y luego en una tubería, puerta, enemigo o bloque.'));
-          links.forEach((l, i) => {
-            const r = S.View.el('div', 'row');
-            r.appendChild(S.View.el('span', '', S.Model.NpcLinks.label(opts, l)));
-            // frase que dice este enlace al dispararse (vacía = no dice nada)
-            const inpT = document.createElement('input');
-            inpT.type = 'text'; inpT.maxLength = 120; inpT.size = 30; inpT.placeholder = 'frase de este enlace';
-            inpT.value = l.t || '';
-            inpT.oninput = () => { l.t = inpT.value; };
-            r.appendChild(inpT);
-            // "una vez": este enlace solo dice su frase la primera vez en cada intento
-            const chkOnce = document.createElement('input');
-            chkOnce.type = 'checkbox'; chkOnce.checked = !!l.o; chkOnce.title = 'Solo una vez por intento';
-            chkOnce.onchange = () => { l.o = chkOnce.checked; drawLinks(); };
-            const lblOnce = S.View.el('label', 'small', ' una vez ');
-            lblOnce.prepend(chkOnce);
-            r.appendChild(lblOnce);
-            // enemigo: derrotado o daño recibido
-            if (l.ev === 'defeat' || l.ev === 'hurt') {
-              const selEv = document.createElement('select');
-              [['defeat', 'al derrotarlo'], ['hurt', 'al recibir daño']].forEach(([v, t]) => { const op = document.createElement('option'); op.value = v; op.textContent = t; selEv.appendChild(op); });
-              selEv.value = l.ev;
-              selEv.onchange = () => { l.ev = selEv.value; drawLinks(); };
-              r.appendChild(selEv);
-            }
-            r.appendChild(S.View.button('Quitar', 'danger', () => { links.splice(i, 1); drawLinks(); }));
-            linkBox.appendChild(r);
-          });
-        };
-        box.appendChild(linkBox);
-        // Enlace por derrotas: no depende de un objeto, sino del número de enemigos derrotados
-        const killRow = S.View.el('div', 'row');
-        const inpKills = document.createElement('input');
-        inpKills.type = 'number'; inpKills.min = '1'; inpKills.max = '999'; inpKills.value = '5'; inpKills.style.width = '70px';
-        killRow.appendChild(S.View.el('span', 'small', 'Al derrotar'));
-        killRow.appendChild(inpKills);
-        killRow.appendChild(S.View.el('span', 'small', 'enemigos'));
-        killRow.appendChild(S.View.button('Añadir', '', () => {
-          const n = Math.max(1, Math.min(999, inpKills.value | 0));
-          if (links.length >= 10) return;
-          if (links.some((l) => l.ev === 'kills' && l.key === String(n))) return;
-          links.push({ ev: 'kills', key: String(n), t: '', o: false });
-          drawLinks();
-        }));
-        box.appendChild(killRow);
-        // Cualquier enemigo de un tipo (los que hay en el nivel)
-        const typeRow = S.View.el('div', 'row');
-        const enemyTypes = [...new Set(m.level.objects.map((q) => q.type).filter((t) => S.Model.Catalog.ENEMY_TYPES.indexOf(t) !== -1))];
-        const selType = document.createElement('select');
-        enemyTypes.forEach((t) => { const op = document.createElement('option'); op.value = t; op.textContent = S.Model.Catalog.OBJECTS[t].name; selType.appendChild(op); });
-        const selEnemyEv = document.createElement('select');
-        [['defeat', 'al derrotarlo'], ['hurt', 'al recibir su daño']].forEach(([v, tx]) => { const op = document.createElement('option'); op.value = v; op.textContent = tx; selEnemyEv.appendChild(op); });
-        typeRow.appendChild(S.View.el('span', 'small', 'Cualquier enemigo de tipo'));
-        typeRow.appendChild(selType);
-        typeRow.appendChild(selEnemyEv);
-        typeRow.appendChild(S.View.button('Añadir', '', () => {
-          if (!selType.value || links.length >= 10) return;
-          const key = 'type:' + selType.value;
-          if (links.some((l) => l.ev === selEnemyEv.value && l.key === key)) return;
-          links.push({ ev: selEnemyEv.value, key, t: '', o: false });
-          drawLinks();
-        }));
-        box.appendChild(typeRow);
-        drawLinks();
-        ta.addEventListener('input', drawLinks);
-        const row = S.View.el('div', 'row');
-        row.appendChild(S.View.button('Guardar', 'primary', () => {
-          const lines = ta.value.split('\n').map((s) => s.trim()).filter(Boolean).slice(0, 1).map((s) => S.Model.TextFilter.clean(s));
-          m.mutate((L) => { const o = L.objectAt(c.x, c.y); if (o && o.type === 'npc') { if (lines.length) o.say = lines; else delete o.say; if (links.length) o.lk = links.map((l) => ({ ev: l.ev, key: l.key, t: S.Model.TextFilter.clean(l.t || ''), o: !!l.o })); else delete o.lk; } });
-          menu.closeModal();
-        }));
-        row.appendChild(S.View.button('Cancelar', '', () => menu.closeModal()));
-        box.appendChild(row);
+        S.Controller.NpcDialog.open(this.app.menu, m, this.cellAt(e));
       });
       on(window, 'mousemove', (e) => {
         if (this.panning) {
@@ -318,4 +228,104 @@
     destroy() { this.offs.forEach((f) => f()); this.app.editorUI.style.display = 'none'; this.app.editorUI.innerHTML = ''; }
   }
   S.Controller.EditorController = EditorController;
+})(window.SGM);
+
+// Cuadro de frases y enlaces de un NPC (doble clic en el editor). Usa los botones de la app.
+(function (S) {
+  'use strict';
+  S.Controller = S.Controller || {};
+
+  // ¿El destino del enlace existe en el nivel? Si no, no se muestra (sigue guardado).
+  function exists(L, l) {
+    const k = String(l.key);
+    if (k.indexOf('type:') === 0) return L.objects.some((q) => q.type === k.slice(5));
+    if (l.ev === 'kills') return true;
+    if (l.ev === 'hit' || l.ev === 'brick') { const p = k.split(','); return !!L.get(+p[0], +p[1]); }
+    const p = k.split(',');
+    return L.objects.some((q) => q.x === +p[0] && q.y === +p[1]);
+  }
+
+  function open(menu, m, c) {
+    const L = m.level;
+    const npc = L.objectAt(c.x, c.y);
+    if (!npc || npc.type !== 'npc') return;
+    const def = S.View.Npcs.get(npc.npc);
+    const box = menu.openModal('NPC: ' + (def ? def.name : 'sin imagen'));
+    box.appendChild(S.View.el('p', 'small', 'Primera línea: frase de proximidad (siempre). Cada enlace tiene su propia frase.'));
+    const ta = document.createElement('textarea');
+    ta.rows = 2; ta.maxLength = 240; ta.style.width = '100%';
+    ta.value = (npc.say && npc.say[0]) || '';
+    box.appendChild(ta);
+
+    const opts = S.Model.NpcLinks.options(L);
+    const C = S.Model.Catalog;
+    const links = (npc.lk || []).map((l) => ({ ev: l.ev, key: l.key, t: l.t || '', o: !!l.o }));
+    const enemyTypes = [...new Set(L.objects.map((q) => q.type).filter((t) => C.ENEMY_TYPES.indexOf(t) !== -1))];
+    const list = S.View.el('div', 'npc-links');
+    const addBox = S.View.el('div', 'npc-add');
+    box.appendChild(list);
+    box.appendChild(addBox);
+
+    const add = (ev, key) => {
+      if (links.length >= 10 || links.some((l) => l.ev === ev && l.key === key)) return;
+      links.push({ ev, key, t: '', o: false });
+      draw();
+    };
+
+    const draw = () => {
+      list.innerHTML = '';
+      const shown = links.filter((l) => exists(L, l));
+      if (!shown.length) list.appendChild(S.View.el('p', 'small', 'Sin enlaces: solo dice la frase de proximidad. Para enlazar, usa la herramienta de enlace: clic en el NPC y luego en el destino.'));
+      shown.forEach((l) => {
+        const r = S.View.el('div', 'row');
+        r.appendChild(S.View.el('span', '', S.Model.NpcLinks.label(opts, l)));
+        const inp = document.createElement('input');
+        inp.type = 'text'; inp.maxLength = 120; inp.size = 26; inp.placeholder = 'frase de este enlace';
+        inp.value = l.t;
+        inp.oninput = () => { l.t = inp.value; };
+        r.appendChild(inp);
+        r.appendChild(S.View.button('Solo una vez', l.o ? 'primary' : '', () => { l.o = !l.o; draw(); }));
+        if (l.ev === 'defeat' || l.ev === 'hurt') {
+          r.appendChild(S.View.button(l.ev === 'defeat' ? 'Cambiar a daño' : 'Cambiar a derrota', '', () => {
+            l.ev = l.ev === 'defeat' ? 'hurt' : 'defeat'; draw();
+          }));
+        }
+        r.appendChild(S.View.button('Quitar', 'danger', () => { links.splice(links.indexOf(l), 1); draw(); }));
+        list.appendChild(r);
+      });
+      // Botones para añadir: solo lo que hay en el nivel
+      addBox.innerHTML = '';
+      if (enemyTypes.length) {
+        const row = S.View.el('div', 'row');
+        enemyTypes.forEach((t) => {
+          const nm = C.OBJECTS[t].name;
+          row.appendChild(S.View.button('Derrotar cualquier ' + nm, '', () => add('defeat', 'type:' + t)));
+          row.appendChild(S.View.button('Daño de ' + nm, '', () => add('hurt', 'type:' + t)));
+        });
+        addBox.appendChild(row);
+      }
+      const kills = S.View.el('div', 'row');
+      kills.appendChild(S.View.el('span', 'small', 'Al derrotar enemigos:'));
+      [3, 5, 10, 20].forEach((n) => kills.appendChild(S.View.button(String(n), '', () => add('kills', String(n)))));
+      addBox.appendChild(kills);
+    };
+
+    draw();
+    const bar = S.View.el('div', 'row');
+    bar.appendChild(S.View.button('Guardar', 'primary', () => {
+      const first = ta.value.split('\n')[0].trim();
+      m.mutate((LL) => {
+        const o = LL.objectAt(c.x, c.y);
+        if (!o || o.type !== 'npc') return;
+        if (first) o.say = [S.Model.TextFilter.clean(first)]; else delete o.say;
+        // se guardan también los enlaces que no se muestran (su destino no está en este nivel/zona)
+        if (links.length) o.lk = links.map((l) => ({ ev: l.ev, key: l.key, t: S.Model.TextFilter.clean(l.t || ''), o: !!l.o })); else delete o.lk;
+      });
+      menu.closeModal();
+    }));
+    bar.appendChild(S.View.button('Cancelar', '', () => menu.closeModal()));
+    box.appendChild(bar);
+  }
+
+  S.Controller.NpcDialog = { open };
 })(window.SGM);
