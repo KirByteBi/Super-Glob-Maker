@@ -41,7 +41,10 @@
     naranja_1: [1, 1], naranja_2: [1, 1], naranja_3: [2, 2], naranja_4: [2, 2],
     bomba_1: [1, 1], bomba_2: [2, 2], bomba_3: [2, 2]
   };
-  LIST.forEach((n) => { byId[n.id] = n; n.w = TILES[n.id][0]; n.h = TILES[n.id][1]; });
+  // Píxeles de dibujo por casilla (por defecto 48). DJ y Nuclear se dibujan a 32 para que su imagen
+  // quepa en la huella 2×2 y no parezca 3×3 o 3×4.
+  const PXT = { naranja_4: 32, bomba_3: 32 };
+  LIST.forEach((n) => { byId[n.id] = n; n.w = TILES[n.id][0]; n.h = TILES[n.id][1]; n.px = PXT[n.id] || 48; });
 
   // id -> { status: 'loading'|'ok'|'fail', canvas }
   const cache = {};
@@ -106,7 +109,7 @@
     drawObject(ctx, o, t) {
       const c = canvasOf(o.npc);
       if (!c) return;
-      const n = byId[o.npc] || { w: 1, h: 1 }, side = 48 * Math.max(n.w, n.h);
+      const n = byId[o.npc] || { w: 1, h: 1, px: 48 }, side = (n.px || 48) * Math.max(n.w, n.h);
       const cx = o.x * T + (n.w * T) / 2, by = (o.y + 1) * T;
       const bob = Math.sin((t || 0) * 2.2 + o.x) * 1.2;
       ctx.save();
