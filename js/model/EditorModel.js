@@ -254,6 +254,8 @@
       // NPC: la herramienta de enlace lo toma como origen; el siguiente clic es el destino (tubería, puerta, enemigo o bloque)
       const npcOrigin = this.level.objectAt(x, y);
       if (this.linkFrom && this.linkFrom.fam === 'npc') {
+        // un segundo clic sobre el mismo NPC (p. ej. el doble clic) no cancela el origen
+        if (this.linkFrom.x === x && this.linkFrom.y === y) return 'same';
         const from = this.linkFrom; this.linkFrom = null;
         const src = this.level.objectAt(from.x, from.y), tg = S.Model.NpcLinks.targetAt(this.level, x, y);
         if (!src || src.type !== 'npc' || !tg) { this.emit('linkBad', {}); return 'bad'; }
