@@ -266,6 +266,7 @@
     box.appendChild(list);
     box.appendChild(addBox);
 
+    let custom = 7; // número personalizado de derrotas (se conserva al repintar)
     const add = (ev, key) => {
       if (links.length >= 10 || links.some((l) => l.ev === ev && l.key === key)) return;
       links.push({ ev, key, t: '', o: false });
@@ -307,6 +308,12 @@
       const kills = S.View.el('div', 'row');
       kills.appendChild(S.View.el('span', 'small', 'Al derrotar enemigos:'));
       [3, 5, 10, 20].forEach((n) => kills.appendChild(S.View.button(String(n), '', () => add('kills', String(n)))));
+      // Personalizado: - N + y añadir (rango 1 a 999)
+      const shownN = S.View.el('span', '', String(custom));
+      kills.appendChild(S.View.button('−', '', () => { custom = Math.max(1, custom - 1); shownN.textContent = String(custom); }));
+      kills.appendChild(shownN);
+      kills.appendChild(S.View.button('+', '', () => { custom = Math.min(999, custom + 1); shownN.textContent = String(custom); }));
+      kills.appendChild(S.View.button('Añadir personalizado', 'primary', () => add('kills', String(custom))));
       addBox.appendChild(kills);
     };
 
