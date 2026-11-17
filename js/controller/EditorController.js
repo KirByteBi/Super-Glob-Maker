@@ -314,7 +314,8 @@
       kills.appendChild(shownN);
       kills.appendChild(S.View.button('+', '', () => { custom = Math.min(999, custom + 1); shownN.textContent = String(custom); }));
       kills.appendChild(S.View.button('Añadir personalizado', 'primary', () => add('kills', String(custom))));
-      addBox.appendChild(kills);
+      // solo si el nivel tiene enemigos (si no, no hay nada que derrotar)
+      if (enemyTypes.length) addBox.appendChild(kills);
     };
 
     draw();
