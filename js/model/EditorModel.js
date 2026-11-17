@@ -257,7 +257,15 @@
         // un segundo clic sobre el mismo NPC (p. ej. el doble clic) no cancela el origen
         if (this.linkFrom.x === x && this.linkFrom.y === y) return 'same';
         const from = this.linkFrom; this.linkFrom = null;
-        const src = this.level.objectAt(from.x, from.y), tg = S.Model.NpcLinks.targetAt(this.level, x, y);
+        // el NPC de origen puede estar en otra zona: como con tuberías y puertas, se busca en la zona donde está
+        let src;
+        if (from.z === this.activeZone) src = this.level.objectAt(from.x, from.y);
+        else {
+          this.syncZone();
+          const srcObjs = from.z === 0 ? this.base.objects : ((this.base.subs[from.z - 1] || {}).objects || []);
+          src = srcObjs.find((q) => q.x === from.x && q.y === from.y);
+        }
+        const tg = S.Model.NpcLinks.targetAt(this.level, x, y);
         if (!src || src.type !== 'npc' || !tg) { this.emit('linkBad', {}); return 'bad'; }
         src.lk = src.lk || [];
         if (src.lk.length >= 10) { this.emit('linkBad', {}); return 'bad'; }
