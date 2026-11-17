@@ -272,6 +272,8 @@
       if (!this.linkFrom) { this.linkFrom = { z: this.activeZone, x, y, fam: famOf(o.type) }; this.emit('linkFrom', { x, y }); return 'from'; }
       // 2º clic: destino, debe ser de la misma familia
       if (famOf(o.type) !== this.linkFrom.fam) { this.emit('linkBad', {}); return 'bad'; }
+      // no se puede enlazar un objeto consigo mismo: el origen se queda marcado
+      if (this.linkFrom.x === x && this.linkFrom.y === y) { this.emit('linkBad', {}); return 'same'; }
       const dstZone = this.activeZone;
       const fam = this.linkFrom.fam;
       // índice del destino dentro de su zona (orden de colocación de esa familia)
