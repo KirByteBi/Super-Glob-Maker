@@ -34,9 +34,11 @@
       if (S.View.Decorations) { try { L.objects.forEach((o) => { if (o.type === 'deco') S.View.Decorations.drawObject(ctx, o, t, L.mode); }); } catch (e) { /* no romper el editor */ } }
       // semisólidos del mapa (seta / árbol / cadena): detrás del terreno, como en la partida
       if (S.View.MapPlats) { const th = S.Model.Themes.get(L.theme); L.objects.forEach((o) => { if (o.type === 'treeplat') S.View.MapPlats.draw(ctx, o, L, th, L.mode, pal, t); }); }
-      S.View.WorldRenderer.drawTiles(ctx, L, pal, cam, t, { editor: true, contents: L.contents, ch });
+      // NPCs: entre fondo y suelo, igual que en la partida
+      const npcMid = () => { if (S.View.Npcs) L.objects.forEach((o) => { if (o.type === 'npc') { try { S.View.Npcs.drawObject(ctx, o, t); } catch (e) { /* no romper el editor */ } } }); };
+      S.View.WorldRenderer.drawTiles(ctx, L, pal, cam, t, { editor: true, contents: L.contents, ch, midPass: npcMid });
       // objetos (las decoraciones y los semisólidos del mapa ya se pintaron detrás del terreno)
-      L.objects.forEach((o) => { if (o.type !== 'deco' && o.type !== 'treeplat') this.drawObject(ctx, o, pal, ch, t); });
+      L.objects.forEach((o) => { if (o.type !== 'deco' && o.type !== 'treeplat' && o.type !== 'npc') this.drawObject(ctx, o, pal, ch, t); });
       // cursor
       if (this.hover && L.inBounds(this.hover.x, this.hover.y)) {
         const hx = this.hover.x * T, hy = this.hover.y * T;
@@ -144,20 +146,29 @@
         items = S.View.Decorations.forMap(L.theme).map((d) => ({ kind: 'obj', type: 'deco', deco: d.id, name: d.name }));
         if (!items.length) { this.items.appendChild(el('p', 'empty', 'Este mapa no tiene decoraciones todavía.')); return; }
       }
+      // NPCs: lista fija (js/view/Npcs.js). Los iconos se cargan despacio, así que se reintenta el repintado un rato
+      if (cat.dynamic === 'npc' && S.View.Npcs) items = S.View.Npcs.forMap().map((n) => ({ kind: 'obj', type: 'npc', npc: n.id, name: n.name }));
+      let npcPending = false;
       items.forEach((it) => {
         const b = el('button', 'ed-item');
         const cv = document.createElement('canvas'); cv.width = 44; cv.height = 44;
         const x = cv.getContext('2d'); x.translate(4, 4);
         if (it.deco && S.View.Decorations) { try { S.View.Decorations.drawObject(x, { x: 0, y: 0, deco: it.deco }, 0, L.mode); } catch (e) { /* icono fallido */ } }
+        else if (it.npc && S.View.Npcs) { if (!S.View.Npcs.drawIcon(x, it.npc, 36)) npcPending = true; }
         else S.View.Sprites.drawIcon(x, it, 36, pal, ch, theme);
         b.appendChild(cv);
         const name = it.name || C.itemName(it);
         b.title = name;
-        const sel = ed.tool.kind === it.kind && (ed.tool.id === it.id && it.kind === 'tile' || ed.tool.type === it.type && it.kind === 'obj' || it.kind === 'erase') && (!it.deco || ed.tool.deco === it.deco);
+        const sel = ed.tool.kind === it.kind && (ed.tool.id === it.id && it.kind === 'tile' || ed.tool.type === it.type && it.kind === 'obj' || it.kind === 'erase') && (!it.deco || ed.tool.deco === it.deco) && (!it.npc || ed.tool.npc === it.npc);
         if (sel) b.classList.add('on');
         b.onclick = () => { ed.setTool(it); S.events.emit('ui:click'); this.refreshItems(ed); };
         this.items.appendChild(b);
       });
+      // iconos de NPC aún cargando: repintar un momento (como mucho ~10 s)
+      if (npcPending) {
+        this.npcRetry = (this.npcRetry || 0) + 1;
+        if (this.npcRetry < 25) setTimeout(() => this.refreshItems(ed), 400);
+      } else this.npcRetry = 0;
     }
 
     refreshInfo(ed) {

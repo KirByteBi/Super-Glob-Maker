@@ -48,6 +48,8 @@
         } else if (o.hdir) ob.hdir = 1;
         // decoración visual (sin colisión): cuál es el adorno
         if (o.deco) ob.deco = o.deco;
+        // NPC: cuál de los Globs de Npcs.js es
+        if (o.npc) ob.npc = String(o.npc);
         // semisólido del mapa (seta / árbol / cadena): ancho de su base en casillas (2-24)
         if (ob.type === 'treeplat') ob.w = Math.max(2, Math.min(24, (o.w | 0) || 3));
         return ob;
@@ -248,6 +250,7 @@
           if (o.len) j.len = o.len;
           if (o.w) j.w = o.w;
           if (o.deco) j.deco = o.deco;
+          if (o.npc) j.npc = o.npc;
           return j;
         }), contents: Object.assign({}, this.contents),
         win: Object.assign({ type: this.win.type, n: this.win.n }, this.win.target ? { target: this.win.target } : {}),

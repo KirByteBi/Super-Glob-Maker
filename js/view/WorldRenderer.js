@@ -36,6 +36,8 @@
     const semiStyle = [sm[0] && sm[0][1], sm[1] && sm[1][1]];
     // primero líquidos/agua (detrás), luego el resto
     for (let pass = 0; pass < 2; pass++) {
+      // entre el fondo y el suelo: NPC (opt.midPass). Así nunca tapan suelo ni personajes
+      if (pass === 1 && opt.midPass) opt.midPass(ctx);
       for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
         const tt = level.get(x, y);
         if (!tt || tt === TT.PIPEX || tt === TT.SEMIX) continue; // partes invisibles: las dibuja su objeto (tubería / seta-árbol)
@@ -55,6 +57,15 @@
     if (type === 'coin') { Sp.coin(ctx, 9, 9, 6, 0); }
     else Sp.drawIcon(ctx, { kind: 'obj', type }, 18, pal, ch);
     ctx.restore();
+  }
+
+  // NPC (objetos type 'npc'): solo los que están en pantalla. Sin colisión.
+  function drawNpcs(ctx, level, cam, t) {
+    try {
+      level.objects.forEach((o) => {
+        if (o.type === 'npc' && o.x >= cam.x / T - 2 && o.x <= (cam.x + cam.w) / T + 2) S.View.Npcs.drawObject(ctx, o, t);
+      });
+    } catch (e) { /* un NPC roto no debe romper el render */ }
   }
 
   function drawPlayer(ctx, p, t, game) {
@@ -123,6 +134,8 @@
         try { g.level.objects.forEach((o) => { if (o.type === 'deco' && o.x + 3 > cam.x / T - 1 && o.x < (cam.x + cam.w) / T + 1) S.View.Decorations.drawObject(ctx, o, t, g.mode); }); } catch (e) { /* los adornos no deben romper el render */ }
       }
       const tileOpt = { bumps: g.bumps, convDir: g.convDir * g.obstacleMul, mush: !!g.fx.movingShrooms, waveH: g.fx.waves ? (wx) => g.waveH(wx) : null };
+      // NPC: entre fondo y suelo (ver drawTiles). Protegido: un NPC roto no debe cortar la partida.
+      if (S.View.Npcs) tileOpt.midPass = () => drawNpcs(ctx, g.level, cam, t);
       // Sound Discotech: el líquido cambia de color al ritmo del tempo del tema
       // (rojo → azul → amarillo → rosa). beatT, si existe, aporta un "latido" extra.
       if (g.theme.id === 'disco') {

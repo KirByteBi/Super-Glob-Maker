@@ -167,6 +167,9 @@
     // Decoración visual (SIN colisión). El adorno concreto va en o.deco; el set es por mapa
     // (ver js/view/Decorations.js). No tiene clase de entidad: el modelo la ignora.
     deco: { name: 'Decoración', cat: 'deco', w: 24, h: 24, decoration: true, desc: 'Adorno visual sin colisión (según el mapa).' },
+    // NPC: Glob que no es jugable ni tangible. Se pinta DELANTE del fondo (cueva, agua, semisólidos de fondo)
+    // y DETRÁS del suelo y de los personajes. El modelo lo ignora (no tiene clase de entidad). Ver js/view/Npcs.js.
+    npc: { name: 'NPC', cat: 'npc', w: 64, h: 64, decoration: true, desc: 'Personaje no jugable. Va delante del fondo y detrás del suelo.' },
     // Semisólido estilo seta de SMM / árbol de SMW. Según el mapa: seta, árbol, palmera, pino,
     // pilar, farola o plataforma colgada con cadenas (mapas de interior). Arrastra para ensancharlo.
     treeplat: { name: 'Semisólido del mapa (seta / árbol / cadena)', cat: 'terrain', w: 96, h: 64, desc: 'Solo se pisa la parte de arriba. Según el mapa es una seta, un árbol o una plataforma con cadenas; el tallo o las cadenas llegan solos hasta el suelo o el techo. Arrastra hacia los lados para cambiar su ancho.' },
@@ -209,6 +212,7 @@
     { id: 'gizmos', name: 'Mecanismos', items: tiles([54]).concat(objs(['platform', 'platformV', 'platformD1', 'platformD2', 'shroomH', 'shroomV', 'warp', 'lockwarp', 'door', 'lockdoor', 'key', 'firebar', 'icicle', 'exswitch0', 'exswitch1', 'exswitch2'])) },
     // Decoración: los items se rellenan dinámicamente según el mapa (ver EditorView.refreshItems)
     { id: 'deco', name: 'Decoración', items: [], dynamic: 'deco' },
+    { id: 'npc', name: 'NPCs', items: [], dynamic: 'npc' },
     { id: 'special', name: 'Especial', items: [{ kind: 'obj', type: 'start' }, { kind: 'obj', type: 'goal' }, { kind: 'obj', type: 'goalhidden' }, { kind: 'link' }, { kind: 'erase' }] }
   ];
 

@@ -199,6 +199,7 @@
         const no = { type, x, y };
         if (def.range) no.r = 3;
         if (type === 'deco' && tool.deco) no.deco = tool.deco; // qué adorno es
+        if (type === 'npc' && tool.npc) no.npc = tool.npc;     // qué NPC es
         L.objects.push(no);
         this.changed = true;
         // recién puesta: si sigues arrastrando, se alarga (como en SMM)
