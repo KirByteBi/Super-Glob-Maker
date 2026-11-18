@@ -748,7 +748,24 @@
     // Requisitos por contador (monedas, powerups): dispara cada enlace cuyo número N se ha cruzado (from < N <= to)
     // Recompensa: si se cumple la condición y te acercas, el NPC suelta su objeto (una vez por intento).
     // Llave: una casilla encima del NPC. Powerup: sale del NPC y se mueve como siempre.
+    // Suelta las recompensas pendientes de los enlaces cuando te acercas (una vez por intento)
+    npcPendingTick() {
+      if (!this.level || !this.npcPending) return;
+      const p = this.player;
+      this.npcFired = this.npcFired || {};
+      Object.keys(this.npcPending).forEach((k) => {
+        const type = this.npcPending[k], parts = k.split(',').map(Number), x = parts[0], y = parts[1];
+        if (Math.hypot(p.x + p.w / 2 - (x * T + T / 2), p.y + p.h / 2 - (y * T + T / 2)) > 3 * T) return;
+        delete this.npcPending[k];
+        const fk = k + '|reward';
+        if (this.npcFired[fk]) return;
+        this.npcFired[fk] = true;
+        const e = S.Model.Entities.create(type, x, type === 'key' ? y - 1 : y, {});
+        if (e) this.entities.push(e);
+      });
+    }
     npcRewardTick() {
+      this.npcPendingTick();
       if (!this.level || !this.level.objects) return;
       const p = this.player;
       this.npcFired = this.npcFired || {};
@@ -818,6 +835,13 @@
       });
     }
     npcEvent(ev, key) {
+      // Recompensa ligada a este enlace: el NPC la deja pendiente y la suelta al acercarte
+      if (this.level && this.level.objects) {
+        this.npcPending = this.npcPending || {};
+        this.level.objects.forEach((o) => {
+          if (o.type === 'npc' && o.lk) o.lk.forEach((l) => { if (l.ev === ev && l.key === key && l.r) this.npcPending[o.x + ',' + o.y] = l.r; });
+        });
+      }
       if (!this.level || !this.level.objects) return;
       this.level.objects.forEach((o) => {
         if (o.type !== 'npc' || !o.say || !o.say.length || !o.lk) return;

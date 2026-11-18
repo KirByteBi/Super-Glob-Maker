@@ -265,7 +265,7 @@
 
     const opts = S.Model.NpcLinks.options(L);
     const C = S.Model.Catalog;
-    const links = (npc.lk || []).map((l) => ({ ev: l.ev, key: l.key, t: l.t || '', o: !!l.o }));
+    const links = (npc.lk || []).map((l) => ({ ev: l.ev, key: l.key, t: l.t || '', o: !!l.o, r: l.r || '' }));
     const enemyTypes = [...new Set(L.objects.map((q) => q.type).filter((t) => C.ENEMY_TYPES.indexOf(t) !== -1))];
     const list = S.View.el('div', 'npc-links');
     const addBox = S.View.el('div', 'npc-add');
@@ -358,6 +358,11 @@
         setTimeout(() => grow(inp), 0);
         r.appendChild(inp);
         r.appendChild(S.View.button('Solo una vez', l.o ? 'primary' : '', () => { l.o = !l.o; draw(); }));
+        // Recompensa de este enlace: el objeto que lleva el NPC se suelta al cumplirse este enlace
+        if (held) {
+          const hn = (S.Model.Catalog.OBJECTS[held] || {}).name || held;
+          r.appendChild(S.View.button(l.r === held ? 'Suelta ' + hn + ': sí' : 'Soltar ' + hn, l.r === held ? 'primary' : '', () => { l.r = l.r === held ? '' : held; draw(); }));
+        }
         if (l.ev === 'defeat' || l.ev === 'hurt') {
           r.appendChild(S.View.button(l.ev === 'defeat' ? 'Cambiar a daño' : 'Cambiar a derrota', '', () => {
             l.ev = l.ev === 'defeat' ? 'hurt' : 'defeat'; draw();
@@ -425,7 +430,7 @@
         if (cond.on) o.cond = { ev: cond.ev, n: cond.n, t: S.Model.TextFilter.clean(cond.t || ''), on: true }; else delete o.cond;
         if (held) o.held = held; else delete o.held;
         // se guardan también los enlaces que no se muestran (su destino no está en este nivel/zona)
-        if (links.length) o.lk = links.map((l) => ({ ev: l.ev, key: l.key, t: S.Model.TextFilter.clean(l.t || ''), o: !!l.o })); else delete o.lk;
+        if (links.length) o.lk = links.map((l) => ({ ev: l.ev, key: l.key, t: S.Model.TextFilter.clean(l.t || ''), o: !!l.o, r: l.r || '' })); else delete o.lk;
       });
       menu.closeModal();
     }));
