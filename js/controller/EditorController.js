@@ -24,6 +24,7 @@
       this.offs.push(S.events.on('editor:collectMix', () => app.menu.toast('Usa un solo tipo de Moneda Estrella por nivel (mezclarlas sería muy confuso)', 1800)));
       this.offs.push(S.events.on('editor:linkFrom', () => app.menu.toast('Origen marcado. Clica el destino (puedes cambiar de zona).', 1800)));
       this.offs.push(S.events.on('editor:npcLink', (d) => app.menu.toast(d.text, 2600)));
+      this.offs.push(S.events.on('editor:npcGive', (d) => app.menu.toast('El NPC ya lleva ' + ((S.Model.Catalog.OBJECTS[d.type] || {}).name || d.type) + ' para su recompensa', 2600)));
       this.offs.push(S.events.on('editor:linkDone', (d) => app.menu.toast('Enlazado a ' + (d.z === 0 ? 'Base' : 'Sub ' + d.z) + ' (#' + (d.i + 1) + ')', 1500)));
       this.offs.push(S.events.on('editor:linkBad', () => app.menu.toast('Para enlazar, clica dos tuberías (o dos puertas).', 1600)));
     }
@@ -383,6 +384,13 @@
       r1.appendChild(S.View.button('Sin condición', !cond.on ? 'primary' : '', () => { cond.on = false; drawCond(); }));
       Object.keys(CN).forEach((ev) => r1.appendChild(S.View.button(CN[ev], cond.on && cond.ev === ev ? 'primary' : '', () => { cond.ev = ev; cond.on = true; drawCond(); })));
       condBox.appendChild(r1);
+      // Estado del objeto que lleva el NPC, se vea o no la condición
+      if (!cond.on) {
+        const rh = S.View.el('div', 'row');
+        rh.appendChild(S.View.el('span', 'small', held ? 'Lleva: ' + ((S.Model.Catalog.OBJECTS[held] || {}).name || held) + ' (se la das al cumplir la condición)' : 'Sin objeto. Elige una llave o un powerup en la paleta y haz clic en el NPC (con el cuadro cerrado).'));
+        if (held) rh.appendChild(S.View.button('Quitar objeto', 'danger', () => { held = ''; drawCond(); }));
+        condBox.appendChild(rh);
+      }
       if (cond.on) {
         const r2 = S.View.el('div', 'row');
         const shownC = S.View.el('span', '', String(cond.n));
