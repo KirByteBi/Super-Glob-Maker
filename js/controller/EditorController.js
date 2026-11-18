@@ -360,6 +360,7 @@
         list.appendChild(r);
       });
       // Botones para añadir: solo lo que hay en el nivel
+      addBox.innerHTML = '';
       addBox.appendChild(sentenceRow());
     };
 
