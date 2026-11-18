@@ -239,7 +239,7 @@
   function exists(L, l) {
     const k = String(l.key);
     if (k.indexOf('type:') === 0) return L.objects.some((q) => q.type === k.slice(5));
-    if (l.ev === 'kills' || l.ev === 'coins' || l.ev === 'powerups') return true;
+    if (l.ev === 'kills' || l.ev === 'coins' || l.ev === 'powerups' || l.ev === 'tkills') return true;
     if (l.ev === 'hit' || l.ev === 'brick') { const p = k.split(','); return !!L.get(+p[0], +p[1]); }
     const p = k.split(',');
     return L.objects.some((q) => q.x === +p[0] && q.y === +p[1]);
@@ -301,6 +301,43 @@
       row.appendChild(S.View.button('Añadir', 'primary', () => add('powerups', custom.powerups + '|' + ptype)));
       return row;
     };
+    // Frase rellenable: "Al [verbo] [N] [unidad] del tipo [desplegable]"
+    const sentenceRow = () => {
+      const row = S.View.el('div', 'row npc-sentence');
+      const C = S.Model.Catalog;
+      const verb = document.createElement('select');
+      [['derrotar', 'Al derrotar'], ['recoger', 'Al recoger'], ['juntar', 'Al juntar']].forEach(([v, tx]) => {
+        const op = document.createElement('option'); op.value = v; op.textContent = tx; verb.appendChild(op);
+      });
+      const num = document.createElement('input');
+      num.type = 'number'; num.min = '1'; num.max = '999'; num.value = '5'; num.style.width = '70px';
+      const unit = S.View.el('span', '', 'enemigos');
+      const tipo = document.createElement('select');
+      const fill = () => {
+        tipo.innerHTML = '';
+        if (verb.value === 'juntar') { unit.textContent = 'monedas'; tipo.style.display = 'none'; return; }
+        tipo.style.display = '';
+        const isKill = verb.value === 'derrotar';
+        unit.textContent = isKill ? 'enemigos' : 'powerups';
+        const any = document.createElement('option'); any.value = '*'; any.textContent = isKill ? 'cualquier enemigo' : 'cualquier powerup';
+        tipo.appendChild(any);
+        const pool = isKill ? enemyTypes : POWER_TYPES.filter((t) => C.OBJECTS[t]);
+        pool.forEach((t) => { const op = document.createElement('option'); op.value = t; op.textContent = C.OBJECTS[t].name; tipo.appendChild(op); });
+      };
+      verb.onchange = fill;
+      fill();
+      const go = S.View.button('Añadir', 'primary', () => {
+        const n = Math.max(1, Math.min(999, num.value | 0)), v = verb.value, t = tipo.value;
+        if (v === 'juntar') add('coins', String(n));
+        else if (v === 'derrotar') add(t === '*' ? 'kills' : 'tkills', t === '*' ? String(n) : n + '|' + t);
+        else add('powerups', n + '|' + t);
+      });
+      row.appendChild(verb); row.appendChild(num); row.appendChild(unit);
+      row.appendChild(S.View.el('span', '', 'del tipo'));
+      row.appendChild(tipo);
+      row.appendChild(go);
+      return row;
+    };
     const draw = () => {
       list.innerHTML = '';
       const shown = links.filter((l) => exists(L, l));
@@ -323,19 +360,7 @@
         list.appendChild(r);
       });
       // Botones para añadir: solo lo que hay en el nivel
-      addBox.innerHTML = '';
-      if (enemyTypes.length) {
-        const row = S.View.el('div', 'row');
-        enemyTypes.forEach((t) => {
-          const nm = C.OBJECTS[t].name;
-          row.appendChild(S.View.button('Derrotar cualquier ' + nm, '', () => add('defeat', 'type:' + t)));
-          row.appendChild(S.View.button('Daño de ' + nm, '', () => add('hurt', 'type:' + t)));
-        });
-        addBox.appendChild(row);
-      }
-      if (enemyTypes.length) addBox.appendChild(counterRow('Al derrotar', 'kills', 'enemigos', [3, 5, 10, 20]));
-      addBox.appendChild(powerRow());
-      addBox.appendChild(counterRow('Al juntar', 'coins', 'monedas', [5, 10, 20, 50]));
+      addBox.appendChild(sentenceRow());
     };
 
     draw();

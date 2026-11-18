@@ -267,3 +267,11 @@ body.touch #stage { touch-action: none; }
 #touch .tc-btn.camera { left: 2%; bottom: calc(3% + 66px); width: 56px; height: 56px; display: none; }
 #touch.edit .tc-pad, #touch.edit .tc-acts, #touch.edit .pause { display: none; }
 @media (max-width: 700px) { .tc-pad { width: 120px; height: 120px; } .tc-acts .jump { width: 72px; height: 72px; } }
+
+/* Frase rellenable del cuadro de NPC: "Al derrotar [5] enemigos del tipo [..]" */
+.npc-sentence { font: 800 16px "Trebuchet MS", sans-serif; align-items: center; gap: 8px; }
+.npc-sentence select, .npc-sentence input {
+  font: 800 15px "Trebuchet MS", sans-serif; color: #1a1033; background: #fff;
+  border: 3px solid #000; border-radius: 10px; padding: 4px 8px; box-shadow: 0 3px 0 #000;
+}
+.npc-sentence select { background: #fff8c4; }

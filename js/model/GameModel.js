@@ -95,7 +95,7 @@
       this.starTotal = this.level.objects.filter((o) => (C.OBJECTS[o.type] || {}).collect).length;
       this.stars = 0;
       // Enemigos derrotados y si el jugador ha saltado (para las condiciones de victoria)
-      this.kills = 0; this.jumped = false; this.npcFired = {}; this.powerupCount = {};
+      this.kills = 0; this.jumped = false; this.npcFired = {}; this.powerupCount = {}; this.typeKills = {};
       this.level.ab = [0, 0, 0];
       // Interruptores "!": estado persistente de la partida (se conserva al cambiar de zona)
       this.exState = this.exState || [0, 0, 0];
@@ -223,7 +223,7 @@
       // Cuenta enemigos derrotados (para la condición de victoria "Derrotar enemigos").
       // Un enemigo cuenta una sola vez, cuando entra en su animación de muerte.
       this.entities.forEach((e) => {
-        if (e.enemy && !e.boss && e.type !== 'eshot' && (e.dying > 0 || e.squashed) && !e._counted) { e._counted = true; this.kills++; this.npcEvent('kills', String(this.kills)); }
+        if (e.enemy && !e.boss && e.type !== 'eshot' && (e.dying > 0 || e.squashed) && !e._counted) { e._counted = true; this.kills++; this.npcEvent('kills', String(this.kills)); this.npcCountType(e.type); }
       });
       this.entities = this.entities.filter((e) => !e.remove);
 
@@ -759,6 +759,21 @@
     npcSpeech(o) {
       if (o.cond && o.cond.on && this.condMet(o)) return o.cond.t || '';
       return (o.say && o.say[0]) || '';
+    }
+    // Enemigos derrotados por tipo. Un enlace 'tkills' tiene key 'N|tipo'
+    npcCountType(type) {
+      this.typeKills = this.typeKills || {};
+      const before = this.typeKills[type] || 0;
+      this.typeKills[type] = before + 1;
+      if (!this.level || !this.level.objects) return;
+      this.level.objects.forEach((o) => {
+        if (o.type !== 'npc' || !o.lk) return;
+        o.lk.forEach((l) => {
+          if (l.ev !== 'tkills') return;
+          const p = String(l.key).split('|'), N = +p[0];
+          if (p[1] === type && N > before && N <= before + 1) this.npcEvent('tkills', l.key);
+        });
+      });
     }
     // Powerups recogidos por tipo. Un enlace 'powerups' tiene key 'N|tipo' ('*' = cualquier powerup)
     npcCountPowerup(type) {

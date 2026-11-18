@@ -61,6 +61,7 @@
     if (o) return o.label + (l.o ? ' · una vez' : '');
     if (l.ev === 'kills') return 'Al derrotar ' + l.key + ' enemigos' + (l.o ? ' · una vez' : '');
     if (l.ev === 'coins') return 'Al juntar ' + l.key + ' monedas' + (l.o ? ' · una vez' : '');
+    if (l.ev === 'tkills') { const p = String(l.key).split('|'), def = S.Model.Catalog.OBJECTS[p[1]] || {}; return 'Al derrotar ' + p[0] + ' ' + (def.name || p[1]) + (l.o ? ' · una vez' : ''); }
     if (l.ev === 'powerups') {
       const p = String(l.key).split('|'), tp = p[1] || '*', def = S.Model.Catalog.OBJECTS[tp] || {};
       return 'Al recoger ' + p[0] + ' ' + (tp === '*' ? 'powerups' : (def.name || tp)) + (l.o ? ' · una vez' : '');
