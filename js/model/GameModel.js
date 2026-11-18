@@ -95,7 +95,7 @@
       this.starTotal = this.level.objects.filter((o) => (C.OBJECTS[o.type] || {}).collect).length;
       this.stars = 0;
       // Enemigos derrotados y si el jugador ha saltado (para las condiciones de victoria)
-      this.kills = 0; this.jumped = false; this.npcFired = {}; this.powerupCount = {}; this.typeKills = {};
+      this.kills = 0; this.jumped = false; this.npcFired = {}; this.powerupCount = {}; this.typeKills = {}; this.npcPaid = {};
       this.level.ab = [0, 0, 0];
       // Interruptores "!": estado persistente de la partida (se conserva al cambiar de zona)
       this.exState = this.exState || [0, 0, 0];
@@ -748,6 +748,22 @@
     // Requisitos por contador (monedas, powerups): dispara cada enlace cuyo número N se ha cruzado (from < N <= to)
     // Recompensa: si se cumple la condición y te acercas, el NPC suelta su objeto (una vez por intento).
     // Llave: una casilla encima del NPC. Powerup: sale del NPC y se mueve como siempre.
+    // Condición de monedas: el NPC te cobra N monedas al acercarte (una vez por intento), si las tienes
+    npcPayTick() {
+      if (!this.level || !this.level.objects) return;
+      this.npcPaid = this.npcPaid || {};
+      const p = this.player;
+      this.level.objects.forEach((o) => {
+        if (o.type !== 'npc' || !o.cond || !o.cond.on || o.cond.ev !== 'coins') return;
+        const k = o.x + ',' + o.y;
+        if (this.npcPaid[k]) return;
+        if (Math.hypot(p.x + p.w / 2 - (o.x * T + T / 2), p.y + p.h / 2 - (o.y * T + T / 2)) > 2 * T) return;
+        if (this.coins < o.cond.n) return;
+        this.coins -= o.cond.n;
+        this.npcPaid[k] = true;
+        if (o.cond.t) this.npcBubble = { text: o.cond.t, x: o.x * T + T / 2, y: o.y * T - 40, until: Date.now() + 2600 };
+      });
+    }
     // Suelta las recompensas pendientes de los enlaces cuando te acercas (una vez por intento)
     npcPendingTick() {
       // Frases de los enlaces: se dicen cuando te acercas al NPC (aunque el enlace se cumpliera lejos)
@@ -773,6 +789,7 @@
       });
     }
     npcRewardTick() {
+      this.npcPayTick();
       this.npcPendingTick();
       if (!this.level || !this.level.objects) return;
       const p = this.player;
@@ -794,7 +811,7 @@
       const c = o.cond;
       if (!c || !c.on) return false;
       if (c.ev === 'kills') return this.kills >= c.n;
-      if (c.ev === 'coins') return this.coins >= c.n;
+      if (c.ev === 'coins') return !!(this.npcPaid && this.npcPaid[o.x + ',' + o.y]); // se cumple cuando ya te ha cobrado
       if (c.ev === 'keys') return (this.keyCount || 0) >= c.n;
       if (c.ev === 'powerups') return ((this.powerupCount || {})['*'] || 0) >= c.n;
       return false;
