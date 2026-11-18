@@ -180,6 +180,7 @@
       if (this.state !== 'play') return;
 
       this.time -= dt;
+      this.npcRewardTick();
       if (this.time <= 0) { this.time = 0; this.die('time'); return; }
       this.updateEffects(dt);
       this.updateWorld(dt);
@@ -745,6 +746,24 @@
     // Enlaces de los NPC: si hay un NPC enlazado a este evento y casilla, muestra la frase elegida.
     // ev: 'exit' (salir de tubería/puerta), 'defeat', 'hurt', 'hit'. key: 'x,y' de la casilla del objeto.
     // Requisitos por contador (monedas, powerups): dispara cada enlace cuyo número N se ha cruzado (from < N <= to)
+    // Recompensa: si se cumple la condición y te acercas, el NPC suelta su objeto (una vez por intento).
+    // Llave: una casilla encima del NPC. Powerup: sale del NPC y se mueve como siempre.
+    npcRewardTick() {
+      if (!this.level || !this.level.objects) return;
+      const p = this.player;
+      this.npcFired = this.npcFired || {};
+      this.level.objects.forEach((o) => {
+        if (o.type !== 'npc' || !o.cond || !o.cond.on || !o.cond.r) return;
+        const fk = o.x + ',' + o.y + '|reward';
+        if (this.npcFired[fk] || !this.condMet(o)) return;
+        const px = p.x + p.w / 2, py = p.y + p.h / 2, nx = o.x * T + T / 2, ny = o.y * T + T / 2;
+        if (Math.hypot(px - nx, py - ny) > 3 * T) return;
+        this.npcFired[fk] = true;
+        const ty = o.cond.r === 'key' ? o.y - 1 : o.y;
+        const e = S.Model.Entities.create(o.cond.r, o.x, ty, {});
+        if (e) this.entities.push(e);
+      });
+    }
     // ¿Se cumple la condición "si" del NPC? (derrotas, monedas, llaves o powerups)
     condMet(o) {
       const c = o.cond;
