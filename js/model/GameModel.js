@@ -700,8 +700,11 @@
     // Primera columna completamente sólida (de arriba abajo) por delante de la mitad de la pantalla.
     // Devuelve el tope de cámara (px) para no enseñar más allá, o null si no hay.
     solidColumnLimit(c) {
-      const L = this.level, H = L.height;
-      const from = Math.floor((c.x + c.w * 0.5) / T) + 1, to = Math.min(L.width - 1, Math.floor((c.x + c.w) / T) + 2);
+      const L = this.level, H = L.height, p = this.player;
+      // solo cuentan las columnas POR DELANTE del Glob: una pared que ya quedó atrás (p. ej. al salir
+      // por una puerta al otro lado) no puede frenar la cámara, o el Glob se quedaría fuera de pantalla
+      const from = Math.max(Math.floor((c.x + c.w * 0.5) / T) + 1, Math.floor((p.x + p.w) / T) + 1);
+      const to = Math.min(L.width - 1, Math.floor((c.x + c.w) / T) + 2);
       for (let x = from; x <= to; x++) {
         let full = true;
         for (let y = 0; y < H; y++) { const t = L.get(x, y); if (!C.isSolid(t, L) || t === C.T.WATER) { full = false; break; } }
@@ -930,7 +933,9 @@
         if (p.star > 0) { if (e.boss) { if (e.damage) e.damage(this, 1, 'star'); } else if (e.kill) { e.kill(this); this.addScore(200, e); } continue; }
         const falling = p.vy > 0 || p.pound > 0;
         const fromAbove = p.y + p.h - e.y < 14 + Math.max(0, p.vy) / 40;
-        if (falling && fromAbove && (e.stompable || (p.pound > 0 && e.poundable))) {
+        // el culetazo solo mata cuando el Glob ya cae de verdad (no mientras flota en la espera previa)
+        const poundHit = p.pound > 0 && p.poundWait <= 0 && p.vy > 0 && e.poundable;
+        if (falling && fromAbove && (e.stompable || poundHit)) {
           e.onStomp(this);
           if (!e.boss) this.addScore(100, e);
           p.vy = this.inputJump ? -560 : -400; p.pound = 0; p.jumpHeld = true; p.y = e.y - p.h;
@@ -1066,7 +1071,8 @@
       const x0 = Math.floor((p.x + 2) / T), x1 = Math.floor((p.x + p.w - 2) / T);
       // POW e interruptores A/B funcionan con cualquier tamaño
       for (let x = x0; x <= x1; x++) if (this.landOn(p, x, y, true, false)) return;
-      if (!(p.big || p.ch.stats.heavy)) return;
+      // solo el personaje Pesado rompe bloques con el culetazo (el powerup no)
+      if (!p.ch.stats.heavy) return;
       let broke = false;
       for (let x = x0; x <= x1; x++) {
         const t = this.level.get(x, y);
