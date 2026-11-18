@@ -528,7 +528,9 @@
     if (locked) { rr(ctx, x + w / 2 - 6, y + h * 0.4, 12, 11, 3); fillStroke(ctx, '#ffd000', 2.5); ctx.fillStyle = INK; ctx.fillRect(x + w / 2 - 1, y + h * 0.45, 2, 4); }
   }
   D.door = (ctx, e) => doorArt(ctx, e, false);
-  D.lockdoor = (ctx, e) => doorArt(ctx, e, true);
+  // en partida el estado real está en e.locked (se desbloquea al usar la llave o al salir por ella);
+  // en el editor el objeto no lo tiene y se dibuja como cerrada
+  D.lockdoor = (ctx, e) => doorArt(ctx, e, e.locked !== undefined ? !!e.locked : true);
   // Llave
   D.key = (ctx, e, t) => {
     const cx = e.cx(), cy = e.y + e.h * 0.4;
