@@ -41,3 +41,5 @@ node_modules/
 .env
 .env.*
 !.env.example
+# --- Copia de trabajo del pack de Historia (el juego usa js/model/StoryPackData.js) ---
+StoryPackData_KirByteWorlds/
