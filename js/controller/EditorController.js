@@ -250,6 +250,7 @@
     const L = m.level;
     const npc = L.objectAt(c.x, c.y);
     if (!npc || npc.type !== 'npc') return;
+    let held = npc.held || ''; // objeto que lleva el NPC para su recompensa (se entrega con un clic en el editor)
     const def = S.View.Npcs.get(npc.npc);
     const box = menu.openModal('NPC: ' + (def ? def.name : 'sin imagen'));
     box.appendChild(S.View.el('p', 'small', 'Primera línea: frase de proximidad (siempre). Cada enlace tiene su propia frase.'));
@@ -379,7 +380,7 @@
     draw();
     // Condición (si / si no): si se cumple, sale su frase "si" y no sale la principal
     let cond = Object.assign({ ev: 'kills', n: 5, t: '', on: false, r: '' }, npc.cond || {});
-    let held = npc.held || ''; // objeto que lleva el NPC para su recompensa (se entrega con un clic en el editor)
+
     const condBox = S.View.el('div', 'npc-cond');
     const drawCond = () => {
       condBox.innerHTML = '';
