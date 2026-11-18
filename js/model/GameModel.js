@@ -750,6 +750,14 @@
     // Llave: una casilla encima del NPC. Powerup: sale del NPC y se mueve como siempre.
     // Suelta las recompensas pendientes de los enlaces cuando te acercas (una vez por intento)
     npcPendingTick() {
+      // Frases de los enlaces: se dicen cuando te acercas al NPC (aunque el enlace se cumpliera lejos)
+      const pl = this.player;
+      Object.keys(this.npcSayPending || {}).forEach((k) => {
+        const s = this.npcSayPending[k];
+        if (Math.hypot(pl.x + pl.w / 2 - s.x, pl.y + pl.h / 2 - s.y) > 3 * T) return;
+        delete this.npcSayPending[k];
+        this.npcBubble = { text: s.text, x: s.x, y: s.y, until: Date.now() + 2600 };
+      });
       if (!this.level || !this.npcPending) return;
       const p = this.player;
       this.npcFired = this.npcFired || {};
@@ -852,7 +860,8 @@
         this.npcFired = this.npcFired || {};
         if (hit.o && this.npcFired[fireKey]) return;
         this.npcFired[fireKey] = true;
-        this.npcBubble = { text: hit.t, x: o.x * T + T / 2, y: o.y * T - 40, until: Date.now() + 2600 };
+        this.npcSayPending = this.npcSayPending || {};
+        this.npcSayPending[o.x + ',' + o.y] = { text: hit.t, x: o.x * T + T / 2, y: o.y * T - 40 };
       });
     }
     hurtPlayer(src) {
