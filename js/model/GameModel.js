@@ -745,6 +745,21 @@
     // Enlaces de los NPC: si hay un NPC enlazado a este evento y casilla, muestra la frase elegida.
     // ev: 'exit' (salir de tubería/puerta), 'defeat', 'hurt', 'hit'. key: 'x,y' de la casilla del objeto.
     // Requisitos por contador (monedas, powerups): dispara cada enlace cuyo número N se ha cruzado (from < N <= to)
+    // ¿Se cumple la condición "si" del NPC? (derrotas, monedas, llaves o powerups)
+    condMet(o) {
+      const c = o.cond;
+      if (!c || !c.on) return false;
+      if (c.ev === 'kills') return this.kills >= c.n;
+      if (c.ev === 'coins') return this.coins >= c.n;
+      if (c.ev === 'keys') return (this.keyCount || 0) >= c.n;
+      if (c.ev === 'powerups') return ((this.powerupCount || {})['*'] || 0) >= c.n;
+      return false;
+    }
+    // Lo que dice ahora el NPC: la frase "si" si se cumple su condición, si no la principal
+    npcSpeech(o) {
+      if (o.cond && o.cond.on && this.condMet(o)) return o.cond.t || '';
+      return (o.say && o.say[0]) || '';
+    }
     // Powerups recogidos por tipo. Un enlace 'powerups' tiene key 'N|tipo' ('*' = cualquier powerup)
     npcCountPowerup(type) {
       this.powerupCount = this.powerupCount || {};
@@ -843,7 +858,7 @@
 
     collectItem(e) {
       // NPC enlazados: llave, powerup (incluye cápsulas de personaje)
-      if (e.type === 'key') this.npcEvent('key', e.tx + ',' + e.ty);
+      if (e.type === 'key') { this.keyCount = (this.keyCount || 0) + 1; this.npcEvent('key', e.tx + ',' + e.ty); }
       else if (['evo', 'flor', 'caca', 'vacio', 'brillo', 'miniglob'].indexOf(e.type) !== -1 || /^cap_/.test(e.type)) this.npcEvent('powerup', e.tx + ',' + e.ty); this.npcCountPowerup(e.type);
       const p = this.player;
       e.remove = true;

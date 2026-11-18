@@ -339,6 +339,33 @@
     };
 
     draw();
+    // Condición (si / si no): si se cumple, sale su frase "si" y no sale la principal
+    let cond = Object.assign({ ev: 'kills', n: 5, t: '', on: false }, npc.cond || {});
+    const condBox = S.View.el('div', 'npc-cond');
+    const drawCond = () => {
+      condBox.innerHTML = '';
+      const CN = { kills: 'enemigos derrotados', coins: 'monedas', keys: 'llaves', powerups: 'powerups' };
+      condBox.appendChild(S.View.el('p', 'small', 'Condición: si se cumple, sale su frase "si" y no sale la principal.'));
+      const r1 = S.View.el('div', 'row');
+      r1.appendChild(S.View.button('Sin condición', !cond.on ? 'primary' : '', () => { cond.on = false; drawCond(); }));
+      Object.keys(CN).forEach((ev) => r1.appendChild(S.View.button(CN[ev], cond.on && cond.ev === ev ? 'primary' : '', () => { cond.ev = ev; cond.on = true; drawCond(); })));
+      condBox.appendChild(r1);
+      if (cond.on) {
+        const r2 = S.View.el('div', 'row');
+        const shownC = S.View.el('span', '', String(cond.n));
+        r2.appendChild(S.View.button('−', '', () => { cond.n = Math.max(1, cond.n - 1); shownC.textContent = String(cond.n); }));
+        r2.appendChild(shownC);
+        r2.appendChild(S.View.button('+', '', () => { cond.n = Math.min(999, cond.n + 1); shownC.textContent = String(cond.n); }));
+        const inpSi = document.createElement('input');
+        inpSi.type = 'text'; inpSi.maxLength = 120; inpSi.size = 30; inpSi.placeholder = 'frase si se cumple';
+        inpSi.value = cond.t;
+        inpSi.oninput = () => { cond.t = inpSi.value; };
+        r2.appendChild(inpSi);
+        condBox.appendChild(r2);
+      }
+    };
+    drawCond();
+    box.appendChild(condBox);
     const bar = S.View.el('div', 'row');
     bar.appendChild(S.View.button('Guardar', 'primary', () => {
       const first = ta.value.split('\n')[0].trim();
@@ -346,6 +373,7 @@
         const o = LL.objectAt(c.x, c.y);
         if (!o || o.type !== 'npc') return;
         if (first) o.say = [S.Model.TextFilter.clean(first)]; else delete o.say;
+        if (cond.on) o.cond = { ev: cond.ev, n: cond.n, t: S.Model.TextFilter.clean(cond.t || ''), on: true }; else delete o.cond;
         // se guardan también los enlaces que no se muestran (su destino no está en este nivel/zona)
         if (links.length) o.lk = links.map((l) => ({ ev: l.ev, key: l.key, t: S.Model.TextFilter.clean(l.t || ''), o: !!l.o })); else delete o.lk;
       });

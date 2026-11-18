@@ -104,10 +104,11 @@
       if (!p) return;
       const px = p.x + p.w / 2, py = p.y + p.h / 2, Sp = S.View.Sprites;
       g.level.objects.forEach((o) => {
-        if (o.type !== 'npc' || !o.say || !o.say.length) return;
+        if (o.type !== 'npc') return;
         const cx = o.x * T + T / 2, top = o.y * T - 40;
         if (Math.hypot(cx - px, (top + 20) - py) > 3 * T) return;
-        const text = o.say[0];
+        const text = g.npcSpeech(o);
+        if (!text) return;
         ctx.save();
         ctx.font = '800 14px "Trebuchet MS",sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
