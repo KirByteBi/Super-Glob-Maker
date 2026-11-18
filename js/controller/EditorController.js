@@ -24,6 +24,7 @@
       this.offs.push(S.events.on('editor:collectMix', () => app.menu.toast('Usa un solo tipo de Moneda Estrella por nivel (mezclarlas sería muy confuso)', 1800)));
       this.offs.push(S.events.on('editor:linkFrom', () => app.menu.toast('Origen marcado. Clica el destino (puedes cambiar de zona).', 1800)));
       this.offs.push(S.events.on('editor:npcLink', (d) => app.menu.toast(d.text, 2600)));
+      this.offs.push(S.events.on('editor:lockLink', () => app.menu.toast('No puedes enlazar dos puertas con llave: al menos una tiene que ser de madera.', 3000)));
       this.offs.push(S.events.on('editor:npcGive', (d) => app.menu.toast('El NPC ya lleva ' + ((S.Model.Catalog.OBJECTS[d.type] || {}).name || d.type) + ' para su recompensa', 2600)));
       this.offs.push(S.events.on('editor:linkDone', (d) => app.menu.toast('Enlazado a ' + (d.z === 0 ? 'Base' : 'Sub ' + d.z) + ' (#' + (d.i + 1) + ')', 1500)));
       this.offs.push(S.events.on('editor:linkBad', () => app.menu.toast('Para enlazar, clica dos tuberías (o dos puertas).', 1600)));

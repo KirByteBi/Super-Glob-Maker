@@ -618,3 +618,32 @@ en vez de estrellas.
 [ ] Mundos con planetoides y gravedad esferica (como Galaxy), o mundos cuadrados al estilo SM64. Ambos entran dentro del plan.
 [ ] Editor 3D de niveles por bloques
 [ ] Los mismos mapas y el modo Corrupto, adaptados al 3D
+
+--------------------------------------------------------------
+ NPC: CONDICIONES (si / si no)
+--------------------------------------------------------------
+Cada NPC puede tener una condición (if) y dos frases:
+  - Si se cumple la condición: dice la frase "si".
+  - Si no se cumple: dice la frase "si no".
+La condición es uno de los requisitos que ya existen: derrotar
+N enemigos (de cualquier tipo o uno concreto), juntar N monedas,
+recoger N powerups de un tipo, recoger una llave o tocar una
+meta. Se comprueba cuando el jugador toca al NPC.
+[ ] Condición + frase "si" + frase "si no" en el cuadro del NPC
+[ ] Mensaje por defecto: la frase de proximidad (primera línea),
+    que se dice cuando no se cumple ninguna condición
+[ ] Una condición por NPC (sin anidar), para no complicar el
+    editor
+[ ] Las frases son solo de texto: el filtro de palabras
+    inapropiadas se aplica también a las frases "si" y "si no"
+
+DECISIONES (NPC: condiciones y tags)
+[x] Tag de cantidad: muestra "faltan/total" (lo que aún debes / el total
+    que pide la condición). Ej.: [monedas] -> "3/5".
+[x] Si se cumple la condición, la frase principal (la de proximidad) NO sale;
+    sale solo la frase "si". Es un interruptor del NPC, activable y
+    desactivable en el cuadro.
+[ ] Tags de color: [monedas] en amarillo, [enemigos] en azul.
+[ ] Tags con icono: @coin (moneda amarilla), @enemy (sprite del enemigo),
+    @powerup (sprite del powerup). Siempre en singular.
+[ ] Los tags también pasan por el filtro de palabras inapropiadas.

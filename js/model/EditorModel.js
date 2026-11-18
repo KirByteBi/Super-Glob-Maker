@@ -287,6 +287,9 @@
       if (!this.linkFrom) { this.linkFrom = { z: this.activeZone, x, y, fam: famOf(o.type) }; this.emit('linkFrom', { x, y }); return 'from'; }
       // 2º clic: destino, debe ser de la misma familia
       if (famOf(o.type) !== this.linkFrom.fam) { this.emit('linkBad', {}); return 'bad'; }
+      // Dos puertas con llave no se pueden enlazar: si ambas están cerradas, nunca se llega al otro lado
+      const srcDoor = this.level.objectAt(this.linkFrom.x, this.linkFrom.y);
+      if (srcDoor && srcDoor.type === 'lockdoor' && o.type === 'lockdoor') { this.emit('lockLink', {}); return 'bad'; }
       // no se puede enlazar un objeto consigo mismo: el origen se queda marcado
       if (this.linkFrom.x === x && this.linkFrom.y === y) { this.emit('linkBad', {}); return 'same'; }
       const dstZone = this.activeZone;
