@@ -44,6 +44,31 @@
       this.dirty = true;
       this.setZone(this.base.subs.length);
     }
+    // Borra un objeto. Si es una puerta o tubería, corrige los enlaces manuales que apuntan
+    // por índice a su misma familia (en todas las zonas): si no, al borrar una puerta anterior
+    // la enlazada posterior llevaría a la puerta de al lado.
+    removeAt(x, y) {
+      const famOf = (t) => (t === 'warp' || t === 'lockwarp') ? 'pipe' : (t === 'door' || t === 'lockdoor') ? 'door' : null;
+      const L = this.level, o = L.objectAt(x, y), fam = o && famOf(o.type);
+      if (!fam) return L.removeObjectAt(x, y);
+      const z = this.activeZone, k = L.objects.filter((q) => famOf(q.type) === fam).indexOf(o);
+      const r = L.removeObjectAt(x, y);
+      this.fixLinksAfterRemove(z, fam, k);
+      return r;
+    }
+    fixLinksAfterRemove(z, fam, k) {
+      const famOf = (t) => (t === 'warp' || t === 'lockwarp') ? 'pipe' : (t === 'door' || t === 'lockdoor') ? 'door' : null;
+      this.syncZone();
+      const fix = (objs) => (objs || []).forEach((o) => {
+        if (famOf(o.type) !== fam || !o.to || o.to.z !== z) return;
+        if (o.to.i === k) delete o.to;           // su destino era el borrado: queda sin enlazar
+        else if (o.to.i > k) o.to.i--;           // el resto se corre una posición
+      });
+      fix(this.base.objects); this.base.subs.forEach((s) => fix(s.objects));
+      // recargar la zona activa con los datos ya corregidos
+      this.level = z === 0 ? this.base : new Level(Object.assign({ character: this.base.character }, this.base.subs[z - 1]));
+      this.dirty = true;
+    }
     removeZone(z) {
       if (z < 1 || z > this.base.subs.length) return;
       this.syncZone();
@@ -97,12 +122,12 @@
         const pipe = !L.objectAt(x, y) && S.Model.Pipe.at(L, x, y);
         if (pipe) {
           const n = S.Model.Pipe.reach(pipe, x, y);
-          if (S.Model.Pipe.inMouth(pipe, x, y) || n == null) L.removeObjectAt(pipe.x, pipe.y);
+          if (S.Model.Pipe.inMouth(pipe, x, y) || n == null) this.removeAt(pipe.x, pipe.y);
           else if (n - 1 > 0) pipe.len = n - 1; else delete pipe.len;
           this.changed = true; return;
         }
         const o = L.objectAt(x, y);
-        if (o && o.type !== 'start' && o.type !== 'goal') { L.removeObjectAt(x, y); this.changed = true; return; }
+        if (o && o.type !== 'start' && o.type !== 'goal') { this.removeAt(x, y); this.changed = true; return; }
         if (!o && tile) { L.set(x, y, 0); delete L.contents[key]; if (tile === C.T.SEMIBG || tile === C.T.BGFILL) EditorModel.fixSemiBg(L, x, y + 1); this.changed = true; }
         return;
       }
@@ -124,7 +149,7 @@
           L.set(x, y, tool.id); delete L.contents[key]; EditorModel.fixSemiBg(L, x, y); this.changed = true; return;
         }
         if (o && (o.type === 'start' || o.type === 'goal')) return;
-        if (o) L.removeObjectAt(x, y);
+        if (o) this.removeAt(x, y);
         L.set(x, y, tool.id);
         if (!C.isContainer(tool.id)) delete L.contents[key];
         this.changed = true;
@@ -218,7 +243,7 @@
       if (L.get(x, y) === C.T.RCOIN) return;
       const o = L.objectAt(x, y);
       if (o && (o.type === 'start' || o.type === 'goal')) return;
-      if (o) L.removeObjectAt(x, y);
+      if (o) this.removeAt(x, y);
       // reconstruir el orden a partir de los tiles reales, quitando las que ya no existen
       this.redOrder = (this.redOrder || []).filter((k) => { const [px, py] = k.split(',').map(Number); return L.get(px, py) === C.T.RCOIN; });
       L.set(x, y, C.T.RCOIN); delete L.contents[key];
