@@ -753,14 +753,14 @@
       const p = this.player;
       this.npcFired = this.npcFired || {};
       this.level.objects.forEach((o) => {
-        if (o.type !== 'npc' || !o.cond || !o.cond.on || !o.cond.r) return;
+        if (o.type !== 'npc' || !o.cond || !o.cond.on || !o.held) return;
         const fk = o.x + ',' + o.y + '|reward';
         if (this.npcFired[fk] || !this.condMet(o)) return;
         const px = p.x + p.w / 2, py = p.y + p.h / 2, nx = o.x * T + T / 2, ny = o.y * T + T / 2;
         if (Math.hypot(px - nx, py - ny) > 3 * T) return;
         this.npcFired[fk] = true;
-        const ty = o.cond.r === 'key' ? o.y - 1 : o.y;
-        const e = S.Model.Entities.create(o.cond.r, o.x, ty, {});
+        const ty = o.held === 'key' ? o.y - 1 : o.y;
+        const e = S.Model.Entities.create(o.held, o.x, ty, {});
         if (e) this.entities.push(e);
       });
     }

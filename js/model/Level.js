@@ -50,6 +50,8 @@
         if (o.deco) ob.deco = o.deco;
         // NPC: cuál de los Globs de Npcs.js es
         if (o.npc) ob.npc = String(o.npc);
+        // objeto que el NPC lleva para su recompensa (llave o powerup)
+        if (o.held) ob.held = String(o.held);
         // frases del NPC (una por línea en el editor, máximo 10)
         if (Array.isArray(o.say)) ob.say = o.say.slice(0, 10).map(String);
         // condición del NPC: si se cumple, sale su frase "si" en vez de la principal
@@ -258,6 +260,7 @@
           if (o.w) j.w = o.w;
           if (o.deco) j.deco = o.deco;
           if (o.npc) j.npc = o.npc;
+          if (o.held) j.held = o.held;
           if (Array.isArray(o.say) && o.say.length) j.say = o.say.slice(0, 10).map(String);
           if (o.cond && o.cond.on) j.cond = { ev: o.cond.ev, n: o.cond.n, t: o.cond.t || '', on: true, r: o.cond.r || '' };
           if (Array.isArray(o.lk) && o.lk.length) j.lk = o.lk.map((l) => ({ ev: l.ev, key: l.key, t: String(l.t || '').slice(0, 120), o: !!l.o }));

@@ -252,9 +252,14 @@
     const def = S.View.Npcs.get(npc.npc);
     const box = menu.openModal('NPC: ' + (def ? def.name : 'sin imagen'));
     box.appendChild(S.View.el('p', 'small', 'Primera línea: frase de proximidad (siempre). Cada enlace tiene su propia frase.'));
+    // Ajusta la altura de un texto a su contenido (margen y saltos de línea, sin cortar)
+    const grow = (el) => { el.style.height = 'auto'; el.style.height = (el.scrollHeight + 4) + 'px'; };
     const ta = document.createElement('textarea');
+    ta.className = 'npc-grow';
+    ta.oninput = () => grow(ta);
     ta.rows = 2; ta.maxLength = 240; ta.style.width = '100%';
     ta.value = (npc.say && npc.say[0]) || '';
+    setTimeout(() => grow(ta), 0);
     box.appendChild(ta);
 
     const opts = S.Model.NpcLinks.options(L);
@@ -345,10 +350,11 @@
       shown.forEach((l) => {
         const r = S.View.el('div', 'row');
         r.appendChild(S.View.el('span', '', S.Model.NpcLinks.label(opts, l)));
-        const inp = document.createElement('input');
-        inp.type = 'text'; inp.maxLength = 120; inp.size = 26; inp.placeholder = 'frase de este enlace';
+        const inp = document.createElement('textarea'); inp.rows = 1;
+        inp.className = 'npc-grow'; inp.maxLength = 120; inp.placeholder = 'frase de este enlace';
         inp.value = l.t;
-        inp.oninput = () => { l.t = inp.value; };
+        inp.oninput = () => { l.t = inp.value; grow(inp); };
+        setTimeout(() => grow(inp), 0);
         r.appendChild(inp);
         r.appendChild(S.View.button('Solo una vez', l.o ? 'primary' : '', () => { l.o = !l.o; draw(); }));
         if (l.ev === 'defeat' || l.ev === 'hurt') {
@@ -367,6 +373,7 @@
     draw();
     // Condición (si / si no): si se cumple, sale su frase "si" y no sale la principal
     let cond = Object.assign({ ev: 'kills', n: 5, t: '', on: false, r: '' }, npc.cond || {});
+    let held = npc.held || ''; // objeto que lleva el NPC para su recompensa (se entrega con un clic en el editor)
     const condBox = S.View.el('div', 'npc-cond');
     const drawCond = () => {
       condBox.innerHTML = '';
@@ -382,17 +389,19 @@
         r2.appendChild(S.View.button('−', '', () => { cond.n = Math.max(1, cond.n - 1); shownC.textContent = String(cond.n); }));
         r2.appendChild(shownC);
         r2.appendChild(S.View.button('+', '', () => { cond.n = Math.min(999, cond.n + 1); shownC.textContent = String(cond.n); }));
-        const inpSi = document.createElement('input');
-        inpSi.type = 'text'; inpSi.maxLength = 120; inpSi.size = 30; inpSi.placeholder = 'frase si se cumple';
+        const inpSi = document.createElement('textarea'); inpSi.rows = 1;
+        inpSi.className = 'npc-grow'; inpSi.maxLength = 120; inpSi.placeholder = 'frase si se cumple';
         inpSi.value = cond.t;
-        inpSi.oninput = () => { cond.t = inpSi.value; };
+        inpSi.oninput = () => { cond.t = inpSi.value; grow(inpSi); };
+        setTimeout(() => grow(inpSi), 0);
         r2.appendChild(inpSi);
         condBox.appendChild(r2);
         // Recompensa: lo que suelta el NPC al cumplirse la condición
         const r3 = S.View.el('div', 'row');
         r3.appendChild(S.View.el('span', 'small', 'Recompensa:'));
         const rewards = [['', 'ninguna'], ['key', 'Llave']].concat(POWER_TYPES.filter((t) => S.Model.Catalog.OBJECTS[t]).map((t) => [t, S.Model.Catalog.OBJECTS[t].name]));
-        rewards.forEach(([v, nm]) => r3.appendChild(S.View.button(nm, cond.r === v ? 'primary' : '', () => { cond.r = v; drawCond(); })));
+        r3.appendChild(S.View.el('span', 'small', held ? 'Lleva: ' + ((S.Model.Catalog.OBJECTS[held] || {}).name || held) : 'Sin objeto. Elige una llave o un powerup en la paleta y haz clic en el NPC para dárselo.'));
+        if (held) r3.appendChild(S.View.button('Quitar objeto', 'danger', () => { held = ''; drawCond(); }));
         condBox.appendChild(r3);
       }
     };
@@ -405,7 +414,8 @@
         const o = LL.objectAt(c.x, c.y);
         if (!o || o.type !== 'npc') return;
         if (first) o.say = [S.Model.TextFilter.clean(first)]; else delete o.say;
-        if (cond.on) o.cond = { ev: cond.ev, n: cond.n, t: S.Model.TextFilter.clean(cond.t || ''), on: true, r: cond.r || '' }; else delete o.cond;
+        if (cond.on) o.cond = { ev: cond.ev, n: cond.n, t: S.Model.TextFilter.clean(cond.t || ''), on: true }; else delete o.cond;
+        if (held) o.held = held; else delete o.held;
         // se guardan también los enlaces que no se muestran (su destino no está en este nivel/zona)
         if (links.length) o.lk = links.map((l) => ({ ev: l.ev, key: l.key, t: S.Model.TextFilter.clean(l.t || ''), o: !!l.o })); else delete o.lk;
       });

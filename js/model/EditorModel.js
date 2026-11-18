@@ -132,6 +132,11 @@
       }
       if (tool.kind === 'obj') {
         const type = tool.type;
+        // Entregar un objeto a un NPC: con una llave o un powerup elegido, un clic sobre el NPC se lo da (queda para su recompensa)
+        const giveTo = L.objectAt(x, y);
+        if (giveTo && giveTo.type === 'npc' && (type === 'key' || ['evo', 'flor', 'caca', 'vacio', 'brillo', 'miniglob'].indexOf(type) !== -1)) {
+          giveTo.held = type; this.changed = true; this.emit('npcGive', { type }); return;
+        }
         // Objeto sobre caja/bloque = contenido de la caja
         if (ITEM_TYPES.has(type) && C.isContainer(tile)) { if (L.contents[key] !== type) { L.contents[key] = type; this.changed = true; this.emit('filled', { x, y, type }); } return; }
         if (type === 'start' || type === 'goal' || type === 'goalhidden') {

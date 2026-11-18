@@ -275,3 +275,10 @@ body.touch #stage { touch-action: none; }
   border: 3px solid #000; border-radius: 10px; padding: 4px 8px; box-shadow: 0 3px 0 #000;
 }
 .npc-sentence select { background: #fff8c4; }
+
+/* Textos del cuadro de NPC: crecen con los saltos de línea y no se cortan */
+.npc-grow {
+  width: 100%; min-width: 260px; box-sizing: border-box; resize: none; overflow: hidden;
+  font: 700 14px "Trebuchet MS", sans-serif; color: #1a1033; background: #fff;
+  border: 3px solid #000; border-radius: 10px; padding: 6px 10px; box-shadow: 0 3px 0 #000;
+}
