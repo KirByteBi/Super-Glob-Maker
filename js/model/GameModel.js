@@ -492,8 +492,11 @@
             if (pd === 1 && !(inp.left && p.x <= m.x + m.w + 3 && p.x >= m.x + m.w - 8)) continue;   // boca a la derecha: yendo ←
           }
         } else {
-          // delante de la puerta y pulsando arriba
+          // se entra desde la BASE de la puerta, de pie y pulsando arriba. Si los pies están
+          // por encima de la base (p. ej. sobre un bloque junto a la puerta), arriba es un salto
           if (!inp.upPressed || !p.onGround || !U.overlap(p, e)) continue;
+          const pcx = p.x + p.w / 2, feet = p.y + p.h, base = e.y + e.h;
+          if (pcx < e.x || pcx > e.x + e.w || feet < base - 10 || feet > base + 6) continue;
         }
         // sin destino: no gastes la llave en una puerta que no lleva a ningún sitio
         if (!e.link && !e.toZone) { if (!this.lockMsgT || this.t - this.lockMsgT > 1) { this.lockMsgT = this.t; this.emit('noLink', { x: e.cx(), y: e.y, family: e.family }); } continue; }
