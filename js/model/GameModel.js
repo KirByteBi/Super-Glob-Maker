@@ -855,13 +855,14 @@
       const COIN = '#c2570c', ENEMY = '#1f6fd8';
       const add = (str, col) => String(str).split(/( )/).forEach((p) => { if (p === ' ') out.push({ s: ' ' }); else if (p) out.push({ s: p, c: col || null }); });
       const str = String(text == null ? '' : text);
-      const re = /\[(monedas|enemigos)\]|@/g;
+      // acepta el tag en español o en inglés (y la variante "enemys")
+      const re = /\[(monedas|coins|enemigos|enemies|enemys)\]|@/g;
       let last = 0, m;
       while ((m = re.exec(str))) {
         add(str.slice(last, m.index));
         last = re.lastIndex;
         if (m[0] === '@') { if (c) out.push({ icon: this.npcTarget(c) }); continue; }
-        const isCoin = m[1] === 'monedas', want = isCoin ? 'coins' : 'kills';
+        const isCoin = m[1] === 'monedas' || m[1] === 'coins', want = isCoin ? 'coins' : 'kills';
         if (c && c.ev === want) add(Math.max(0, c.n - this.npcProgress(c)) + '/' + c.n + ' ' + m[1], isCoin ? COIN : ENEMY);
         else add(m[1], isCoin ? COIN : ENEMY);
       }
