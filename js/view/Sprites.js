@@ -784,15 +784,13 @@
       }
       // Pared de cueva de fondo (sin colisión)
       case TT.CAVEBG: {
-        const base = U.shade(pal.groundDark || pal.ground || '#444', -0.35);
-        ctx.fillStyle = base; ctx.fillRect(px, py, T, T);
-        ctx.fillStyle = U.shade(base, -0.25);
-        const h1 = U.hash2(x, y), h2 = U.hash2(y + 3, x);
-        ctx.beginPath(); ctx.ellipse(px + 6 + h1 * 18, py + 8 + h2 * 14, 6 + h2 * 4, 3 + h1 * 3, h1 * 3, 0, 7); ctx.fill();
-        if (h2 > 0.55) { ctx.fillStyle = U.shade(base, 0.12); ctx.fillRect(px + h1 * 22, py + 20, 6, 3); }
+        // Fondo de cueva: barro con raíces (el dibujo que antes tenía el suelo de la jungla)
+        ctx.fillStyle = '#6b3f22'; ctx.fillRect(px, py, T, T);
+        ctx.fillStyle = '#4f2d17'; ctx.fillRect(px + 3, py + 3, T - 6, T - 6);
+        ctx.strokeStyle = '#3a1f10'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+        ctx.beginPath(); for (let i = 0; i <= 3; i++) ctx.lineTo(px + i * T / 3, py + T / 2 + Math.sin(i * 1.3 + x) * 5); ctx.stroke();
         // bordes con la roca de alrededor
-        ctx.fillStyle = 'rgba(0,0,0,0.25)';
-        if (level.get(x, y - 1) !== TT.CAVEBG) ctx.fillRect(px, py, T, 4);
+        if (level.get(x, y - 1) !== TT.CAVEBG) { ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(px, py, T, 4); }
         break;
       }
       // Raíl (estilo SMM): medio tramo desde el centro hacia cada casilla de raíl unida.

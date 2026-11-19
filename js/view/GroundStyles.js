@@ -426,6 +426,8 @@
 
   // ----- Bosque de setas: CASA SETA de madera. Mismo autotiling que la casa del lago:
   //       pared de tablones continua, tejado de seta (sombrero con puntos) solo en la fila superior. -----
+  // Colores de sombrero de las casas seta: rosa, azul, azul brillante, lila, rojo y rojo claro
+  const MUSH_ROOFS = ['#ff7ac8', '#3b8bff', '#00c2ff', '#b44dff', '#e8323f', '#ff7a7a'];
   function fillMushHouse(ctx, level, x, y, pal, ed) {
     const px = x * T, py = y * T;
     // pared de tablones de madera
@@ -435,10 +437,17 @@
     if (ed.up) {
       // sombrero de seta: rojo con puntos blancos, sobresale a los lados que están expuestos
       const l = ed.left ? 3 : 0, r = ed.right ? 3 : 0;
-      ctx.fillStyle = '#d8453a'; ctx.fillRect(px - l, py, T + l + r, T * 0.5);
-      ctx.fillStyle = '#f4e9d8'; ctx.fillRect(px - l, py + T * 0.46, T + l + r, 3); // borde bajo del sombrero
+      // color del sombrero: fijo por grupo de 4 columnas (cada casa tiene el suyo)
+      const roof = MUSH_ROOFS[Math.floor(U.hash2(Math.floor(x / 4), 7) * MUSH_ROOFS.length)];
+      ctx.fillStyle = roof; ctx.fillRect(px - l, py, T + l + r, T * 0.5);
+      ctx.fillStyle = U.shade(roof, -0.3); ctx.fillRect(px - l, py + T * 0.46, T + l + r, 3); // borde bajo del sombrero
+      // nubecitas blancas muy dispersas (pocas por casilla)
       ctx.fillStyle = '#ffffff';
-      [0.22, 0.55, 0.82].forEach((f, i) => { ctx.beginPath(); ctx.arc(px + T * f, py + T * (i === 1 ? 0.2 : 0.16), 2.2, 0, 7); ctx.fill(); });
+      for (let i = 0; i < 3; i++) {
+        if (U.hash2(x * 3 + i, y + 11) < 0.55) continue;
+        const cx = px + T * (0.15 + 0.7 * U.hash2(x + i, y + 3)), cy = py + T * (0.1 + 0.22 * U.hash2(y + i, x + 5));
+        ctx.beginPath(); ctx.ellipse(cx, cy, 3.4, 2.2, 0, 0, 7); ctx.fill();
+      }
       ink(ctx, 2); ctx.beginPath(); ctx.moveTo(px - l, py + 1.5); ctx.lineTo(px + T + r, py + 1.5); ctx.stroke();
     } else {
       // ventana redonda (una sí, una no, por posición)
