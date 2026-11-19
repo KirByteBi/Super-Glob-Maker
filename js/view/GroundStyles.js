@@ -428,6 +428,15 @@
   //       pared de tablones continua, tejado de seta (sombrero con puntos) solo en la fila superior. -----
   // Colores de sombrero de las casas seta: rosa, azul, azul brillante, lila, rojo y rojo claro
   const MUSH_ROOFS = ['#ff7ac8', '#3b8bff', '#00c2ff', '#b44dff', '#e8323f', '#ff7a7a'];
+  // Primera columna de la casa (la fila de arriba de la misma masa): así todo el tejado de una casa
+  // tiene el mismo color, aunque la casa mida más de 4 casillas.
+  // Primera columna del tramo de tejado (misma fila, sin nada encima): cada escalón de altura tiene su color
+  function mushHouseStart(level, x, y) {
+    const t = level.get(x, y);
+    let sx = x;
+    for (let i = 0; i < 80 && sx - 1 >= 0 && level.get(sx - 1, y) === t && level.get(sx - 1, y - 1) === 0; i++) sx--;
+    return sx;
+  }
   function fillMushHouse(ctx, level, x, y, pal, ed) {
     const px = x * T, py = y * T;
     // pared de tablones de madera
@@ -438,7 +447,7 @@
       // sombrero de seta: rojo con puntos blancos, sobresale a los lados que están expuestos
       const l = ed.left ? 3 : 0, r = ed.right ? 3 : 0;
       // color del sombrero: fijo por grupo de 4 columnas (cada casa tiene el suyo)
-      const roof = MUSH_ROOFS[Math.floor(U.hash2(Math.floor(x / 4), 7) * MUSH_ROOFS.length)];
+      const roof = MUSH_ROOFS[Math.floor(U.hash2(mushHouseStart(level, x, y), 7) * MUSH_ROOFS.length)];
       ctx.fillStyle = roof; ctx.fillRect(px - l, py, T + l + r, T * 0.5);
       ctx.fillStyle = U.shade(roof, -0.3); ctx.fillRect(px - l, py + T * 0.46, T + l + r, 3); // borde bajo del sombrero
       // nubecitas blancas muy dispersas (pocas por casilla)
