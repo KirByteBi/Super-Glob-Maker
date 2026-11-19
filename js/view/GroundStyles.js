@@ -423,6 +423,35 @@
     ink(ctx, 2.5); ctx.strokeRect(px + 1.5, py + 1.5, T - 3, T - 3);
   }
 
+  // ----- Bosque de setas: CASA SETA de madera. Mismo autotiling que la casa del lago:
+  //       pared de tablones continua, tejado de seta (sombrero con puntos) solo en la fila superior. -----
+  function fillMushHouse(ctx, level, x, y, pal, ed) {
+    const px = x * T, py = y * T;
+    // pared de tablones de madera
+    ctx.fillStyle = '#8a5a32'; ctx.fillRect(px, py, T, T);
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 1;
+    for (let ly = 0; ly < T; ly += 8) { ctx.beginPath(); ctx.moveTo(px, py + ly); ctx.lineTo(px + T, py + ly); ctx.stroke(); }
+    if (ed.up) {
+      // sombrero de seta: rojo con puntos blancos, sobresale a los lados que están expuestos
+      const l = ed.left ? 3 : 0, r = ed.right ? 3 : 0;
+      ctx.fillStyle = '#d8453a'; ctx.fillRect(px - l, py, T + l + r, T * 0.5);
+      ctx.fillStyle = '#f4e9d8'; ctx.fillRect(px - l, py + T * 0.46, T + l + r, 3); // borde bajo del sombrero
+      ctx.fillStyle = '#ffffff';
+      [0.22, 0.55, 0.82].forEach((f, i) => { ctx.beginPath(); ctx.arc(px + T * f, py + T * (i === 1 ? 0.2 : 0.16), 2.2, 0, 7); ctx.fill(); });
+      ink(ctx, 2); ctx.beginPath(); ctx.moveTo(px - l, py + 1.5); ctx.lineTo(px + T + r, py + 1.5); ctx.stroke();
+    } else {
+      // ventana redonda (una sí, una no, por posición)
+      if ((x + y) % 2 === 0) { ctx.fillStyle = '#ffe9a8'; ctx.beginPath(); ctx.arc(px + T / 2, py + T / 2, T * 0.26, 0, 7); ctx.fill(); ink(ctx, 2); ctx.stroke(); }
+    }
+    // puerta de madera en la base de una columna (centro de la casa)
+    if (ed.down && !ed.up && (x % 3 === 1)) { ctx.fillStyle = '#4f2d17'; ctx.fillRect(px + 8, py + 6, T - 16, T - 6); ink(ctx, 2); ctx.strokeRect(px + 8, py + 6, T - 16, T - 6); ctx.fillStyle = '#ffd000'; ctx.beginPath(); ctx.arc(px + T - 12, py + T * 0.55, 1.6, 0, 7); ctx.fill(); }
+    // contorno exterior (solo lados expuestos)
+    ink(ctx, 2.5); ctx.beginPath();
+    if (ed.left) { ctx.moveTo(px + 1.5, py); ctx.lineTo(px + 1.5, py + T); }
+    if (ed.right) { ctx.moveTo(px + T - 1.5, py); ctx.lineTo(px + T - 1.5, py + T); }
+    if (ed.down) { ctx.moveTo(px, py + T - 1.5); ctx.lineTo(px + T, py + T - 1.5); }
+    ctx.stroke();
+  }
   // Registro por mapa. Los 16 mapas tienen suelo tematico (es un tile aparte, no toca el base).
   const STYLES = {
     // UR: viga ligera en pieza, columna Y fila; solo la masa grande (3+x3+) pasa a carretera.
@@ -441,7 +470,7 @@
     factory: { fill: fillPixelStar }, // azul cian con estrellas amarillas
     snow: { fill: pieceGift, piece: pieceGift, col: pieceGift, row: pieceGift }, // regalos apilados (2×2 o 1×1)
     underwater: { fill: fillCoral },  // coral
-    jungle: { fill: fillRoot }        // raices / madera
+    jungle: { fill: fillMushHouse }   // casas seta de madera (bosque de setas)
   };
 
   S.View.GroundStyles = {
