@@ -380,7 +380,7 @@
 
     draw();
     // Condición (si / si no): si se cumple, sale su frase "si" y no sale la principal
-    let cond = Object.assign({ ev: 'kills', n: 5, t: '', on: false, r: '' }, npc.cond || {});
+    let cond = Object.assign({ ev: 'kills', n: 5, t: '', on: false, r: '', k: '*' }, npc.cond || {});
 
     const condBox = S.View.el('div', 'npc-cond');
     const drawCond = () => {
@@ -391,6 +391,14 @@
       r1.appendChild(S.View.button('Sin condición', !cond.on ? 'primary' : '', () => { cond.on = false; drawCond(); }));
       Object.keys(CN).forEach((ev) => r1.appendChild(S.View.button(CN[ev], cond.on && cond.ev === ev ? 'primary' : '', () => { cond.ev = ev; cond.on = true; drawCond(); })));
       condBox.appendChild(r1);
+      // Derrotas: se puede limitar a un enemigo concreto (los que hay en el nivel)
+      if (cond.on && cond.ev === 'kills') {
+        const rk = S.View.el('div', 'row');
+        rk.appendChild(S.View.el('span', 'small', 'Enemigo:'));
+        [['*', 'cualquier enemigo']].concat(enemyTypes.map((t) => [t, (C.OBJECTS[t] || {}).name || t]))
+          .forEach(([t, nm]) => rk.appendChild(S.View.button(nm, (cond.k || '*') === t ? 'primary' : '', () => { cond.k = t; drawCond(); })));
+        condBox.appendChild(rk);
+      }
       // Estado del objeto que lleva el NPC, se vea o no la condición
       if (!cond.on) {
         const rh = S.View.el('div', 'row');
@@ -429,7 +437,7 @@
         const o = LL.objectAt(c.x, c.y);
         if (!o || o.type !== 'npc') return;
         if (first) o.say = [S.Model.TextFilter.clean(first)]; else delete o.say;
-        if (cond.on) o.cond = { ev: cond.ev, n: cond.n, t: S.Model.TextFilter.clean(cond.t || ''), on: true }; else delete o.cond;
+        if (cond.on) o.cond = { ev: cond.ev, n: cond.n, t: S.Model.TextFilter.clean(cond.t || ''), on: true, k: cond.k || '*' }; else delete o.cond;
         if (held) o.held = held; else delete o.held;
         // se guardan también los enlaces que no se muestran (su destino no está en este nivel/zona)
         if (links.length) o.lk = links.map((l) => ({ ev: l.ev, key: l.key, t: S.Model.TextFilter.clean(l.t || ''), o: !!l.o, r: l.r || '' })); else delete o.lk;

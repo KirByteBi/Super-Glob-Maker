@@ -55,7 +55,7 @@
         // frases del NPC (una por línea en el editor, máximo 10)
         if (Array.isArray(o.say)) ob.say = o.say.slice(0, 10).map(String);
         // condición del NPC: si se cumple, sale su frase "si" en vez de la principal
-        if (o.cond && typeof o.cond === 'object') ob.cond = { ev: String(o.cond.ev), n: Math.max(1, o.cond.n | 0), t: String(o.cond.t || '').slice(0, 120), on: !!o.cond.on, r: String(o.cond.r || '') };
+        if (o.cond && typeof o.cond === 'object') ob.cond = { ev: String(o.cond.ev), n: Math.max(1, o.cond.n | 0), t: String(o.cond.t || '').slice(0, 120), on: !!o.cond.on, r: String(o.cond.r || ''), k: String(o.cond.k || '*') };
         // enlaces del NPC: { ev, key, n } (n = número de frase que dice)
         if (Array.isArray(o.lk)) ob.lk = o.lk.filter((l) => l && typeof l.key === 'string' && ['exit', 'defeat', 'hurt', 'hit', 'key', 'powerup', 'brick', 'goal', 'goalhidden', 'exclaim', 'kills', 'coins', 'powerups', 'tkills'].indexOf(l.ev) !== -1).slice(0, 10).map((l) => ({ ev: l.ev, key: String(l.key), t: String(l.t || '').slice(0, 120), o: !!l.o, r: String(l.r || '') }));
         // enlaces del NPC: evento ('exit', 'defeat', 'hurt', 'hit'), casilla del objeto y nº de frase
@@ -262,7 +262,7 @@
           if (o.npc) j.npc = o.npc;
           if (o.held) j.held = o.held;
           if (Array.isArray(o.say) && o.say.length) j.say = o.say.slice(0, 10).map(String);
-          if (o.cond && o.cond.on) j.cond = { ev: o.cond.ev, n: o.cond.n, t: o.cond.t || '', on: true, r: o.cond.r || '' };
+          if (o.cond && o.cond.on) j.cond = { ev: o.cond.ev, n: o.cond.n, t: o.cond.t || '', on: true, r: o.cond.r || '', k: o.cond.k || '*' };
           if (Array.isArray(o.lk) && o.lk.length) j.lk = o.lk.map((l) => ({ ev: l.ev, key: l.key, t: String(l.t || '').slice(0, 120), o: !!l.o, r: l.r || '' }));
           return j;
         }), contents: Object.assign({}, this.contents),

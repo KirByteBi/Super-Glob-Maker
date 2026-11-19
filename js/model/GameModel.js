@@ -816,7 +816,8 @@
     condMet(o) {
       const c = o.cond;
       if (!c || !c.on) return false;
-      if (c.ev === 'kills') return this.kills >= c.n;
+      // derrotas de cualquier enemigo ('*') o de un tipo concreto (c.k, p. ej. 'knight')
+      if (c.ev === 'kills') return (c.k && c.k !== '*') ? ((this.typeKills || {})[c.k] || 0) >= c.n : this.kills >= c.n;
       if (c.ev === 'coins') return !!(this.npcPaid && this.npcPaid[o.x + ',' + o.y]); // se cumple cuando ya te ha cobrado
       if (c.ev === 'keys') return (this.keyCount || 0) >= c.n;
       if (c.ev === 'powerups') return ((this.powerupCount || {})['*'] || 0) >= c.n;
