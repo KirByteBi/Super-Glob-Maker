@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Vista: DECORACIONES de terreno. Adornos puramente VISUALES, SIN COLISION (como la tuberia
    decorativa 1x1). AISLADO en su modulo: el renderer/editor solo llaman, con guardas, a
    S.View.Decorations. Si falla o no existe, no se dibuja nada y el resto del juego sigue igual.

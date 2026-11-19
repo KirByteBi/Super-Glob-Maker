@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Vista: partículas y textos flotantes. Reacciona a los eventos del modelo. */
 (function (S) {
   'use strict';

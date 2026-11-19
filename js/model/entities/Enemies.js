@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: enemigos Pyce de tierra. Cuanto más básico es el dibujo, más sencillo es el enemigo. */
 (function (S) {
   'use strict';

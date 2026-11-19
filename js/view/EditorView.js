@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Vista: lienzo del editor (rejilla, bloques, objetos y cursor) y barra de herramientas DOM */
 (function (S) {
   'use strict';

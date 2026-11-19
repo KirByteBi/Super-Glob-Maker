@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Vista: dibuja una partida (GameModel) en el canvas */
 (function (S) {
   'use strict';

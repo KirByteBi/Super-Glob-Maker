@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 ﻿/* Vista: imagenes de los Pyces. GENERADO por tools/PyceBounds.ps1 (no editar a mano).
    box = zona visible [x, y, ancho, alto] dentro de la imagen original.
    Los dibujos originales miran a la derecha: el juego los voltea al ir a la izquierda.

@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Vista: SUELO TEMATICO por mapa (autotiling visual). AISLADO en su propio modulo para no
    tocar el dibujo base: Sprites.js solo llama, con guardas, a S.View.GroundStyles.draw().
    La MECANICA del suelo NO cambia: solo el DIBUJO, segun la FORMA del tramo y el MAPA.

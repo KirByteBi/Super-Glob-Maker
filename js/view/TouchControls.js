@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Vista: CONTROLES TÁCTILES para móvil/tablet.
    - En partida (y en el mapamundi): cruceta (← → ↓ ↑) a la izquierda y botones a la derecha
      (Saltar, Correr, Disparar) + Pausa. Escriben en InputController.keys como el teclado.

@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Vista: fondos con parallax para cada mapa (y su versión Corrupta) */
 (function (S) {
   'use strict';

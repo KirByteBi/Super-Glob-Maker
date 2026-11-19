@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Super Glob Maker - núcleo: espacio de nombres, constantes, utilidades y bus de eventos */
 window.SGM = window.SGM || {};
 (function (S) {

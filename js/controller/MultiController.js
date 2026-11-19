@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Controlador: MULTIJUGADOR ONLINE (planning 5d). 2-4 jugadores en una sala con SEED estilo GlD.
    Modos:
    - 1 NIVEL: todos juegan el mismo nivel.

@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: LISTA FIJA de los niveles del Modo Historia (como la Historia de SMM2).
    Los niveles de la Historia son niveles de verdad, guardados como los de Mis niveles pero en
    una lista OCULTA y aparte (no salen en 📁 Mis niveles ni gastan sus huecos):

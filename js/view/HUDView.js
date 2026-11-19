@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Vista: interfaz en partida (monedas, puntos, tiempo, vidas, forma actual, jefe) */
 (function (S) {
   'use strict';

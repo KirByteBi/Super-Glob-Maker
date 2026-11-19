@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Vista: SEMISÓLIDO DEL MAPA (objeto 'treeplat'), estilo seta de SMM / árbol de SMW.
    Es UN elemento del editor; según el mapa se dibuja de una forma u otra:
      - SETA ........ sombrero redondo + tallo hasta el suelo (Darkness Forest, Circo, Abismo)

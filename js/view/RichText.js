@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Vista: FORMATO RICO de los ✉ Mensajes (estilo Discord), sin HTML crudo: todo se construye
    con nodos del DOM (textContent), así un mensaje nunca puede meter código en la página.
      **negrita**   *cursiva* o _cursiva_   ~~tachado~~   __subrayado__   `código`   ||spoiler||

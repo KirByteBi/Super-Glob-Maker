@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: CÓDIGOS de nivel (estilo Super Mario Maker). Las SEEDS (estilo Glob Defenders) son
    de las salas del multijugador, no de los niveles.
    - CÓDIGO (corto, online): como SMM, "GGNN-NGNN-GNGN" (G = letra, N = número), p. ej.

@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: mapas (temas), paletas Paz/Corrupto y efectos del modo Corrupto */
 (function (S) {
   'use strict';

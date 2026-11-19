@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: objetos (power-ups, muelles, plataformas, puntos de control y proyectiles del jugador) */
 (function (S) {
   'use strict';

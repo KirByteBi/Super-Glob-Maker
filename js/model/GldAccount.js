@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: cuenta de Glob Defenders (GlD) via Supabase.
    Se usa la MISMA cuenta que Glob Defenders (no hay cuentas propias de SGM).
    Login: signInWithPassword con <usuario>@accounts.glob-defenders.invalid.

@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: niveles del MODO HISTORIA. Cada nodo del mapamundi tiene su propio nivel, construido
    por "salas" alrededor de UNA lección (una mecánica: bloques, muelles, raíles, A/B, agua, Bros...).
    El mundo marca la dificultad (1..5). Mismo nodo = mismo nivel siempre (semilla fija).

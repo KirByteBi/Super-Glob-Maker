@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: guardado de niveles en localStorage (máx. 207; 258 con la cuenta de Glob Defenders vinculada) */
 (function (S) {
   'use strict';

@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: datos de un nivel (rejilla de bloques, objetos y contenido de cajas) */
 (function (S) {
   'use strict';

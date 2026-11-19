@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: Pyces acuáticos (familia Pysh), raros (Mimic), jefes y proyectiles enemigos */
 (function (S) {
   'use strict';

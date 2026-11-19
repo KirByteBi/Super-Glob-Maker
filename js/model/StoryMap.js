@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: MAPAMUNDI del Modo Historia (world-map estilo SMW). AISLADO en su modulo.
    Define MUNDOS con NODOS (inicio, niveles, palacio "!", castillo) colocados en una rejilla,
    conectados por CAMINOS (con cruces). El progreso vive en localStorage 'sgm.story.v1' y se

@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: el Glob jugable (movimiento, evoluciones, power-ups especiales) */
 (function (S) {
   'use strict';

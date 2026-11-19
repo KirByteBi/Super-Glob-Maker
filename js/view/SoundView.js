@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Vista (audio): efectos y música chiptune sintetizados con WebAudio. Reacciona a eventos del modelo. */
 (function (S) {
   'use strict';

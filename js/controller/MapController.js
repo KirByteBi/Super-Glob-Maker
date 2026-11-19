@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Controlador: escena del MAPAMUNDI (world-map del Modo Historia). AISLADO.
    Dibuja el mapa en el canvas y mueve el Glob por los nodos con las flechas.
    Enter/Espacio/Z entra al nivel del nodo; Esc vuelve al titulo.

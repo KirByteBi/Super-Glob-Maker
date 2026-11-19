@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: SALA del multijugador (planning 5d), con Supabase Realtime como Glob Defenders.
    - Se entra por SEED, con el MISMO formato que GlD: letra G/K/P/W/B/N/A + 6 caracteres
      (p. ej. "G123456"). Los niveles usan otro formato (códigos tipo SMM), así no se lían.

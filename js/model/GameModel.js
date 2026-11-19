@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: estado completo de una partida. No dibuja nada: emite eventos que escuchan las vistas. */
 (function (S) {
   'use strict';

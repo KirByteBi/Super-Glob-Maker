@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: comprobación aproximada de que un nivel SE PUEDE SUPERAR (la usa el editor al guardar
    y tools/story_check.js). Recorre las casillas "de pie" alcanzables desde la salida con la física
    del Glob EVO1 (saltos de hasta 4 casillas de alto y 4-6 de largo). Cuentan como suelo: bloques,

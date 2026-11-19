@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: Globs jugables, sus 3 evoluciones y los power-ups especiales (Glob Caca y Glob Vacío) */
 (function (S) {
   'use strict';

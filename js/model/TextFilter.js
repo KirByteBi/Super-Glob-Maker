@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: filtro de texto para las frases de los NPC.
    Si una línea contiene una palabra inapropiada (en español o inglés), se sustituye entera por "Hello World!".
    La comparación ignora mayúsculas y acentos, y solo mira palabras completas. */

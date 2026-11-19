@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Vista: carga de imágenes de los Globs (pre-escaladas para dibujar rápido) */
 (function (S) {
   'use strict';

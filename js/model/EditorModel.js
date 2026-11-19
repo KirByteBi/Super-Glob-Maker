@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: estado del editor (nivel en edición, herramienta, deshacer/rehacer) */
 (function (S) {
   'use strict';

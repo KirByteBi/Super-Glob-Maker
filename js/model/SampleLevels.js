@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: "Modo Historia". Genera un nivel de ejemplo por mapa a partir de una semilla fija. */
 (function (S) {
   'use strict';

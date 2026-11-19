@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Controlador: une GameModel con sus vistas y gestiona pausa / fin de partida */
 (function (S) {
   'use strict';

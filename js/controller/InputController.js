@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Controlador: teclado y mando. Produce una "foto" de la entrada por fotograma, con pulsaciones nuevas. */
 (function (S) {
   'use strict';

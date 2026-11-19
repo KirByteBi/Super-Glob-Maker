@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Controlador: entrada del editor (ratón/teclado) -> EditorModel; refresca EditorView */
 (function (S) {
   'use strict';

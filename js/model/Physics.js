@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: colisiones AABB contra la rejilla de bloques (con pendientes y bloques A/B) */
 (function (S) {
   'use strict';

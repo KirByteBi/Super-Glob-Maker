@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Vista: NPCs (Globs que no son jugables). Son un objeto del nivel { type:'npc', x, y, npc:<id> }.
    No tienen colisión ni clase de entidad: son decoración viva. Capa de render:
    fondo (agua, raíles, fondo de cueva, semisólidos de fondo) < NPC < suelo/bloques < personajes.

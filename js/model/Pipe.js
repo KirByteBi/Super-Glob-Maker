@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: geometría de las TUBERÍAS enlazables (warp / lockwarp), estilo Super Mario Maker.
    Una tubería es UN objeto: (x, y) = esquina de arriba a la izquierda de su BOCA (2×2).
    - pd  = hacia dónde mira la boca: 0 arriba · 1 derecha · 2 abajo · 3 izquierda (R la gira).

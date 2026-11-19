@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: opciones de enlace para los NPC.
    Un enlace es { ev, key, n }: ev = evento, key = 'x,y' de la casilla del objeto, n = número de frase que dice.
    Eventos:

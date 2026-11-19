@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Modelo: catálogo de bloques, objetos (Pyces, power-ups, mecanismos) y paleta del editor */
 (function (S) {
   'use strict';

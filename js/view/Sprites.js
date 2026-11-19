@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Vista: dibujo procedural al estilo Glob (contorno negro grueso, colores planos, ojos cuadrados) */
 (function (S) {
   'use strict';

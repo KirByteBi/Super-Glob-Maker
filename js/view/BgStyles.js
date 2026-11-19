@@ -1,3 +1,4 @@
+/* © 2026 KirByte_Bi · OWNER: KirByte_Bi · Todos los derechos reservados. Ver LICENSE. */
 /* Vista: ESTILOS DE SEMISÓLIDO DE FONDO por mapa (estilo SMM). AISLADO en su módulo.
    Sprites.drawTile llama, con guardas try/catch, a S.View.BgStyles.draw(...) en el case
    SEMIBG/BGFILL. Si el módulo falla, no existe, o el mapa no tiene estilo propio, devuelve
