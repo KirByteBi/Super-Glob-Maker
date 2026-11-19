@@ -21,6 +21,8 @@
       this.charId = opts.character || this.level.character || 'green';
       this.lives = opts.lives != null ? opts.lives : 5;
       this.score = opts.score || 0; this.coins = opts.coins || 0;
+      // Monedas recogidas en total (sin dar la vuelta a 100): sirve de desempate en contrarreloj
+      this.coinsTotal = 0;
       this.checkpoint = null;
       this.medals = 0;
       this.fx = {};
@@ -144,7 +146,7 @@
     addCoin(x, y) {
       // Glob Ducky: +1 a cada moneda que coge
       const bonus = (this.player && this.player.ch.coinBonus) || 0;
-      const coinsBefore = this.coins; this.coins += 1 + bonus; this.score += 100 * (1 + bonus); this.emit('coin', { x, y }); this.npcCrossed('coins', coinsBefore, this.coins);
+      const coinsBefore = this.coins; this.coins += 1 + bonus; this.coinsTotal += 1 + bonus; this.score += 100 * (1 + bonus); this.emit('coin', { x, y }); this.npcCrossed('coins', coinsBefore, this.coins);
       while (this.coins >= 100) { this.coins -= 100; this.oneUp(x, y); }
     }
     oneUp(x, y) { this.lives++; this.emit('oneUp', { x, y }); }

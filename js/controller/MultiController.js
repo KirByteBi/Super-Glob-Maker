@@ -137,14 +137,14 @@
     onLocalFinished(kind, g) {
       if (this.phase !== 'play' || this.myFinish) return;
       const time = (performance.now() - this.roundStart) / 1000;
-      this.myFinish = { time: kind === 'clear' ? time : null, dnf: kind !== 'clear', score: g.score, stars: g.stars || 0, coins: g.coins || 0, secret: !!g.secretClear };
+      this.myFinish = { time: kind === 'clear' ? time : null, dnf: kind !== 'clear', score: g.score, stars: g.stars || 0, coins: g.coins || 0, coinsTotal: g.coinsTotal || 0, secret: !!g.secretClear };
       this.room.send('finish', Object.assign({ round: this.round }, this.myFinish));
       this.onFinish(this.room.id, Object.assign({ round: this.round }, this.myFinish));
       this.phase = 'waiting'; this.showWaiting();
     }
     onFinish(id, d) {
       if (d.round !== this.round || this.finishes[id]) return;
-      this.finishes[id] = { time: d.time, dnf: !!d.dnf, score: d.score | 0, stars: d.stars | 0, coins: d.coins | 0, secret: !!d.secret };
+      this.finishes[id] = { time: d.time, dnf: !!d.dnf, score: d.score | 0, stars: d.stars | 0, coins: d.coins | 0, coinsTotal: d.coinsTotal | 0, secret: !!d.secret };
       if (!d.dnf && !this.firstFinishAt) this.firstFinishAt = performance.now();
       if (id !== this.room.id && !d.dnf) this.app.menu.toast('🏁 ' + this.name(id) + ' ha llegado a la meta (' + d.time.toFixed(1) + ' s)', 2000);
       if (this.phase === 'waiting') this.showWaiting();
