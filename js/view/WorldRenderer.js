@@ -71,27 +71,52 @@
   // Burbuja con la frase por defecto (primera línea) de los NPC cercanos al Glob (3 casillas).
   // Las demás líneas son para cuando el NPC esté enlazado a algo (aún no implementado).
   // Burbuja de texto encima de un NPC: (cx, top) es el punto de encima de su cabeza
-  function drawBubble(ctx, text, cx, top) {
-    const Sp = S.View.Sprites, MAX = 240, LH = 18;
+  // "words" es una lista de { s, c } (texto con color opcional) o { icon } (tipo de objeto),
+  // o un texto plano. Se parte en líneas por espacios; un icono cuenta como una palabra.
+  function drawBubble(ctx, words, cx, top) {
+    const Sp = S.View.Sprites, MAX = 240, LH = 18, ICON = 16;
+    const items = typeof words === 'string' ? String(words).split(/( )/).filter(Boolean).map((s) => ({ s })) : words;
     ctx.save();
     ctx.font = '800 14px "Trebuchet MS",sans-serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    // los mensajes largos se parten por palabras en varias líneas para que se lean enteros
-    const words = String(text).split(' '), lines = [];
-    let cur = '';
-    words.forEach((word) => {
-      const trial = cur ? cur + ' ' + word : word;
-      if (cur && ctx.measureText(trial).width > MAX) { lines.push(cur); cur = word; } else cur = trial;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    const wid = (it) => (it.icon ? ICON : ctx.measureText(it.s).width);
+    const lines = [];
+    let cur = [], curW = 0;
+    const flush = () => {
+      while (cur.length && cur[cur.length - 1].s === ' ') { curW -= wid(cur[cur.length - 1]); cur.pop(); }
+      if (cur.length) lines.push({ items: cur, w: curW });
+      cur = []; curW = 0;
+    };
+    items.forEach((it) => {
+      if (it.s === ' ') { if (cur.length) { cur.push(it); curW += wid(it); } return; }
+      const w = wid(it);
+      if (cur.length && curW + w > MAX) flush();
+      cur.push(it); curW += w;
     });
-    if (cur) lines.push(cur);
-    const widest = Math.max.apply(null, lines.map((l) => ctx.measureText(l).width));
+    flush();
+    if (!lines.length) { ctx.restore(); return; }
+    const widest = Math.max.apply(null, lines.map((l) => l.w));
     const w = Math.min(MAX, widest) + 22, h = lines.length * LH + 10, x = cx - w / 2, y = top - h - 8;
     Sp.rr(ctx, x, y, w, h, 8);
     Sp.fillStroke(ctx, '#ffffff', 2.5);
     ctx.beginPath(); ctx.moveTo(cx - 6, y + h); ctx.lineTo(cx, y + h + 8); ctx.lineTo(cx + 6, y + h); ctx.closePath();
     ctx.fillStyle = '#ffffff'; ctx.fill();
-    ctx.fillStyle = '#1a1033';
-    lines.forEach((l, i) => ctx.fillText(l, cx, y + 5 + LH * i + LH / 2));
+    lines.forEach((ln, i) => {
+      let px = cx - ln.w / 2;
+      const cy = y + 5 + LH * i + LH / 2;
+      ln.items.forEach((it) => {
+        if (it.icon) {
+          ctx.save(); ctx.translate(px, cy - ICON / 2);
+          if (it.icon === 'coin') Sp.coin(ctx, ICON / 2, ICON / 2, ICON / 2 - 1, 0);
+          else Sp.drawIcon(ctx, { kind: 'obj', type: it.icon }, ICON, null, null);
+          ctx.restore();
+        } else {
+          ctx.fillStyle = it.c || '#1a1033';
+          ctx.fillText(it.s, px, cy);
+        }
+        px += wid(it);
+      });
+    });
     ctx.restore();
   }
 
@@ -107,19 +132,9 @@
         if (o.type !== 'npc') return;
         const cx = o.x * T + T / 2, top = o.y * T - 40;
         if (Math.hypot(cx - px, (top + 20) - py) > 3 * T) return;
-        const text = g.npcSpeech(o);
-        if (!text) return;
-        ctx.save();
-        ctx.font = '800 14px "Trebuchet MS",sans-serif';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        const w = Math.min(260, ctx.measureText(text).width + 22), h = 26, x = cx - w / 2, y = top - h - 8;
-        Sp.rr(ctx, x, y, w, h, 8);
-        Sp.fillStroke(ctx, '#ffffff', 2.5);
-        ctx.beginPath(); ctx.moveTo(cx - 6, y + h); ctx.lineTo(cx, y + h + 8); ctx.lineTo(cx + 6, y + h); ctx.closePath();
-        ctx.fillStyle = '#ffffff'; ctx.fill();
-        ctx.fillStyle = '#1a1033';
-        ctx.fillText(text, cx, y + h / 2 + 1, 250);
-        ctx.restore();
+        const words = g.npcWords(o, g.npcSpeech(o));
+        if (!words.length) return;
+        drawBubble(ctx, words, cx, top);
       });
     } catch (e) { /* una frase no debe romper la partida */ }
   }

@@ -828,6 +828,46 @@
       if (o.cond && o.cond.on && this.condMet(o)) return o.cond.t || '';
       return (o.say && o.say[0]) || '';
     }
+    // Progreso actual de la condición del NPC (lo que ya llevas), para los tags del texto
+    npcProgress(c) {
+      const k = c.k && c.k !== '*' ? c.k : null;
+      if (c.ev === 'kills') return k ? ((this.typeKills || {})[k] || 0) : (this.kills || 0);
+      if (c.ev === 'coins') return this.coins || 0;
+      if (c.ev === 'powerups') return (this.powerupCount || {})[k || '*'] || 0;
+      if (c.ev === 'keys') return this.keyCount || 0;
+      return 0;
+    }
+    // Icono (tipo de objeto) que pinta el tag @ según la condición del NPC
+    npcTarget(c) {
+      const k = c.k && c.k !== '*' ? c.k : null;
+      if (c.ev === 'coins') return 'coin';
+      if (c.ev === 'keys') return 'key';
+      if (c.ev === 'powerups') return k || 'evo';
+      const enemies = S.Model.Catalog.ENEMY_TYPES || [];
+      return k || enemies[0] || 'goomba';
+    }
+    // Convierte el texto de un NPC en palabras para dibujarlo:
+    //  [monedas] / [enemigos] -> en naranja / azul, con "lo que queda/total" si la condición es de ese tipo
+    //  @ -> icono del objetivo de la condición (si hay condición)
+    // Devuelve una lista de { s, c } (texto, c = color opcional) o { icon } (tipo de objeto).
+    npcWords(o, text) {
+      const out = [], c = o && o.cond && o.cond.on ? o.cond : null;
+      const COIN = '#c2570c', ENEMY = '#1f6fd8';
+      const add = (str, col) => String(str).split(/( )/).forEach((p) => { if (p === ' ') out.push({ s: ' ' }); else if (p) out.push({ s: p, c: col || null }); });
+      const str = String(text == null ? '' : text);
+      const re = /\[(monedas|enemigos)\]|@/g;
+      let last = 0, m;
+      while ((m = re.exec(str))) {
+        add(str.slice(last, m.index));
+        last = re.lastIndex;
+        if (m[0] === '@') { if (c) out.push({ icon: this.npcTarget(c) }); continue; }
+        const isCoin = m[1] === 'monedas', want = isCoin ? 'coins' : 'kills';
+        if (c && c.ev === want) add(Math.max(0, c.n - this.npcProgress(c)) + '/' + c.n + ' ' + m[1], isCoin ? COIN : ENEMY);
+        else add(m[1], isCoin ? COIN : ENEMY);
+      }
+      add(str.slice(last));
+      return out;
+    }
     // Enemigos derrotados por tipo. Un enlace 'tkills' tiene key 'N|tipo'
     npcCountType(type) {
       this.typeKills = this.typeKills || {};

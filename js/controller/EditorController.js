@@ -387,6 +387,7 @@
       condBox.innerHTML = '';
       const CN = { kills: 'enemigos derrotados', coins: 'monedas', keys: 'llaves', powerups: 'powerups' };
       condBox.appendChild(S.View.el('p', 'small', 'Condición: si se cumple, sale su frase "si" y no sale la principal.'));
+      condBox.appendChild(S.View.el('p', 'small', 'En las frases: [monedas] o [enemigos] muestran lo que queda (15/20) en color; @ pone el icono de la condición.'));
       const r1 = S.View.el('div', 'row');
       r1.appendChild(S.View.button('Sin condición', !cond.on ? 'primary' : '', () => { cond.on = false; drawCond(); }));
       Object.keys(CN).forEach((ev) => r1.appendChild(S.View.button(CN[ev], cond.on && cond.ev === ev ? 'primary' : '', () => { cond.ev = ev; cond.on = true; drawCond(); })));
