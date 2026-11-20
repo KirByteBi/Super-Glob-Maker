@@ -125,6 +125,7 @@
         const inp = this.input.poll();
         // (tras update se vuelve a mirar: entrar a un nivel desde el mapa borra el mapa a mitad de fotograma)
         if (this.mode === 'game' && this.game) { this.game.update(dt, inp); if (this.game) this.game.render(this.t); }
+        else if (this.mode === '3d' && this.g3) { this.g3.update(dt, inp); if (this.g3) this.g3.render(this.t); }
         else if (this.mode === 'editor' && this.editor) { this.editor.update(dt); if (this.editor) this.editor.render(this.t); }
         else if (this.mode === 'map' && this.worldmap) { this.worldmap.update(dt, inp); if (this.worldmap && this.mode === 'map') this.worldmap.render(this.t); }
         else this.drawMenuBackdrop();
@@ -142,10 +143,32 @@
     // ---------- navegación ----------
     clearAll() {
       if (this.game) { this.game.destroy(); this.game = null; }
+      if (this.g3) { this.g3.destroy(); this.g3 = null; }
       if (this.editor) { this.editor.destroy(); this.editor = null; }
       if (this.worldmap) { this.worldmap.destroy(); this.worldmap = null; }
       this.menu.closeModal(); this.menu.clear(); this.mode = 'menu';
     }
+
+    // ---------- 🌌 MODO 3D (planning kiro/PLANNING_3D.txt, Fase 1) ----------
+    // Carga three.js por CDN BAJO DEMANDA. Si no hay red, avisa y vuelve al menú.
+    show3D() {
+      if (!this.canUse3D()) { this.menu.toast('El modo 3D estilo SM64 / Galaxy llegará en la próxima versión.'); return; }
+      const G3 = S.G3;
+      if (!G3 || !G3.ensureThree) { this.menu.toast('El módulo 3D no se ha cargado.'); return; }
+      this.menu.toast('Cargando el Modo 3D…', 2500);
+      G3.ensureThree(false).then(() => {
+        this.clearAll();
+        const world = G3.Model.levels3d.get('playground');
+        this.g3 = new G3.Controller.Game3D(this, world, { character: this.prefs.character });
+        this.mode = '3d';
+        this.input.swallow();
+      }).catch(() => {
+        this.menu.notice('🌌 Modo 3D', 'No se pudo cargar el motor 3D (three.js). El Modo 3D necesita conexión a internet la primera vez. Comprueba tu red y vuelve a intentarlo.');
+      });
+    }
+
+    // Salir del Modo 3D de vuelta al menú
+    exit3D() { this.showTitle(); }
 
     showTitle() {
       this.clearAll();
@@ -156,6 +179,7 @@
         online: () => this.showOnline('home'),
         multi: () => this.showMultiplayer(),
         messages: () => this.showMessages(),
+        mode3d: this.canUse3D() ? () => this.show3D() : null,
         lang: () => { S.i18n.set(S.i18n.lang === 'es' ? 'en' : 'es'); this.showTitle(); },
         controls: () => this.menu.controls(),
         account: () => this.accountDialog()
@@ -275,6 +299,9 @@
     canEditStory() {
       return !!(S.Model.Gld && S.Model.Gld._admin && String(this._myUser || '').trim().toLowerCase() === 'kirbytebi');
     }
+
+    // Modo 3D: de momento solo kirbytebi. El resto ve el botón "próximamente".
+    canUse3D() { return this.canEditStory(); }
 
     // Muestra un dialogo/cinematica del Modo Historia (id p.ej. 'w1/intro'). onDone al cerrar.
     // Aislado: si falta el modulo o el guion, llama a onDone directamente (no rompe el flujo).

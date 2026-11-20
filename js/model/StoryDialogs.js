@@ -32,12 +32,12 @@
       hero('(No parece que quiera hablar. Parece... dolido.)')
     ] },
     'w1/castle': { pages: [
-      foe('Pyce capataz', PYCE, 'Esta fabrica es de PixelStar. Aqui NO entran animales como tu.'),
+      foe('Pyce', PYCE, 'Esta fabrica es de PixelStar. Aqui NO entran animales como tu.'),
       hero('¿Animales? Solo quiero pasar.'),
-      foe('Pyce capataz', PYCE, 'Pues tendras que ganartelo. ¡Adelante, si te atreves!')
+      foe('Pyce', PYCE, 'Pues tendras que ganartelo. ¡Adelante, si te atreves!')
     ] },
     'w1/boss': { pages: [
-      foe('Pyce capataz', PYCE, 'Imposible... un Glob, pensando. No teniais que ser capaces de esto.'),
+      foe('Pyce', PYCE, 'Imposible... un Glob, pensando. No teniais que ser capaces de esto.'),
       hero('No pensamos mucho. Pero aprendemos a base de tropezar.')
     ] },
 

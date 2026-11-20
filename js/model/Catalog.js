@@ -100,6 +100,8 @@
     snowcap: { name: 'SnowCapsule Pyce', w: 28, h: 28, tier: 3, desc: 'Al pisarlo se vuelve cápsula: ¡patéala!' },
     festive: { name: 'Festive Pyce', w: 28, h: 30, tier: 3, desc: 'Lanza regalos en parábola.' },
     bomb: { name: 'Bomb Pyce', w: 26, h: 30, tier: 3, desc: 'Al pisarlo se enciende la mecha y explota.' },
+    astralbpyce: { name: 'Astral BPyce', w: 26, h: 30, tier: 4, desc: 'Explota al recibir daño y no se puede pisar (solo Void Glob). Cualquier proyectil lo enciende.' },
+    dreamyspyce: { name: 'Dreamy SPyce', w: 28, h: 24, tier: 4, desc: 'No se puede pisar (solo Void Glob). Invoca Symbol Pyces mientras camina y planea tras saltar.' },
     toybomb: { name: 'ToyBomb Pyce', w: 26, h: 28, tier: 3, desc: 'Juguete de cuerda que corre hacia ti y explota.' },
     wingel: { name: 'Wingel Pyce', w: 30, h: 28, tier: 3, desc: 'Vuela a saltos. Al pisarlo pierde las alas.' },
     strechy: { name: 'Strechy Pyce', w: 24, h: 30, tier: 3, desc: 'Se estira hacia arriba. Pisa su cabeza.' },
@@ -207,9 +209,11 @@
   const PALETTE = [
     { id: 'terrain', name: 'Terreno', items: tiles([1, 53, 5, 17]).concat(objs(['treeplat'])).concat(tiles([56, 58, 11, 29, 30, 31, 32, 33, 34, 37, 52, 8, 6, 9, 16, 14, 15, 48])) },
     { id: 'blocks', name: 'Bloques', items: tiles([2, 3, 13, 4, 7, 19, 18, 36, 12, 38, 55, 39, 41, 40, 47, 46, 20, 21, 22, 23, 24, 25, 26, 27, 28, 49, 50, 51, 35, 42, 43]) },
-    { id: 'pyces', name: 'Pyces', items: objs(['stupid', 'so', 'symbol', 'pyce2', 'guest', 'noob', 'elf', 'umbrella', 'zom', 'crystal', 'knight', 'rebel', 'skelebone', 'builder', 'miner', 'snowcap', 'festive', 'bomb', 'toybomb', 'wingel', 'strechy', 'flower', 'cannon']) },
-    { id: 'pyces2', name: 'Pyces raros', items: objs(['ghost', 'holo', 'motions', 'hacker', 'pysh', 'clownpysh', 'axolotl', 'squid', 'shark', 'mimic', 'dirty', 'nomic', 'goldmimic', 'noeye', 'nosense', 'noir', 'moonstar']) },
+    { id: 'pyces', name: 'Pyces', items: objs(['stupid', 'so', 'symbol', 'pyce2', 'guest', 'noob', 'elf', 'umbrella', 'zom', 'knight', 'rebel', 'skelebone', 'builder', 'snowcap', 'festive', 'bomb', 'toybomb', 'wingel', 'strechy', 'flower', 'cannon']) },
+    { id: 'pyces2', name: 'Pyces raros', items: objs(['ghost', 'holo', 'motions', 'hacker', 'pysh', 'clownpysh', 'axolotl', 'squid', 'shark', 'mimic', 'dirty', 'nomic', 'goldmimic']) },
+    { id: 'jefes', name: 'Jefes', items: objs(['noeye', 'nosense', 'noir', 'moonstar']) },
     { id: 'items', name: 'Objetos', items: objs(['evo', 'flor', 'caca', 'vacio', 'brillo', 'miniglob'].concat(S.Model.Characters.list.map((c) => 'cap_' + c.id)).concat(['coin10', 'coin30', 'coin50', 'coin100', 'spring', 'checkpoint', 'starcoin', 'starcoin_giga', 'starcoin_moon', 'starcoin_rg', 'starcoin_magic', 'starcoin_traitor'])) },
+    { id: 'cristal', name: 'Cristalizados', items: objs(['crystal', 'miner', 'astralbpyce', 'dreamyspyce']) },
     { id: 'gizmos', name: 'Mecanismos', items: tiles([54]).concat(objs(['platform', 'platformV', 'platformD1', 'platformD2', 'shroomH', 'shroomV', 'warp', 'lockwarp', 'door', 'lockdoor', 'key', 'firebar', 'icicle', 'exswitch0', 'exswitch1', 'exswitch2'])) },
     // Decoración: los items se rellenan dinámicamente según el mapa (ver EditorView.refreshItems)
     { id: 'deco', name: 'Decoración', items: [], dynamic: 'deco' },

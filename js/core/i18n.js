@@ -6,9 +6,15 @@
   'use strict';
   const KEY = 'sgm.lang';
   let lang = 'es';
-  try { lang = localStorage.getItem(KEY) || ((navigator.language || 'es').toLowerCase().startsWith('es') ? 'es' : 'en'); } catch (e) { /* nada */ }
+  // Por defecto español; el usuario cambia de idioma con el botón (se recuerda en localStorage)
+  try { lang = localStorage.getItem(KEY) || 'es'; } catch (e) { /* nada */ }
 
   const D = {
+    // ---- Modo 3D
+    '🌌 Modo 3D (beta)': '🌌 3D Mode (beta)', '🌌 Modo 3D (próximamente)': '🌌 3D Mode (coming soon)',
+    'Cargando el Modo 3D…': 'Loading 3D Mode…',
+    'No se pudo cargar el motor 3D (three.js). El Modo 3D necesita conexión a internet la primera vez. Comprueba tu red y vuelve a intentarlo.': 'Could not load the 3D engine (three.js). 3D Mode needs an internet connection the first time. Check your network and try again.',
+    'WASD / flechas: mover · Espacio: saltar · Shift: correr · Q/E: girar cámara (o ratón) · Esc: salir': 'WASD / arrows: move · Space: jump · Shift: run · Q/E: turn camera (or mouse) · Esc: exit',
     // ---- menú principal y generales
     '▶ Modo Historia': '▶ Story Mode', '✏ Crear nivel': '✏ Create level', '📁 Mis niveles': '📁 My levels', '🌐 Online': '🌐 Online',
     '🌌 Modo 3D (próximamente)': '🌌 3D Mode (coming soon)', '🎮 Controles': '🎮 Controls', '🔊 Sonido': '🔊 Sound', '🔇 Sonido': '🔇 Sound',
@@ -77,7 +83,18 @@
     // ---- HUD
     'ESPECIAL': 'SPECIAL', '¡Medalla!': 'Medal!', 'Llega sin saltar': 'Finish without jumping', 'Probando nivel': 'Testing level',
     // ---- personajes / power-ups
-    'Glob Verde': 'Green Glob', 'Glob Rojo': 'Red Glob', 'Glob Azul': 'Blue Glob', 'Glob Cometa': 'Comet Glob', 'Glob Antiguo': 'Ancient Glob', 'Glob Ducky': 'Ducky Glob', 'Glob Caca': 'Poop Glob', 'Glob Vacío': 'Void Glob',
+    'Glob Verde': 'Green Glob', 'Glob Rojo': 'Red Glob', 'Glob Azul': 'Blue Glob', 'Glob de Jabón': 'Soap Glob', 'Glob Cometa': 'Comet Glob', 'Glob Antiguo': 'Old Glob', 'Glob Ducky': 'Ducky Glob', 'Glob Caca': 'Poop Glob', 'Glob Vacío': 'Void Glob',
+    // evoluciones (EVO2/EVO3) de cada Glob
+    'Glob Esmeralda': 'Emerald Glob', 'Glob Arcoíris': 'Rainbow Glob', 'Glob Fundido': 'Molten Glob', 'Glob Ciborg': 'Cyborg Glob', 'Glob de Cotón': 'Cotton Glob', 'Glob Electroclean': 'ElectroClean Glob',
+    'Glob Ducky Dorado': 'Golden Ducky Glob', 'Glob Ducky Rico': 'Rich Ducky Glob', 'Glob Oscuro': 'Dark Glob', 'Glob Pyce': 'Pyce Glob', 'Glob Espía': 'SpyGlob',
+    // descripciones de personajes
+    'Equilibrado, no destaca en nada.': 'Balanced, no standout traits.', 'Un pelín más rápido.': 'A touch faster.',
+    'Resbala al caminar; mientras resbala no le afectan cintas ni pinchos.': 'Slides when walking; while sliding, conveyors and spikes do nothing to it.',
+    'Planea al caer unos segundos y suma +1 a cada moneda que coge.': 'Glides for a few seconds when falling and adds +1 to every coin it collects.',
+    'Salta más alto y dispara con el power-up.': 'Jumps higher and shoots with the power-up.',
+    'Pesado (su culetazo rompe bloques); dispara con el power-up y de especial nada más rápido.': 'Heavy (its ground pound breaks blocks); shoots with the power-up and swims faster as a special.',
+    'Lanza bolas de caca que rebotan y dejan charcos pegajosos que frenan a los enemigos.': 'Throws poop balls that bounce and leave sticky puddles that slow enemies down.',
+    'Doble salto estelar y caída lenta. Al aterrizar del doble salto lanza una onda de estrellas.': 'Starry double jump and slow fall. Landing from the double jump releases a wave of stars.',
     'Gota Evo': 'Evo Drop', 'Flor Estelar': 'Star Flower', 'Brillo Estelar': 'Star Shine', 'Gota Caca': 'Poop Drop', 'Fragmento del Vacío': 'Void Shard',
     // ---- bloques y objetos más usados
     'Suelo': 'Ground', 'Bloque Gel (rompible)': 'Gel Block (breakable)', 'Caja Sorpresa': 'Surprise Box', 'Bloque Duro': 'Hard Block', 'Semisólido A': 'Semisolid A', 'Semisólido B': 'Semisolid B', 'Bloque Pincho': 'Spike Block',
@@ -89,6 +106,124 @@
     'Raíl (pon encima plataformas, setas, Barras Estelares o Pyces y lo seguirán; las plataformas arrancan al subirte)': 'Rail (put platforms, mushrooms, Star Bars or Pyces on it and they follow it; platforms start when you step on)',
     'Punto de control': 'Checkpoint', 'Muelle': 'Spring', 'Llave': 'Key', 'Puerta': 'Door', 'Puerta con llave': 'Locked door', 'Entrada de tubería': 'Pipe entrance', 'Tubería con tapa': 'Capped pipe', 'Barra Estelar': 'Star Bar', 'Carámbano': 'Icicle',
     'Plataforma ↔': 'Platform ↔', 'Plataforma ↕': 'Platform ↕', 'Seta móvil ↔': 'Moving mushroom ↔', 'Seta móvil ↕': 'Moving mushroom ↕', 'Moneda Estrella': 'Star Coin',
+
+    // ---- Pyces (nombres de jefe + descripciones) ----
+    'NOeye Pyce (jefe)': 'NOeye Pyce (boss)', 'NOsense Pyce (jefe fantasma)': 'NOsense Pyce (ghost boss)', 'NOIRrupt Pyce (jefe fantasma)': 'NOIRrupt Pyce (ghost boss)', 'MoonStar Pyce (jefe final)': 'MoonStar Pyce (final boss)',
+    'El más simple: camina y cae al pisarlo.': 'The simplest: walks and falls when stomped.',
+    'Casi transparente. Se da la vuelta en los bordes.': 'Almost transparent. Turns around at ledges.',
+    'Borroso y saltarín.': 'Blurry and hoppy.',
+    'Necesita dos golpes. Al primero se enfada y acelera.': 'Takes two hits. The first one makes it angry and faster.',
+    'Atacante de espada sencillo.': 'Simple sword attacker.',
+    'Dispara con su pistola.': 'Shoots with its gun.',
+    'Brinca sin parar hacia ti.': 'Hops nonstop toward you.',
+    'Baja flotando con su paraguas.': 'Floats down with its umbrella.',
+    'Lento, pero se levanta una vez tras pisarlo.': 'Slow, but gets up once after being stomped.',
+    'Cristales en la cabeza: no se puede pisar.': 'Crystals on its head: cannot be stomped.',
+    'Armadura inmune a los proyectiles.': 'Armor immune to projectiles.',
+    'Su spray crea nubes de niebla.': 'Its spray creates fog clouds.',
+    'Se desmonta al pisarlo y se vuelve a montar. Lanza huesos.': 'Falls apart when stomped and reassembles. Throws bones.',
+    'Tipo Hammer Bro: va y viene, salta y te lanza martillos en arco (atraviesan paredes).': 'Hammer Bro type: paces back and forth, jumps and throws arcing hammers (they go through walls).',
+    'Tipo Boomerang Bro, poseído por cristales: lanza su pico de cristal, que vuelve a sus manos.': 'Boomerang Bro type, possessed by crystals: throws its crystal pick, which returns to its hands.',
+    'Al pisarlo se vuelve cápsula: ¡patéala!': 'When stomped it becomes a capsule: kick it!',
+    'Lanza regalos en parábola.': 'Throws gifts in an arc.',
+    'Al pisarlo se enciende la mecha y explota.': 'When stomped the fuse lights and it explodes.',
+    'Juguete de cuerda que corre hacia ti y explota.': 'Wind-up toy that runs at you and explodes.',
+    'Vuela a saltos. Al pisarlo pierde las alas.': 'Flies in hops. Loses its wings when stomped.',
+    'Se estira hacia arriba. Pisa su cabeza.': 'Stretches upward. Stomp its head.',
+    'Planta fija que escupe pétalos. No se pisa.': 'Fixed plant that spits petals. Cannot be stomped.',
+    'Cañón que dispara balas estelares.': 'Cannon that fires star bullets.',
+    'Se acerca cuando le das la espalda.': 'Approaches when your back is turned.',
+    'Holograma: a ratos es intangible.': 'Hologram: sometimes intangible.',
+    'Cambia de emoción: feliz, enfadado, triste o asustado.': 'Changes emotion: happy, angry, sad or scared.',
+    'Hacker: sus píxeles atraviesan paredes.': 'Hacker: its pixels go through walls.',
+    'Nada y salta fuera del agua o del líquido. En lava/veneno se vuelve ígneo/venenoso. Sin agua solo brinca.': 'Swims and leaps out of water or liquid. In lava/poison it turns fiery/poisonous. Without water it just hops.',
+    'Versión fuerte de Pysh: más rápido y salta más alto hacia ti. 2 golpes.': 'Strong version of Pysh: faster and jumps higher at you. 2 hits.',
+    'Nada y dispara burbujas. Fuera del agua es lento.': 'Swims and shoots bubbles. Slow out of water.',
+    'Calamar tipo Blooper: se hunde despacio y da tirones hacia ti. Suelta nubes de tinta. Solo se pisa fuera del líquido.': 'Blooper-type squid: sinks slowly and darts at you. Releases ink clouds. Can only be stomped out of liquid.',
+    'Te embiste en el agua. No se pisa. Fuera del agua se arrastra.': 'Charges at you in water. Cannot be stomped. Crawls out of water.',
+    'RARO: cofre que muerde. 10 pisotones. Da 1UP.': 'RARE: biting chest. 10 stomps. Gives 1UP.',
+    'RARO: mimic sucio y rápido. 10 pisotones. Da 1UP.': 'RARE: dirty, fast mimic. 10 stomps. Gives 1UP.',
+    'RARO: lanza ojos. 10 pisotones. Da 1UP.': 'RARE: throws eyes. 10 stomps. Gives 1UP.',
+    'RARO: vuela y suelta monedas. 10 pisotones. Da 3UP.': 'RARE: flies and drops coins. 10 stomps. Gives 3UP.',
+    'Mini-jefe: corre, gira y salta. 3 golpes.': 'Mini-boss: runs, spins and jumps. 3 hits.',
+    'Jefe fantasma. Se mueve sin sentido y lanza ojos. Písalo cuando se maree. 4 golpes.': 'Ghost boss. Moves erratically and throws eyes. Stomp it when it gets dizzy. 4 hits.',
+    'Versión fuerte de NOsense: se teletransporta, dispara en abanico e invoca Ghost Pyces. 6 golpes.': 'Strong version of NOsense: teleports, fires in a fan and summons Ghost Pyces. 6 hits.',
+    'El gran jefe de los Pyces. 5 golpes.': 'The great boss of the Pyces. 5 hits.',
+    // ---- objetos (descripciones) ----
+    'Segunda meta secreta: pasa el nivel por meta oculta.': 'Second secret goal: clear the level via the hidden goal.',
+    'Champiñón: hace crecer tu Glob (EVO1 → EVO2).': 'Mushroom: grows your Glob (EVO1 → EVO2).',
+    'Flor: lleva a tu Glob a su 3ª evolución (EVO2 → EVO3), la de la habilidad.': 'Flower: takes your Glob to its 3rd evolution (EVO2 → EVO3), the ability one.',
+    'Invencible un rato.': 'Invincible for a while.', 'Vida extra.': 'Extra life.', 'Te convierte en Glob Caca.': 'Turns you into the Poop Glob.', 'Te convierte en Glob Vacío.': 'Turns you into the Void Glob.',
+    'Mini Glob (1UP)': 'Mini Glob (1UP)', 'Moneda Lunar': 'Moon Coin', 'Gigamoneda rosada': 'Pink Gigacoin', 'Estrella verde/roja': 'Green/red star', 'Estrella mágica': 'Magic star', 'Estrella de la Traición': 'Traitor Star',
+    'Coleccionable del nivel (2×2).': "Level collectible (2×2).", 'Moneda Estrella (reskin, 2×2).': 'Star Coin (reskin, 2×2).', 'Coleccionable (versión Corrupto, 2×2).': 'Collectible (Corrupt version, 2×2).', 'Moneda Estrella con forma de estrella (2×2).': 'Star-shaped Star Coin (2×2).',
+    '¡Te daña al tocarla! Pero cuenta como coleccionable (2×2).': 'It hurts you on touch! But counts as a collectible (2×2).',
+    'Interruptor "!" amarillo': 'Yellow "!" switch', 'Interruptor "!" verde': 'Green "!" switch', 'Interruptor "!" rosa': 'Pink "!" switch',
+    'Activa los bloques "!" amarillos (2×2). Cuenta como meta oculta.': 'Activates the yellow "!" blocks (2×2). Counts as hidden goal.',
+    'Activa los bloques "!" verdes (2×2). Cuenta como meta oculta.': 'Activates the green "!" blocks (2×2). Counts as hidden goal.',
+    'Activa los bloques "!" rosas (2×2). Cuenta como meta oculta.': 'Activates the pink "!" blocks (2×2). Counts as hidden goal.',
+    'Moneda ×10': 'Coin ×10', 'Moneda ×30': 'Coin ×30', 'Moneda ×50': 'Coin ×50', 'Moneda ×100': 'Coin ×100',
+    'Da 10 monedas (2×2).': 'Gives 10 coins (2×2).', 'Da 30 monedas (2×2).': 'Gives 30 coins (2×2).', 'Da 50 monedas (2×2).': 'Gives 50 coins (2×2).', 'Da 100 monedas (2×2).': 'Gives 100 coins (2×2).',
+    'Plataforma raíl ↗↙': 'Rail platform ↗↙', 'Plataforma raíl ↘↖': 'Rail platform ↘↖',
+    'Recorre un raíl diagonal. Clic otra vez para cambiar el recorrido.': 'Follows a diagonal rail. Click again to change its path.',
+    'Semisólido que solo se mueve con alguien encima. Clic otra vez para cambiar el recorrido.': 'Semisolid that only moves with someone on top. Click again to change its path.',
+    'Tubería 2×2. Se conecta con la siguiente (pulsa ↓).': 'Pipe 2×2. Connects to the next one (press ↓).',
+    'Puerta (1 ancho × 2 alto). Se conecta con la siguiente puerta (pulsa ↑).': 'Door (1 wide × 2 tall). Connects to the next door (press ↑).',
+    'Abre una puerta con llave o una tubería con tapa.': 'Opens a locked door or a capped pipe.',
+    'Necesita una llave. Una vez abierta queda abierta. Se conecta como una puerta normal.': 'Needs a key. Once opened it stays open. Connects like a normal door.',
+    'Tubería 2×2 con tapa. Necesita una llave para quitar la tapa.': 'Capped pipe 2×2. Needs a key to remove the cap.',
+    'Barra giratoria de estrellas. Clic otra vez para alargarla.': 'Rotating bar of stars. Click again to lengthen it.',
+    'Cae cuando pasas por debajo.': 'Falls when you pass underneath.',
+    'Adorno visual sin colisión (según el mapa).': 'Visual decoration with no collision (varies by map).',
+    'Semisólido del mapa (seta / árbol / cadena)': 'Map semisolid (mushroom / tree / chain)',
+    'Solo se pisa la parte de arriba. Según el mapa es una seta, un árbol o una plataforma con cadenas; el tallo o las cadenas llegan solos hasta el suelo o el techo. Arrastra hacia los lados para cambiar su ancho.': 'Only the top is walkable. Depending on the map it is a mushroom, a tree or a chained platform; the stalk or chains reach the floor or ceiling on their own. Drag sideways to change its width.',
+
+    // ---- DIALOGOS del Modo Historia (StoryDialogs) ----
+    'Pyce': 'Pyce',
+    // w1
+    '¡Alto ahi, Glob! Esta isla era nuestra mucho antes de que vosotros aparecierais... o eso dicen.': "Hold it, Glob! This island was ours long before you lot showed up... or so they say.",
+    'Ahora todos os quieren a VOSOTROS. ¿Y nosotros, los Pyces? Arrinconados. No es justo.': 'Now everyone loves YOU. And us Pyces? Pushed aside. It\'s not fair.',
+    '(No parece que quiera hablar. Parece... dolido.)': "(It doesn't seem to want to talk. It looks... hurt.)",
+    'Esta fabrica es de PixelStar. Aqui NO entran animales como tu.': "This factory belongs to PixelStar. Animals like you do NOT come in here.",
+    '¿Animales? Solo quiero pasar.': 'Animals? I just want to get through.',
+    'Pues tendras que ganartelo. ¡Adelante, si te atreves!': "Then you'll have to earn it. Come on, if you dare!",
+    'Imposible... un Glob, pensando. No teniais que ser capaces de esto.': "Impossible... a Glob, thinking. You weren't supposed to be capable of this.",
+    'No pensamos mucho. Pero aprendemos a base de tropezar.': "We don't think much. But we learn by stumbling.",
+    // w2
+    'Mira al salvaje. Nosotros tenemos ORDEN, jerarquia, un mando. Vosotros... cada uno a lo suyo.': 'Look at the savage. We have ORDER, hierarchy, a chain of command. You lot... each one does their own thing.',
+    '(Y aun asi avanzamos. Curioso.)': '(And yet we keep moving forward. Curious.)',
+    'Je, je... ¿hueles eso? Es NAVIDAD. La ODIO. Y pienso borrarla de todos los mundos.': 'Heh heh... smell that? It\'s CHRISTMAS. I HATE it. And I\'m going to wipe it from every world.',
+    'Me hicieron mezclando esa fecha asquerosa con un trozo de... EL. De NOeye. Y lo detesto a el tambien.': 'They made me by mixing that disgusting season with a piece of... HIM. Of NOeye. And I loathe him too.',
+    '¿Quien es NOeye?': 'Who is NOeye?',
+    '¡No pronuncies su nombre! Caiste tu primero. ¡Al fin algo que machacar!': "Don't you say his name! You fell first. Finally, something to crush!",
+    'Me derrotaron una vez en Techspawn... pero volvi como fantasma. Volvere otra vez. SIEMPRE vuelvo.': 'They beat me once in Techspawn... but I came back as a ghost. I\'ll come back again. I ALWAYS come back.',
+    '(Un fantasma con rencor. Esto es mas grande de lo que creia.)': '(A ghost with a grudge. This is bigger than I thought.)',
+    // w3
+    '¡Pasen y vean! El gran espectaculo Pyce. Aqui todo es un truco... hasta nosotros.': 'Step right up! The great Pyce show. Everything here is a trick... even us.',
+    '(Algo no cuadra. Estos Pyces no estan al mando de verdad.)': "(Something's off. These Pyces aren't really in charge.)",
+    '...': '...',
+    '¿No vas a decir nada?': "Aren't you going to say anything?",
+    '(Te mira en silencio. No ataca. Se aparta y te deja pasar... por ahora.)': '(It stares at you in silence. It doesn\'t attack. It steps aside and lets you pass... for now.)',
+    '(Dicen que quien se cruza en su camino lo paga caro. Pero a mi me ha dejado ir.)': '(They say whoever crosses its path pays dearly. But it let me go.)',
+    '(No luchaba contra ti. Luchaba contra los OTROS. Los que de verdad quieren destruirlo todo.)': "(It wasn't fighting you. It was fighting the OTHERS. The ones who really want to destroy everything.)",
+    '¿Entonces... estabas de nuestro lado?': 'So... you were on our side?',
+    // w4
+    'La corrupcion crece. Nosotros solo teniamos celos... esto ya no lo controlamos.': "The corruption is growing. We were only jealous... this is beyond our control now.",
+    '(Los Pyces parecen tan asustados como yo.)': '(The Pyces look as scared as I am.)',
+    'Mirame bien: soy EL, pero en negro y blanco. Lo que NOsense seria si se acercara del todo a NOeye.': 'Look closely: I am HIM, but in black and white. What NOsense would be if it drew fully close to NOeye.',
+    'Mas fuerte. Mas vacio. Y tu estas en mi camino.': 'Stronger. Emptier. And you are in my way.',
+    '¡He llegado hasta aqui, no pienso parar!': "I've made it this far, I won't stop now!",
+    'Tsk... solo soy un eco de algo peor. Lo entenderas cuando llegues al Vortice.': "Tsk... I'm just an echo of something worse. You'll understand when you reach the Vortex.",
+    '(El Vortice. Ahi esta el final de todo esto.)': '(The Vortex. That\'s where all this ends.)',
+    // w5
+    '(Aqui empieza el fin de los tiempos. Toda la corrupcion que dejaron los Pyces... y EL.)': '(Here begins the end of times. All the corruption the Pyces left behind... and HIM.)',
+    '¿Vienes conmigo?': 'Are you coming with me?',
+    '(Asiente, en silencio. Solo busca un hogar para los suyos. Hoy, ese hogar lo defendemos juntos.)': '(It nods, in silence. It only seeks a home for its own. Today, we defend that home together.)',
+    'Yo soy la corrupcion. El BITCORE me modifico, me rompio, y con lo que quedo... voy a conquistarlo TODO.': 'I am the corruption. The BITCORE changed me, broke me, and with what was left... I will conquer EVERYTHING.',
+    'Esa energia ancestral daño a la estrella Pyce. Me daño a MI. Ahora el mundo pagara por ello.': 'That ancient energy harmed the Pyce star. It harmed ME. Now the world will pay for it.',
+    '¡Se acabo, MoonStar! ¡Por los Pyces y por los Globs!': "It's over, MoonStar! For the Pyces and for the Globs!",
+    'El Bitcore... se apaga... pero volvera. Siempre... vuelve...': 'The Bitcore... fades... but it will return. It always... returns...',
+    '(Se queda mirando el Vortice en calma. Por fin, un hogar a salvo. Al menos, por hoy.)': '(It gazes calmly at the Vortex. At last, a home that\'s safe. At least, for today.)',
+    'Pyces y Globs. Quiza no somos tan distintos despues de todo.': "Pyces and Globs. Maybe we're not so different after all.",
 
     // ---- ✉ Mensajes / moderación / sanciones
     '✉ Mensajes': '✉ Mail', 'No tienes mensajes.': 'You have no messages.', 'Inicia sesión en 🌐 Online para ver tus mensajes.': 'Log in on 🌐 Online to see your messages.',
@@ -135,7 +270,12 @@
     [/^Exportar "(.*)"$/, (m) => `Export "${m[1]}"`], [/^Elige cómo quieres guardar o compartir "(.*)"\.$/, (m) => `Choose how you want to save or share "${m[1]}".`],
     [/^📋 Código copiado: (.*)$/, (m) => '📋 Code copied: ' + m[1]], [/^Buscando (.*)…$/, (m) => 'Looking for ' + m[1] + '…'], [/^No hay ningún nivel publicado con el código (.*)$/, (m) => 'No published level has the code ' + m[1]], [/^🔒 Nivel de @(.*)$/, (m) => `🔒 Level by @${m[1]}`], [/^⬇ de @(.*) · solo jugar$/, (m) => `⬇ by @${m[1]} · play only`],
     [/^🦆 Favoritos de @(.*)$/, (m) => `🦆 @${m[1]}'s favorites`], [/^Mundo (\d) · (.*)$/, (m) => `World ${m[1]} · ${m[2]}`],
-    [/^(.*) · (Primeros pasos|Bloques y cajas|Plataformas|Tuberías|Muelles|Plataformas móviles|Monedas rojas|Llaves y puertas|Bloques Nota|Raíles|Hielo|Cañones|Rosquillas|Nubes|Bloques A\/B|Los Bros|Interruptor P|Monedas púrpura|Cintas|Agua|Barras Estelares|Palacio "!"|Castillo)$/, (m) => tr(m[1]) + ' · ' + tr(m[2])]
+    [/^(.*) · (Primeros pasos|Bloques y cajas|Plataformas|Tuberías|Muelles|Plataformas móviles|Monedas rojas|Llaves y puertas|Bloques Nota|Raíles|Hielo|Cañones|Rosquillas|Nubes|Bloques A\/B|Los Bros|Interruptor P|Monedas púrpura|Cintas|Agua|Barras Estelares|Palacio "!"|Castillo)$/, (m) => tr(m[1]) + ' · ' + tr(m[2])],
+    // Cápsulas de personaje: "Cápsula <Glob>" y "Te transforma en <Glob>." (el nombre se traduce aparte)
+    [/^Cápsula (.*)$/, (m) => 'Capsule: ' + tr(m[1])],
+    [/^Te transforma en (.*)\.$/, (m) => 'Turns you into ' + tr(m[1]) + '.'],
+    // nota de moderación al conectar
+    [/^Has recibido (\d+) avisos de moderación:(.*)$/s, (m) => 'You received ' + m[1] + ' moderation warnings:' + m[2]]
   ];
   const tag = (s) => (s || '').replace(' · meta oculta', ' · hidden goal').replace(' · Medalla', ' · Medal');
 

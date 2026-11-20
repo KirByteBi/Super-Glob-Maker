@@ -1000,7 +1000,7 @@
         const fromAbove = p.y + p.h - e.y < 14 + Math.max(0, p.vy) / 40;
         // el culetazo solo mata cuando el Glob ya cae de verdad (no mientras flota en la espera previa)
         const poundHit = p.pound > 0 && p.poundWait <= 0 && p.vy > 0 && e.poundable;
-        if (falling && fromAbove && (e.stompable || poundHit)) {
+        if (falling && fromAbove && (e.stompable || poundHit || (p.special === 'vacio' && e.voidStompable))) {
           e.onStomp(this);
           if (!e.boss) this.addScore(100, e);
           p.vy = this.inputJump ? -560 : -400; p.pound = 0; p.jumpHeld = true; p.y = e.y - p.h;

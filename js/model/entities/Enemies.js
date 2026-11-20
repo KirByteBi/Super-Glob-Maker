@@ -458,6 +458,34 @@
 
   // ---------------------------------------------------------------- nivel 4 y 5
   // Ghost: avanza cuando le das la espalda, se para si lo miras. Solo lo mata el Brillo Estelar.
+  // Astral BPyce (versión mejorada del Bomb Pyce): no se puede pisar (solo Void Glob), explota al recibir
+  // daño y cualquier proyectil lo enciende.
+  class AstralBPyce extends Bomb {
+    constructor(tx, ty) { super(tx, ty, 'astralbpyce'); this.stompable = false; this.poundable = false; this.voidStompable = true; }
+    damage(g, amt, how) {
+      if (how === 'stomp' || this.dying > 0) return false;
+      this.light(g, 0.4); return true;
+    }
+    onStomp(g) { this.kill(g); } // solo lo llega a pisar el Void Glob
+  }
+  // Dreamy SPyce (versión mejorada del Symbol Pyce): no se puede pisar (solo Void Glob), invoca Symbol Pyces
+  // cada pocos segundos mientras camina y planea unos segundos tras saltar.
+  class DreamySPyce extends Symbol {
+    constructor(tx, ty) { super(tx, ty); this.type = 'dreamyspyce'; this.stompable = false; this.poundable = false; this.voidStompable = true; this.summonT = 4; this.glideT = 0; }
+    think(g, dt) {
+      const wasGround = this.onGround;
+      super.think(g, dt);
+      if (wasGround && !this.onGround && this.vy < 0) this.glideT = 2.5; // acaba de saltar: planea
+      if (this.glideT > 0) { this.glideT -= dt; if (this.vy > 90) this.vy = 90; }
+      this.summonT -= dt * g.enemySpeedMul;
+      if (this.summonT <= 0 && this.onGround && !this.dying) {
+        this.summonT = 4;
+        const s = S.Model.Entities.create('symbol', Math.floor(this.cx() / T), Math.floor(this.y / T));
+        if (s) { s.active = true; g.spawn(s); g.emit('enemyHop', { x: this.cx(), y: this.y }); }
+      }
+    }
+    onStomp(g) { this.kill(g); } // solo lo llega a pisar el Void Glob
+  }
   class Ghost extends Enemy {
     constructor(tx, ty) { super('ghost', tx, ty); this.gravity = 0; this.tiles = false; this.stompable = false; this.shootable = false; this.poundable = false; this.shy = false; }
     think(g, dt) {
@@ -513,7 +541,7 @@
   [['stupid', Stupid], ['so', SO], ['symbol', Symbol], ['pyce2', Pyce2], ['guest', Guest], ['noob', Noob], ['elf', Elf],
     ['umbrella', Umbrella], ['zom', Zom], ['crystal', Crystal], ['knight', Knight], ['rebel', Rebel], ['skelebone', SkeleBone], ['snowcap', SnowCap],
     ['festive', Festive], ['bomb', Bomb], ['toybomb', ToyBomb], ['wingel', Wingel], ['strechy', Strechy], ['flower', Flower], ['cannon', Cannon],
-    ['starbullet', StarBullet], ['ghost', Ghost], ['holo', Holo], ['motions', Motions], ['hacker', Hacker]
+    ['starbullet', StarBullet], ['ghost', Ghost], ['astralbpyce', AstralBPyce], ['dreamyspyce', DreamySPyce], ['holo', Holo], ['motions', Motions], ['hacker', Hacker]
   ].forEach(([k, K]) => reg(k, K));
   S.Model.Enemy = Enemy;
 })(window.SGM);

@@ -160,10 +160,37 @@ Colocar bloques/planetas/medallas/enemigos en una rejilla 3D:
 --------------------------------------------------------------
  7. FASES (orden de construccion y lo que se puede verificar)
 --------------------------------------------------------------
-  F0. [este documento] diseño.
-  F1. Motor base: core3d + Scene3D + Game3D + Input3D. Glob como
-      primitiva, suelo, cámara orbital, mover+saltar. Engancha en
-      AppController (boton 🌌). Verificable: carga, no peta, JSON.
+  F0. [HECHO] diseño.
+  F1. [HECHO] Motor base: core3d + World3D + Physics3D + Player3D +
+      levels3d + Scene3D + Camera3D + Game3D. Glob como primitiva
+      (esfera-gota con ojos), suelo + plataformas, cámara orbital
+      (ratón arrastrar + Q/E), mover (WASD/flechas) + salto. three.js
+      por CDN bajo demanda. Enganchado en AppController: show3D() /
+      exit3D() / mode==='3d' en loop() y clearAll(); botón 🌌 Modo 3D
+      (beta) en el menú. Nivel de ejemplo "Patio 3D" con 2 Medallas.
+      VERIFICADO: tests headless de física (aterrizaje, salto,
+      colisión lateral, carga de nivel, mates) -> todo OK.
+      Pendiente de prueba en navegador por el usuario (el "feel").
+      ---
+      AJUSTES tras feedback del usuario:
+      · Controles limpios (lectura directa del teclado, no el mapeo 2D):
+        WASD/flechas mover · Espacio saltar · Shift correr · Q/E girar
+        cámara (para portátiles sin ratón) o ratón · Esc salir.
+      · Cámara con auto-seguimiento detrás del Glob al moverse (SM64).
+      · Física anti-resbaladiza (fricción alta + zona muerta).
+      · MODELOS basados en los sprites/modelos viejos:
+        - Glob: DOS cubos redondeados apilados (base ancha + bloque
+          encima), verde + contorno negro, ojos cuadrados y boca barra.
+        - Pyce: cuerpo CREMA (cubo redondeado) con PANTALLA AZUL en la
+          cara, brazos y pies cremas. Caras: stupid ":D", pyce2 "^^".
+        - Helper _roundedCube (superelipsoide) para el look "redondito".
+      · ENEMIGOS: nuevo modelo Pyce3D.js que REPRODUCE la mecánica 2D.
+        Set elegido (los que funcionan en 3D plano sin limitaciones y
+        son fáciles): stupid, pyce2, symbol, noob, zom, knight.
+        (Descartados: voladores/nadadores/fijos/jefes y los que
+        dependen de proyectiles o caparazones.) Verificado con tests
+        headless: stupid 1 golpe, pyce2 2 + enfado, zom se levanta 1
+        vez, symbol brinca, knight/noob embisten, patrulla acotada.
   F2. Physics3D 'flat': gravedad, colision AABB, salto triple,
       culetazo, wall jump. Verificable: tests de fisica headless.
   F3. Medallas + meta + victoria + enemigos basicos (Pyces que

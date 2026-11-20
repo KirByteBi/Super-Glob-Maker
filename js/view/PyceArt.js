@@ -16,6 +16,8 @@
     guest: { src: 'Enemigos/Guest_Pyce.png', w: 773, h: 773, box: [76, 13, 601, 727] },
     noob: { src: 'Enemigos/Noob_Pyce.png', w: 241, h: 194, box: [6, 15, 232, 174] },
     crystal: { src: 'Enemigos/Crystal Pyce.png', w: 1080, h: 1080, box: [47, 51, 990, 985] },
+  astralbpyce: { src: 'Enemigos/Enemigos Cristalizados/Astral BPyce.png', w: 1080, h: 1080, box: [47, 51, 990, 985] },
+  dreamyspyce: { src: 'Enemigos/Enemigos Cristalizados/Dreamy SPyce.png', w: 1080, h: 1080, box: [47, 51, 990, 985] },
     hacker: { src: 'Enemigos/1x1x1x1_Pyce.png', w: 212, h: 235, box: [0, 5, 204, 214] },
     motions: { src: 'Enemigos/4motions_Pyce.png', w: 223, h: 264, box: [15, 28, 199, 214] },
     flower: { src: 'Enemigos/Flower_Pyce.png', w: 1080, h: 1080, box: [180, 36, 721, 1035] },

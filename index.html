@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Super Glob Maker</title>
+  <meta name="author" content="KirByte_Bi">
+  <meta name="copyright" content="© 2026 KirByte_Bi. All rights reserved. OWNER: KirByte_Bi">
+  <meta name="owner" content="KirByte_Bi">
   <link rel="icon" type="image/svg+xml" href="logo/SGM-icon.svg">
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -19,6 +22,11 @@
   <!-- Núcleo -->
   <script src="js/core/sgm.js"></script>
   <script src="js/core/i18n.js"></script>
+<script src="js/core/i18n_ui.js"></script>
+<script src="js/core/i18n_editor.js"></script>
+<script src="js/core/i18n_game.js"></script>
+<script src="js/core/i18n_story.js"></script>
+<script src="js/core/i18n_3d.js"></script>
   <!-- Modelo -->
   <script src="js/model/Characters.js"></script>
   <script src="js/model/Themes.js"></script>
@@ -49,7 +57,7 @@
   <script src="js/view/Sprites.js"></script>
   <script src="js/view/BackgroundView.js"></script>
   <script src="js/view/Decorations.js"></script>
-  <script src="js/view/Npcs.js"></script>
+<script src="js/view/Npcs.js"></script>
   <script src="js/view/MapPlats.js"></script>
   <script src="js/view/ParticlesView.js"></script>
   <script src="js/view/WorldRenderer.js"></script>
@@ -63,6 +71,16 @@
   <script src="js/controller/MapController.js?v=enter2"></script>
   <script src="js/controller/EditorController.js"></script>
   <script src="js/controller/MultiController.js"></script>
+  <!-- Modo 3D (SM64 / Galaxy) - three.js se carga por CDN bajo demanda -->
+  <script src="js/3d/core3d.js"></script>
+  <script src="js/3d/World3D.js"></script>
+  <script src="js/3d/Physics3D.js"></script>
+  <script src="js/3d/Player3D.js"></script>
+  <script src="js/3d/Pyce3D.js"></script>
+  <script src="js/3d/levels3d.js"></script>
+  <script src="js/3d/Scene3D.js"></script>
+  <script src="js/3d/Camera3D.js"></script>
+  <script src="js/3d/Game3D.js"></script>
   <script src="js/controller/AppController.js"></script>
   <script src="js/main.js"></script>
 </body>

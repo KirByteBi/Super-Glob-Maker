@@ -42,7 +42,9 @@
       if (h.online) menu.appendChild(button('🌐 Online', 'big', h.online));
       if (h.multi) menu.appendChild(button('👥 Multijugador', 'big', h.multi));
       if (h.messages) menu.appendChild(button('✉ Mensajes', 'big', h.messages));
-      const b3d = button('🌌 Modo 3D (próximamente)', 'big disabled', () => this.toast('El modo 3D estilo SM64 / Galaxy llegará en la próxima versión.'));
+      const b3d = h.mode3d
+        ? button('🌌 Modo 3D (beta)', 'big', h.mode3d)
+        : button('🌌 Modo 3D (próximamente)', 'big disabled', () => this.toast('El modo 3D estilo SM64 / Galaxy llegará en la próxima versión.'));
       menu.appendChild(b3d);
       const row = el('div', 'row');
       row.appendChild(button('🎮 Controles', '', h.controls));
@@ -53,6 +55,7 @@
       menu.appendChild(row);
       s.appendChild(menu);
       s.appendChild(el('div', 'foot', 'Versión 2D · Los Globs y sus amigos'));
+      s.appendChild(el('div', 'foot', '© 2026 KirByte_Bi · OWNER: KirByte_Bi'));
       // Conexión con Glob Defenders (misma cuenta): logo que abre el juego en otra pestaña
       const gld = document.createElement('a');
       gld.className = 'gld-link'; gld.href = 'https://kirbytebi.github.io/Glob-Defenders/';
@@ -203,9 +206,14 @@
       scroll.addEventListener('change', syncScroll); syncScroll();
       // Norma "sin efectos especiales": todos los Globs juegan como el verde (sin poderes)
       const noPowers = field('Sin efectos especiales (todos juegan como el verde)', inp('checkbox', '', { checked: !!level.noPowers }));
+      // Fondo de cueva de todo el mapa (lo que hay en las casillas de cueva)
+      const caveSel = document.createElement('select');
+      [['1', 'Cueva'], ['2', 'Lodo'], ['3', 'Edificación']].forEach(([v, t]) => { const op = document.createElement('option'); op.value = v; op.textContent = t; caveSel.appendChild(op); });
+      caveSel.value = String(level.caveBg || 1);
+      field('Fondo de cueva del mapa', caveSel);
       b.appendChild(form);
       const row = el('div', 'row');
-      row.appendChild(button('Aplicar', 'primary', () => { this.closeModal(); onApply({ name: name.value.trim() || 'Nivel sin nombre', width: +width.value, height: +height.value, time: +time.value, win: { type: winSel.value, n: +winN.value, target: tgSel.value }, scroll: scroll.checked ? 1 : 0, scrollSpeed: +scrollSpeed.value, noPowers: noPowers.checked ? 1 : 0 }); }));
+      row.appendChild(button('Aplicar', 'primary', () => { this.closeModal(); onApply({ name: name.value.trim() || 'Nivel sin nombre', width: +width.value, height: +height.value, time: +time.value, win: { type: winSel.value, n: +winN.value, target: tgSel.value }, scroll: scroll.checked ? 1 : 0, scrollSpeed: +scrollSpeed.value, noPowers: noPowers.checked ? 1 : 0, caveBg: +caveSel.value }); }));
       row.appendChild(button('🔢 Código', '', h.exportLevel));
       row.appendChild(button('📥 Cargar código', '', h.importLevel));
       row.appendChild(button('🗑 Vaciar', 'danger', () => { this.confirm('¿Borrar todo el contenido del nivel?', h.clearLevel); }));
