@@ -29,8 +29,8 @@
     title(h) {
       const s = this.open('title');
       const logo = el('div', 'logo');
-      logo.appendChild(el('div', 'logo-super', 'SUPER'));
-      logo.appendChild(el('div', 'logo-main', 'GLOB MAKER'));
+      const logoImg = document.createElement('img'); logoImg.src = S.View.Assets.url('LogosSuperGlobMaker/LogoSuperGlobMaker.png'); logoImg.alt = 'Super Glob Maker'; logoImg.draggable = false; logoImg.className = 'logo-img'; logo.appendChild(logoImg);
+      
       s.appendChild(logo);
       const parade = el('div', 'parade');
       S.Model.Characters.list.forEach((c, i) => { const im = globImg(c.paths[0], 'parade-glob'); im.style.animationDelay = (i * 0.15) + 's'; parade.appendChild(im); });

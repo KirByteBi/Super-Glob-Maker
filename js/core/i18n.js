@@ -92,7 +92,7 @@
     'Resbala al caminar; mientras resbala no le afectan cintas ni pinchos.': 'Slides when walking; while sliding, conveyors and spikes do nothing to it.',
     'Planea al caer unos segundos y suma +1 a cada moneda que coge.': 'Glides for a few seconds when falling and adds +1 to every coin it collects.',
     'Salta más alto y dispara con el power-up.': 'Jumps higher and shoots with the power-up.',
-    'Pesado (su culetazo rompe bloques); dispara con el power-up y de especial nada más rápido.': 'Heavy (its ground pound breaks blocks); shoots with the power-up and swims faster as a special.',
+    'Pesado (su culetazo rompe bloques); dispara con el power-up. Aura que mata fantasmas; el botón de disparo enciende la linterna en niveles oscuros.': 'Heavy (its ground pound breaks blocks); shoots with the power-up. An aura that kills ghosts; the shoot button turns on the flashlight in dark levels.',
     'Lanza bolas de caca que rebotan y dejan charcos pegajosos que frenan a los enemigos.': 'Throws poop balls that bounce and leave sticky puddles that slow enemies down.',
     'Doble salto estelar y caída lenta. Al aterrizar del doble salto lanza una onda de estrellas.': 'Starry double jump and slow fall. Landing from the double jump releases a wave of stars.',
     'Gota Evo': 'Evo Drop', 'Flor Estelar': 'Star Flower', 'Brillo Estelar': 'Star Shine', 'Gota Caca': 'Poop Drop', 'Fragmento del Vacío': 'Void Shard',
