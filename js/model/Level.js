@@ -11,6 +11,8 @@
       this.id = d.id || U.uid();
       this.name = d.name || 'Nivel sin nombre';
       this.theme = d.theme || 'lake';
+    // Fondo de cueva de TODO el mapa: 1 Cueva (por defecto), 2 Lodo, 3 Edificación
+    this.caveBg = [1, 2, 3].includes(d.caveBg | 0) ? (d.caveBg | 0) : 1;
       this.mode = d.mode === 'corrupt' ? 'corrupt' : 'peace';
       this.character = d.character || 'green';
       this.width = U.clamp(d.width | 0 || 120, 32, 400);
@@ -160,7 +162,7 @@
     static normSub(s) {
       s = s || {};
       const L = new Level({ theme: s.theme, mode: s.mode, width: s.width, height: s.height, time: 300, tiles: s.tiles, objects: s.objects, contents: s.contents, win: s.win });
-      return { theme: L.theme, mode: L.mode, width: L.width, height: L.height, tiles: Level.encode(L.tiles), objects: L.objects, contents: L.contents, win: L.win };
+      return { theme: L.theme, caveBg: L.caveBg, mode: L.mode, width: L.width, height: L.height, tiles: Level.encode(L.tiles), objects: L.objects, contents: L.contents, win: L.win };
     }
     // Número total de zonas (base + subzonas)
     zoneCount() { return 1 + this.subs.length; }
@@ -246,7 +248,7 @@
     }
 
     toJSON() {
-      return { v: 1, id: this.id, name: this.name, theme: this.theme, mode: this.mode, character: this.character,
+      return { v: 1, id: this.id, name: this.name, theme: this.theme, caveBg: this.caveBg, mode: this.mode, character: this.character,
         width: this.width, height: this.height, time: this.time, scroll: this.scroll || undefined, scrollSpeed: this.scroll ? this.scrollSpeed : undefined, noPowers: this.noPowers || undefined, tiles: Level.encode(this.tiles),
         objects: this.objects.map((o) => {
           const j = { type: o.type, x: o.x, y: o.y };

@@ -71,7 +71,7 @@
     55: 'Moneda púrpura (junta 100 y aparece la Medalla)',
     56: 'Semisólido de fondo (pinta un bloque: arriba se pisa, el resto es fondo del mapa)',
     57: 'Relleno de semisólido de fondo',
-    58: 'Fondo de cueva (sin colisión: para cuevas y túneles)'
+    58: 'Fondo de cueva (sin colisión; su estilo lo pone el mapa: Cueva, Lodo o Edificación)'
   };
 
   // anchor: bottom = apoyado en el suelo de la casilla, center, top = colgando del techo

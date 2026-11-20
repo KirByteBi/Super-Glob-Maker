@@ -783,14 +783,33 @@
         drawSemiBg(ctx, level, x, y, t === TT.SEMIBG, pal, o.theme, time); break;
       }
       // Pared de cueva de fondo (sin colisión)
+      // Fondo de cueva de TODO el mapa (level.caveBg): 1 Cueva, 2 Lodo, 3 Edificación. Sin colisión.
       case TT.CAVEBG: {
-        // Fondo de cueva: barro con raíces (el dibujo que antes tenía el suelo de la jungla)
-        ctx.fillStyle = '#6b3f22'; ctx.fillRect(px, py, T, T);
-        ctx.fillStyle = '#4f2d17'; ctx.fillRect(px + 3, py + 3, T - 6, T - 6);
-        ctx.strokeStyle = '#3a1f10'; ctx.lineWidth = 2; ctx.lineCap = 'round';
-        ctx.beginPath(); for (let i = 0; i <= 3; i++) ctx.lineTo(px + i * T / 3, py + T / 2 + Math.sin(i * 1.3 + x) * 5); ctx.stroke();
-        // bordes con la roca de alrededor
-        if (level.get(x, y - 1) !== TT.CAVEBG) { ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(px, py, T, 4); }
+        const sty = level.caveBg | 0;
+        if (sty === 2) {
+          // Lodo: barro con raíces
+          ctx.fillStyle = '#6b3f22'; ctx.fillRect(px, py, T, T);
+          ctx.fillStyle = '#4f2d17'; ctx.fillRect(px + 3, py + 3, T - 6, T - 6);
+          ctx.strokeStyle = '#3a1f10'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+          ctx.beginPath(); for (let i = 0; i <= 3; i++) ctx.lineTo(px + i * T / 3, py + T / 2 + Math.sin(i * 1.3 + x) * 5); ctx.stroke();
+          if (level.get(x, y - 1) !== TT.CAVEBG) { ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(px, py, T, 4); }
+        } else if (sty === 3) {
+          // Edificación: tablones de madera con ventanitas
+          ctx.fillStyle = '#5c3a22'; ctx.fillRect(px, py, T, T);
+          ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1;
+          for (let ly = 0; ly < T; ly += 8) { ctx.beginPath(); ctx.moveTo(px, py + ly); ctx.lineTo(px + T, py + ly); ctx.stroke(); }
+          if ((x + y) % 2 === 0) { ctx.fillStyle = '#ffe9a8'; ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.arc(px + T / 2, py + T / 2, T * 0.2, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
+        } else {
+          // Cueva: pared de roca oscura
+          const base = U.shade(pal.groundDark || pal.ground || '#444', -0.35);
+          ctx.fillStyle = base; ctx.fillRect(px, py, T, T);
+          ctx.fillStyle = U.shade(base, -0.25);
+          const h1 = U.hash2(x, y), h2 = U.hash2(y + 3, x);
+          ctx.beginPath(); ctx.ellipse(px + 6 + h1 * 18, py + 8 + h2 * 14, 6 + h2 * 4, 3 + h1 * 3, h1 * 3, 0, 7); ctx.fill();
+          if (h2 > 0.55) { ctx.fillStyle = U.shade(base, 0.12); ctx.fillRect(px + h1 * 22, py + 20, 6, 3); }
+          ctx.fillStyle = 'rgba(0,0,0,0.25)';
+          if (level.get(x, y - 1) !== TT.CAVEBG) ctx.fillRect(px, py, T, 4);
+        }
         break;
       }
       // Raíl (estilo SMM): medio tramo desde el centro hacia cada casilla de raíl unida.
