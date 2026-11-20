@@ -140,6 +140,22 @@
       this.emit('start', { first });
     }
 
+    // Glob Antiguo: el aura (siempre encendida) mata fantasmas a 2 casillas;
+    // la linterna (encendida al pulsar disparo o mientras lo mantienes) mata fantasmas en un cono de 6 casillas
+    // hacia delante, pero solo en niveles oscuros.
+    updateGlobLight() {
+      const p = this.player;
+      if (!p || p.ch.id !== 'gray' || this.state !== 'play') return;
+      const cx = p.x + p.w / 2, cy = p.y + p.h / 2, face = p.face >= 0 ? 1 : -1;
+      const lampOn = !!(p.flashlight || p.lampHeld) && !!(this.fx && this.fx.darkness);
+      this.entities.forEach((e) => {
+        if (e.type !== 'ghost' || e.dying || e.remove) return;
+        const dx = e.cx() - cx, dy = e.cy() - cy;
+        const inAura = dx * dx + dy * dy <= (2 * T) * (2 * T);
+        const inBeam = lampOn && dx * face > 0 && Math.abs(dx) <= 6 * T && Math.abs(dy) <= 1.5 * T;
+        if (inAura || inBeam) e.kill(this);
+      });
+    }
     solidEntities() { return this.entities.filter((e) => (e.platform || e.solid) && e.active && !e.remove); }
     spawn(e) { this.entities.push(e); }
     addScore(n, at) { this.score += n; if (at) this.emit('score', { x: at.x + (at.w || 0) / 2, y: at.y, n }); }
@@ -187,6 +203,7 @@
       if (this.time <= 0) { this.time = 0; this.die('time'); return; }
       this.updateEffects(dt);
       this.updateWorld(dt);
+      this.updateGlobLight(dt);
 
       const p = this.player;
       // Entrando por una tubería o puerta: animación y teletransporte

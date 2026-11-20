@@ -198,6 +198,12 @@
 
       // Disparos: Glob Caca siempre; EVO3 solo si el Glob tiene la habilidad de disparar (gris/negro)
       const canShootEvo = this.evo === 2 && !this.special && this.ch.ability === 'shoot';
+      // Glob Antiguo: cada pulsación del botón de disparo activa/desactiva la linterna;
+      // mientras mantienes el botón, la linterna se queda encendida (aunque la hubieras apagado)
+      if (this.ch.id === 'gray') {
+        if (inp.shootPressed) { this.flashlight = !this.flashlight; g.emit('flashlight', { x: this.x + this.w / 2, y: this.y, on: this.flashlight }); }
+        this.lampHeld = !!inp.shoot;
+      }
       if (inp.shootPressed && this.shootCd <= 0 && (canShootEvo || this.special === 'caca')) g.playerShoot(this);
     }
 

@@ -8,7 +8,7 @@
   const list = [
     { id: 'green', name: 'Glob Verde', folder: 'GreenRewamp-SKIN', color: '#00ff66', shot: '#00ff66',
       evos: ['Glob Verde (EVO1).png', 'Emerald Glob (EVO3).png', 'Greenbow Glob (EVO4).png'],
-      evoNames: ['Glob Verde', 'Glob Dorado', 'Glob Arcoíris'],
+      evoNames: ['Glob Verde', 'Glob Esmeralda', 'Glob Arcoíris'],
       stats: { speed: 1, jump: 1, traction: 1, float: 0, swim: 1 }, ability: 'none', desc: 'Equilibrado, no destaca en nada.' },
     { id: 'red', name: 'Glob Rojo', folder: 'RedRewamp-SKIN', color: '#ff3b1f', shot: '#ff7a00',
       evos: ['Red Glob (EVO1).png', 'Molten Glob (EVO2).png', 'Cyborg Glob (EVO3).png'],
@@ -17,7 +17,7 @@
     { id: 'blue', name: 'Glob de Jabón', folder: 'BlueRewamp_SKIN', color: '#7fd6ff', shot: '#9fe8ff',
       evos: ['Soap Glob (EVO1).png', 'Cotton Glob (SK-EVO2).png', 'ElectroClean Glob (EVO3).png'],
       evoNames: ['Glob de Jabón', 'Glob de Cotón', 'Glob Electroclean'],
-      stats: { speed: 1, jump: 1, traction: 0.5, float: 0, swim: 1 }, slippery: true, ability: 'none', desc: 'Resbala al caminar; mientras resbala no le afectan cintas ni pinchos.' },
+      stats: { speed: 1, jump: 1, traction: 0.5, float: 0, swim: 1.4 }, slippery: true, ability: 'none', desc: 'Resbala al caminar; mientras resbala no le afectan cintas ni pinchos.' },
     { id: 'ducky', name: 'Glob Ducky', folder: 'DuckyRewamp-SKIN', color: '#ffd000', shot: '#ffb000',
       evos: ['Ducky Glob (EVO1).png', 'Golden Ducky Glob (EVO2).png', 'Rich Ducky Glob (EVO3).png'],
       evoNames: ['Glob Ducky', 'Glob Ducky Dorado', 'Glob Ducky Rico'],
@@ -29,7 +29,7 @@
     { id: 'gray', name: 'Glob Antiguo', folder: 'GrayRewamp-SKIN', color: '#9a9a9a', shot: '#d0d0d0',
       evos: ['RewampedGray1.png', 'RewampedGray2.png', 'RewampedGray3.png'],
       evoNames: ['Glob Antiguo', 'Glob Pyce', 'Glob Espía'],
-      stats: { speed: 1, jump: 1, traction: 1, float: 0, swim: 1, heavy: true }, ability: 'shoot', swimSpecial: 1.4, desc: 'Pesado (su culetazo rompe bloques); dispara con el power-up y de especial nada más rápido.' }
+      stats: { speed: 1, jump: 1, traction: 1, float: 0, swim: 1, heavy: true }, ability: 'shoot', swimSpecial: 0, desc: 'Pesado (su culetazo rompe bloques); dispara con el power-up y de especial nada más rápido.' }
   ];
   list.forEach((c) => { c.paths = c.evos.map((f) => 'Globs/' + c.folder + '/' + f); });
 

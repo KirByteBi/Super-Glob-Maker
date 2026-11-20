@@ -461,6 +461,13 @@
   class Ghost extends Enemy {
     constructor(tx, ty) { super('ghost', tx, ty); this.gravity = 0; this.tiles = false; this.stompable = false; this.shootable = false; this.poundable = false; this.shy = false; }
     think(g, dt) {
+      // Un Bloque de luz tiene un radio de 2 casillas: un fantasma que entra en él se disipa y suelta una moneda
+      const gx = Math.floor(this.cx() / T), gy = Math.floor(this.cy() / T), LIGHT = S.Model.Catalog.T.LIGHT;
+      let lit = false;
+      for (let dy = -2; dy <= 2 && !lit; dy++) for (let dx = -2; dx <= 2 && !lit; dx++) {
+        if (dx * dx + dy * dy <= 4 && g.level.get(gx + dx, gy + dy) === LIGHT) lit = true;
+      }
+      if (lit) { this.kill(g); g.addCoin(this.cx(), this.cy()); return; }
       const p = g.player;
       this.shy = (p.face > 0) === (this.cx() > p.x + p.w / 2);
       if (this.shy || !near(this, p, 14 * T)) { this.vx = U.approach(this.vx, 0, 120 * dt); this.vy = U.approach(this.vy, Math.sin(this.t * 2) * 10, 120 * dt); return; }

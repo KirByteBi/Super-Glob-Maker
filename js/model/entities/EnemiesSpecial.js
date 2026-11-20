@@ -42,7 +42,17 @@
         this.jumpT -= dt * g.enemySpeedMul;
         const surface = g.liquidAt(this.cx(), this.y - T * 0.6) == null;
         // cuando le toca saltar, sube nadando hasta la superficie
-        if (this.jumpT <= 0 && !surface) this.vy = -80 * this.power;
+        // Pyces que NACEN con 2+ casillas de agua encima: nunca saltan fuera, nadan dentro del agua
+        if (this.deep === undefined) {
+          let d = 0;
+          for (let k = 0; k < 8 && g.liquidAt(this.cx(), this.cy() - k * T) != null; k++) d++;
+          this.deep = d >= 2;
+        }
+        if (this.deep) {
+          this.jumpT = 9;
+          if (surface) this.vy = 40; // no sube a la superficie: se hunde y sigue nadando
+          if (g.liquidAt(this.cx() + this.dir * T, this.cy()) == null) this.dir = -this.dir; // no se sale por el lado
+        } else if (this.jumpT <= 0 && !surface) this.vy = -80 * this.power;
         // El Pysh PREFIERE quedarse en el agua: al llegar a la superficie con el timer, la
         // mayoria de las veces solo se asoma y vuelve a bajar; solo salta fuera de vez en cuando.
         if (this.jumpT <= 0 && surface && U.hash2(Math.floor(this.t), this.spawnX) > 0.65) {
