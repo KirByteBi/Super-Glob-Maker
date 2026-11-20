@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<!-- Arte de los Pyces de la noche y el bosque:
+       ?p=mushroom  Mushroom Pyce  (seta lila + cuerpo azulado; la franja lisa de la carcasa es la que se estira)
+       ?p=piranha   Pyceranha      (enredaderas saliendo de la pantalla + planta piraña azul brillante con puntos cian)
+       ?p=vampire   Vampire Pyce   (azul pálido con rojo oscuro, capa, alas y la cara de un vampiro en la pantalla)
+       ?p=bat       Bat Pyce       (un murciélago de alas abiertas, en horizontal)
+     Genera Enemigos/Pyces/<nombre>.png con tools/NightArt.ps1 (msedge headless, 1080x1080, fondo transparente).
+     Misma anatomía que BroArt: monitor, pie abajo-izq, teclado abajo-dcha, ratón colgando a la izquierda y mano a la derecha.
+     Miran a la DERECHA. -->
+<html><head><meta charset="UTF-8">
+<style>html,body{margin:0;background:transparent;overflow:hidden}canvas{display:block}</style></head>
+<body><canvas id="c" width="1080" height="1080"></canvas>
+<script>
+const P = new URLSearchParams(location.search).get('p') || 'mushroom';
+const c = document.getElementById('c'), x = c.getContext('2d');
+const INK = '#0a0a0a', LW = 28;
+x.lineJoin = 'round'; x.lineCap = 'round';
+
+function path(pts, closed) {
+  x.beginPath(); const n = pts.length;
+  x.moveTo((pts[0][0] + pts[n - 1][0]) / 2, (pts[0][1] + pts[n - 1][1]) / 2);
+  for (let i = 0; i < n; i++) { const a = pts[i], b = pts[(i + 1) % n]; x.quadraticCurveTo(a[0], a[1], (a[0] + b[0]) / 2, (a[1] + b[1]) / 2); }
+  if (closed !== false) x.closePath();
+}
+function blob(pts, fill, lw) { path(pts); if (fill) { x.fillStyle = fill; x.fill(); } x.strokeStyle = INK; x.lineWidth = lw || LW; x.stroke(); }
+function poly(pts, fill, lw) { x.beginPath(); pts.forEach(([a, b], i) => (i ? x.lineTo(a, b) : x.moveTo(a, b))); x.closePath(); if (fill) { x.fillStyle = fill; x.fill(); } x.strokeStyle = INK; x.lineWidth = lw || LW; x.stroke(); }
+function rrect(px, py, w, h, r, fill, lw) { x.beginPath(); x.roundRect(px, py, w, h, r); if (fill) { x.fillStyle = fill; x.fill(); } x.strokeStyle = INK; x.lineWidth = lw || LW; x.stroke(); }
+function line(pts, col, w) { x.beginPath(); pts.forEach(([a, b], i) => (i ? x.lineTo(a, b) : x.moveTo(a, b))); x.strokeStyle = col; x.lineWidth = w; x.stroke(); }
+function dot(cx, cy, r, fill, lw) { x.beginPath(); x.arc(cx, cy, r, 0, 7); if (fill) { x.fillStyle = fill; x.fill(); } if (lw) { x.strokeStyle = INK; x.lineWidth = lw; x.stroke(); } }
+function oval(cx, cy, rx, ry, fill, rot, lw) { x.beginPath(); x.ellipse(cx, cy, rx, ry, rot || 0, 0, 7); if (fill) { x.fillStyle = fill; x.fill(); } if (lw) { x.strokeStyle = INK; x.lineWidth = lw; x.stroke(); } }
+function cable(fn, col, wOut, wIn) { x.beginPath(); fn(); x.strokeStyle = INK; x.lineWidth = wOut; x.stroke(); x.beginPath(); fn(); x.strokeStyle = col; x.lineWidth = wIn; x.stroke(); }
+// Ratón de los Pyces: borde de arriba plano (cable), "U" hacia abajo, rueda con palo hasta la curva
+function mouse(mx, my, fill, wheel, rot) {
+  x.save(); x.translate(mx, my); x.rotate(rot || 0);
+  x.beginPath(); x.moveTo(-58, 0); x.lineTo(58, -6); x.bezierCurveTo(66, 60, 64, 120, 30, 150); x.quadraticCurveTo(0, 168, -30, 150); x.bezierCurveTo(-66, 120, -66, 60, -58, 0); x.closePath();
+  x.fillStyle = fill; x.fill(); x.strokeStyle = INK; x.lineWidth = 24; x.stroke();
+  line([[0, 86], [0, 160]], INK, 14);
+  x.beginPath(); x.arc(0, 68, 18, 0, 7); x.fillStyle = wheel; x.fill(); x.strokeStyle = INK; x.lineWidth = 12; x.stroke();
+  x.restore();
+}
+function keyboard(kx, ky, fill, keys, rot) {
+  x.save(); x.translate(kx, ky); x.rotate(rot);
+  rrect(-170, -70, 340, 140, 18, fill);
+  x.fillStyle = keys; for (let r = 0; r < 3; r++) for (let k = 0; k < 6; k++) { x.beginPath(); x.roundRect(-140 + k * 47, -46 + r * 33, 38, 25, 5); x.fill(); x.strokeStyle = INK; x.lineWidth = 6; x.stroke(); }
+  x.restore();
+}
+function foot(fill) { blob([[190, 860], [300, 820], [470, 830], [500, 900], [450, 960], [260, 965], [175, 920]], fill); }
+// Seta pequeña (cabeza + pie)
+function mini(cx, cy, s, cap, stem, spot) {
+  rrect(cx - 9 * s, cy - 6 * s, 18 * s, 34 * s, 8 * s, stem, 12);
+  path([[cx - 44 * s, cy], [cx - 36 * s, cy - 30 * s], [cx, cy - 46 * s], [cx + 36 * s, cy - 30 * s], [cx + 44 * s, cy]]);
+  x.fillStyle = cap; x.fill(); x.strokeStyle = INK; x.lineWidth = 12; x.stroke();
+  dot(cx - 14 * s, cy - 20 * s, 7 * s, spot); dot(cx + 14 * s, cy - 24 * s, 5 * s, spot);
+}
+function leaf(lx, ly, len, rot, fill) {
+  x.save(); x.translate(lx, ly); x.rotate(rot);
+  x.beginPath(); x.moveTo(0, 0); x.quadraticCurveTo(len * 0.45, -len * 0.42, len, 0); x.quadraticCurveTo(len * 0.45, len * 0.42, 0, 0); x.closePath();
+  x.fillStyle = fill; x.fill(); x.strokeStyle = INK; x.lineWidth = 14; x.stroke();
+  line([[len * 0.1, 0], [len * 0.75, 0]], 'rgba(0,0,0,0.35)', 6);
+  x.restore();
+}
+
+x.save();
+if (P === 'bat') { x.translate(540, 540); x.scale(0.95, 0.95); x.translate(-540, -540); }
+else { x.translate(500, 560); x.scale(0.84, 0.84); x.rotate(P === 'mushroom' ? 0 : -0.04); x.translate(-540, -560); }
+
+if (P === 'mushroom') {
+  const CAP = '#b48cff', CAPD = '#8a63d6', SPOT = '#efe4ff', BLU = '#7fb2f0', BLUD = '#4d7fc9', SCR = '#13244a', GLOW = '#d9c4ff';
+  // ratón azulado colgando del cable (termina antes de la franja que se estira)
+  cable(() => { x.moveTo(330, 440); x.bezierCurveTo(250, 430, 205, 450, 192, 495); }, '#5f8fd8', 44, 18);
+  mouse(192, 490, BLU, CAP, -0.1);
+  // mano-paleta lila (por encima de la franja)
+  blob([[790, 470], [880, 430], [950, 460], [955, 540], [900, 600], [820, 590]], CAP);
+  foot(BLUD);
+  keyboard(720, 880, BLUD, '#2c4d86', 0.22);
+  mini(790, 835, 1, CAP, SPOT, '#ffffff'); mini(255, 880, 0.8, CAP, SPOT, '#ffffff');
+  // carcasa azulada alargada: de y=340 a y=820. La franja lisa y=690..780 es la que se estira.
+  rrect(305, 340, 480, 480, 34, BLU);
+  line([[335, 430], [335, 790]], '#cfe6ff', 12);
+  line([[755, 700], [755, 790]], BLUD, 10);
+  // pantalla: el Pyce que queda dentro, con ojos que brillan lila
+  rrect(375, 425, 340, 250, 26, SCR, 24);
+  // mirada hacia la derecha (->): ojos y boca desplazados
+  x.save(); x.translate(40, 0);
+  x.save(); x.shadowColor = GLOW; x.shadowBlur = 36;
+  oval(470, 530, 30, 44, GLOW); oval(620, 530, 30, 44, GLOW);
+  x.restore();
+  oval(478, 542, 12, 20, SCR); oval(628, 542, 12, 20, SCR);
+  x.beginPath(); x.moveTo(515, 616); x.quadraticCurveTo(545, 640, 575, 616); x.strokeStyle = GLOW; x.lineWidth = 14; x.stroke();
+  x.restore();
+  [[400, 470, 6], [690, 460, 5], [420, 640, 5], [680, 640, 7]].forEach(([a, b, r]) => dot(a, b, r, 'rgba(217,196,255,0.7)'));
+  // sombrero de seta que se come el monitor
+  path([[150, 400], [175, 270], [275, 165], [420, 110], [560, 92], [705, 110], [840, 165], [930, 265], [955, 400], [880, 425], [770, 400], [660, 425], [545, 402], [430, 425], [310, 400], [225, 425]]);
+  x.fillStyle = CAP; x.fill(); x.strokeStyle = INK; x.lineWidth = LW; x.stroke();
+  // láminas bajo el sombrero
+  x.beginPath(); x.moveTo(205, 408); x.quadraticCurveTo(545, 462, 905, 408); x.strokeStyle = CAPD; x.lineWidth = 16; x.stroke();
+  x.fillStyle = 'rgba(255,255,255,0.35)'; x.beginPath(); x.ellipse(330, 200, 70, 24, -0.55, 0, 7); x.fill();
+  [[330, 270, 42], [530, 205, 36], [700, 275, 48], [430, 345, 26], [815, 350, 24], [245, 345, 20], [610, 340, 18]].forEach(([a, b, r]) => dot(a, b, r, SPOT, 10));
+  // esporas
+  [[120, 310, 8], [90, 220, 6], [985, 300, 8], [1010, 210, 6], [955, 130, 5]].forEach(([a, b, r]) => dot(a, b, r, 'rgba(180,140,255,0.8)'));
+} else if (P === 'piranha') {
+  // inclinación hacia delante: la parte alta del Pyce se desplaza a la derecha (anclaje en y=560)
+  x.save();
+  const CASE = '#2f7a4f', CASED = '#1d5236', SCR = '#0e2a1c', VINE = '#3fcf5a', VINED = '#1e7a35', PLANT = '#2f9bff', PLANTD = '#1f6fe0', DOT = '#2ff0ff', MOUTH = '#7a1030', GLOW = '#a8ffb8';
+  // ratón verde oscuro colgando del cable
+  // el cable nace detrás de la carcasa (se dibuja antes del monitor)
+  cable(() => { x.moveTo(420, 450); x.bezierCurveTo(300, 440, 200, 480, 165, 578); }, VINE, 46, 22);
+  // enredadera al teclado: va por detrás del teclado (se dibuja antes que él)
+  cable(() => { x.moveTo(420, 705); x.bezierCurveTo(430, 780, 500, 800, 575, 840); }, VINED, 44, 20);
+  leaf(575, 840, 70, 0.6, VINE);
+  mouse(165, 575, CASED, VINE, -0.1);
+  // mano-paleta
+  blob([[790, 560], [880, 510], [950, 540], [955, 630], [900, 690], [820, 680]], CASE);
+  foot(CASED);
+  keyboard(720, 880, CASED, '#0f2e1d', 0.22);
+  leaf(300, 905, 90, -2.4, VINE);
+  // monitor y pantalla desplazados a la derecha: todo el Pyce mira hacia ->
+  x.save(); x.translate(45, 0);
+  rrect(275, 330, 540, 440, 34, CASE);
+  rrect(345, 390, 400, 290, 26, SCR, 24);
+  // cara: un ojo asoma, el otro está tapado por la enredadera. Toda la cara va desplazada a la derecha (mira ->)
+  x.save(); x.translate(55, 0);
+  x.save(); x.shadowColor = GLOW; x.shadowBlur = 32;
+  oval(470, 500, 28, 40, GLOW);
+  x.restore();
+  // pupila mirando a la derecha (->)
+  oval(486, 512, 10, 17, SCR);
+  // cejas enfadadas: caen hacia el centro
+  line([[428, 452], [500, 482]], GLOW, 16);
+  line([[600, 482], [660, 452]], GLOW, 16);
+  // boca en frown, con los dientes apretados
+  x.beginPath(); x.moveTo(440, 640); x.quadraticCurveTo(515, 585, 590, 640); x.strokeStyle = GLOW; x.lineWidth = 14; x.stroke();
+  x.restore();
+  // pantalla rota: impacto con anillo, grietas que salen de él y trozos de cristal que faltan
+  const CRACK = 'rgba(225,245,235,0.9)';
+  x.fillStyle = '#050b08';
+  [[[590, 552], [650, 546], [640, 602], [598, 598]], [[378, 585], [420, 575], [412, 632], [372, 625]], [[600, 470], [648, 462], [652, 515], [606, 520]]].forEach((pts) => { x.beginPath(); pts.forEach(([a, b], i) => (i ? x.lineTo(a, b) : x.moveTo(a, b))); x.closePath(); x.fill(); });
+  [[[480, 440], [456, 472], [500, 500], [462, 542], [522, 586], [506, 628]], [[480, 440], [542, 456], [578, 426], [628, 468], [658, 452]], [[456, 472], [404, 456], [372, 492]], [[500, 500], [562, 522], [612, 506], [652, 556]], [[462, 542], [410, 578], [384, 632]], [[578, 426], [598, 396], [634, 394]], [[542, 456], [530, 420], [500, 396]]].forEach((pts) => { x.beginPath(); pts.forEach(([a, b], i) => (i ? x.lineTo(a, b) : x.moveTo(a, b))); x.strokeStyle = CRACK; x.lineWidth = 5; x.stroke(); });
+  x.beginPath(); x.arc(480, 440, 15, 0, 7); x.strokeStyle = CRACK; x.lineWidth = 4; x.stroke();
+  x.restore();
+  // enredaderas: salen de la pantalla, cruzan la carcasa y suben al tallo de la planta
+  cable(() => { x.moveTo(720, 600); x.bezierCurveTo(640, 560, 700, 470, 640, 420); }, VINE, 42, 20);
+  cable(() => { x.moveTo(560, 650); x.bezierCurveTo(470, 690, 360, 640, 330, 560); x.bezierCurveTo(305, 500, 345, 450, 330, 400); }, VINE, 40, 18);
+  leaf(640, 430, 90, -2.1, VINE); leaf(330, 420, 85, -1.0, VINE); leaf(345, 600, 80, 2.4, VINED);
+  // brazos de enredadera: uno sale del monitor hacia la mano, otro baja hacia el pie
+  cable(() => { x.moveTo(745, 520); x.bezierCurveTo(800, 470, 880, 520, 862, 596); }, VINE, 46, 22);
+  leaf(862, 596, 70, 0.6, VINE);
+  // tallo (sale de la esquina de la pantalla y sube a la planta)
+  cable(() => { x.moveTo(735, 470); x.bezierCurveTo(840, 470, 800, 400, 850, 330); }, VINE, 62, 38);
+  // planta piraña azul brillante: boca abierta hacia la derecha (cabeza grande, 3 dientes arriba y 3 abajo)
+  // cabeza de perfil: la planta mira a la derecha (->). Boca abierta hacia el lado, dientes en las dos mandíbulas
+  // cabeza girada hacia la derecha: giro sobre la base del cuello (800,340)
+  x.save(); x.translate(0, -24); x.translate(800, 340); x.rotate(0.15); x.translate(-800, -340);
+  // interior de la boca (abierta hacia la derecha)
+  // lengua roja: empieza después de la bisagra y asoma hacia la derecha
+  poly([[795, 337], [1000, 330], [1060, 352], [995, 359], [795, 351]], MOUTH, 10);
+  // bisagra cerrada: une las mandíbulas detrás, dejando la abertura solo hacia la derecha
+  dot(782, 320, 32, PLANTD, 16);
+  // mandíbula superior girada hacia arriba: bisagra en la parte de atrás (760,305)
+  x.save(); x.translate(760, 305); x.rotate(0.04); x.translate(-760, -305);
+  // dientes de la mandíbula superior (apuntan abajo)
+  [[900, 300], [960, 298], [1010, 292]].forEach(([a, b]) => poly([[a - 20, b - 4], [a + 20, b - 4], [a, b + 42]], '#ffffff', 8));
+  // mandíbula inferior abierta: gira hacia abajo sobre la bisagra de atrás (760,340)
+  x.save(); x.translate(760, 340); x.rotate(0.12); x.translate(-760, -340);
+  // dientes de la mandíbula inferior (apuntan arriba)
+  [[880, 340], [935, 342]].forEach(([a, b]) => poly([[a - 20, b + 4], [a + 20, b + 4], [a, b - 42]], '#ffffff', 8));
+  // mandíbula inferior
+  blob([[760, 330], [950, 346], [1012, 384], [930, 402], [800, 392], [760, 370]], PLANTD);
+  x.restore();
+  // mandíbula superior: hocico que apunta a la derecha
+  blob([[760, 200], [840, 150], [940, 160], [1030, 240], [1042, 290], [960, 306], [760, 306]], PLANT);
+  // ojo mirando a la derecha
+  dot(850, 218, 22, '#ffffff', 8); dot(862, 218, 10, DOT);
+  // puntos cian del cráneo
+  [[800, 250, 13], [830, 290, 9], [900, 185, 10]].forEach(([a, b, r]) => dot(a, b, r, DOT, 6));
+  x.fillStyle = 'rgba(255,255,255,0.5)'; x.beginPath(); x.ellipse(820, 175, 46, 14, -0.45, 0, 7); x.fill();
+  x.restore();
+  x.restore();
+  x.restore();} else if (P === 'vampire') {
+  const PALE = '#bcd0ee', PALED = '#8fa8d6', RED = '#8b1224', REDD = '#5a0a16', FACE = '#e9f0fb', HAIR = '#14101c', EYE = '#ff2a4a';
+  // alas detrás del cuerpo (membrana roja, huesos negros)
+  poly([[310, 440], [170, 230], [95, 215], [60, 150], [30, 270], [75, 330], [45, 420], [120, 410], [95, 500], [200, 470], [250, 540]], RED);
+  line([[310, 440], [95, 215]], INK, 14); line([[310, 440], [45, 420]], INK, 14); line([[310, 440], [95, 500]], INK, 14);
+  poly([[790, 440], [930, 230], [1005, 215], [1040, 150], [1070, 270], [1025, 330], [1055, 420], [980, 410], [1005, 500], [900, 470], [850, 540]], RED);
+  line([[790, 440], [1005, 215]], INK, 14); line([[790, 440], [1055, 420]], INK, 14); line([[790, 440], [1005, 500]], INK, 14);
+  // capa
+  poly([[300, 340], [235, 540], [245, 790], [830, 800], [850, 540], [785, 340]], REDD);
+  // cuello alto de la capa (dos picos)
+  poly([[290, 350], [250, 160], [410, 330]], RED); poly([[800, 350], [845, 160], [680, 330]], RED);
+  poly([[295, 345], [268, 215], [370, 335]], PALE, 12); poly([[795, 345], [826, 215], [725, 335]], PALE, 12);
+  // ratón y mano
+  cable(() => { x.moveTo(300, 480); x.bezierCurveTo(215, 470, 170, 510, 165, 588); }, '#7d90b8', 44, 18);
+  mouse(165, 585, PALE, RED, -0.1);
+  blob([[790, 540], [880, 490], [950, 520], [955, 610], [900, 670], [820, 660]], PALE);
+  foot(REDD);
+  keyboard(720, 885, REDD, '#2a0510', 0.22);
+  // monitor azul pálido con la cara de un vampiro en la pantalla
+  rrect(275, 330, 540, 440, 34, PALE);
+  line([[300, 430], [300, 720]], '#e4eeff', 12);
+  // pantalla y cara desplazadas a la derecha (->)
+  x.save(); x.translate(40, 0);
+  rrect(345, 385, 400, 300, 26, FACE, 24);
+  poly([[355, 395], [735, 395], [735, 470], [610, 480], [545, 440], [480, 480], [355, 470]], HAIR, 10);   // pelo con pico en la frente
+  x.save(); x.shadowColor = EYE; x.shadowBlur = 30;
+  [[470, 535, -0.3], [620, 535, 0.3]].forEach(([ex, ey, r]) => oval(ex, ey, 40, 17, EYE, r));
+  x.restore();
+  [[470, 535], [620, 535]].forEach(([ex, ey]) => oval(ex, ey, 7, 15, INK));
+  line([[425, 495], [505, 510]], INK, 12); line([[665, 495], [585, 510]], INK, 12);
+  x.beginPath(); x.moveTo(470, 610); x.quadraticCurveTo(545, 645, 620, 610); x.strokeStyle = INK; x.lineWidth = 14; x.stroke();
+  [[505, 626], [585, 626]].forEach(([a, b]) => poly([[a - 13, b - 12], [a + 13, b - 12], [a, b + 32]], '#ffffff', 8));
+  poly([[545, 700], [575, 730], [545, 760], [515, 730]], EYE, 12);   // broche
+  x.restore();
+} else {
+  // BAT: murciélago de alas abiertas en horizontal (el cuerpo es un monitorcito)
+  const PALE = '#bcd0ee', RED = '#8b1224', REDD = '#5a0a16', SCR = '#1a1330', EYE = '#ff2a4a';
+  const wing = (m) => {
+    const X = (v) => (m ? 1080 - v : v);
+    x.beginPath(); [[440, 450], [300, 335], [135, 262], [70, 305], [100, 365], [40, 435], [110, 470], [80, 545], [185, 522], [250, 592], [335, 532], [430, 565]].forEach(([a, b], i) => (i ? x.lineTo(X(a), b) : x.moveTo(X(a), b)));
+    x.closePath(); x.fillStyle = RED; x.fill(); x.strokeStyle = INK; x.lineWidth = LW; x.stroke();
+    [[135, 262], [40, 435], [80, 545], [250, 592]].forEach(([a, b]) => line([[X(440), 462], [X(a), b]], INK, 14));
+  };
+  wing(false); wing(true);
+  // orejas puntiagudas
+  poly([[450, 400], [425, 285], [515, 365]], PALE); poly([[630, 400], [655, 285], [565, 365]], PALE);
+  poly([[455, 385], [440, 322], [490, 372]], RED, 8); poly([[625, 385], [640, 322], [590, 372]], RED, 8);
+  // patitas
+  oval(490, 600, 24, 14, REDD, 0, 12); oval(590, 600, 24, 14, REDD, 0, 12);
+  // cuerpo: monitorcito con cara de murciélago
+  rrect(425, 385, 230, 215, 38, PALE);
+  // cara desplazada a la derecha (->)
+  x.save(); x.translate(25, 0);
+  rrect(458, 418, 164, 140, 20, SCR, 20);
+  x.save(); x.shadowColor = EYE; x.shadowBlur = 24;
+  [[505, 475, -0.25], [575, 475, 0.25]].forEach(([ex, ey, r]) => oval(ex, ey, 24, 12, EYE, r));
+  x.restore();
+  [[505, 475], [575, 475]].forEach(([ex, ey]) => oval(ex, ey, 5, 10, INK));
+  x.beginPath(); x.moveTo(505, 520); x.quadraticCurveTo(540, 540, 575, 520); x.strokeStyle = '#d6e2f7'; x.lineWidth = 9; x.stroke();
+  [[518, 527], [562, 527]].forEach(([a, b]) => poly([[a - 8, b - 6], [a + 8, b - 6], [a, b + 20]], '#ffffff', 6));
+  x.restore();
+}
+x.restore();
+</script></body></html>

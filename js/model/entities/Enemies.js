@@ -12,6 +12,16 @@
 
   const near = (e, p, dist) => Math.abs(p.x + p.w / 2 - e.cx()) < dist && Math.abs(p.y + p.h / 2 - e.cy()) < dist * 0.7;
   const dirTo = (e, p) => (p.x + p.w / 2 < e.cx() ? -1 : 1);
+  // La luz de un bloque LIGHT alcanza un radio de dos casillas.
+  const diesInLight = (e, g) => {
+    const gx = Math.floor(e.cx() / T), gy = Math.floor(e.cy() / T), LIGHT = C.T.LIGHT;
+    for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+      if (dx * dx + dy * dy <= 4 && g.level.get(gx + dx, gy + dy) === LIGHT) {
+        e.kill(g); g.addCoin(e.cx(), e.cy()); return true;
+      }
+    }
+    return false;
+  };
 
   // ---------------------------------------------------------------- base
   class Enemy extends Entity {
@@ -538,10 +548,72 @@
     }
   }
 
+  // ---------------------------------------------------------------- Pyces de bosque/noche
+  // Mushroom: en base camina sin caer por precipicios; al acercarse el Glob se estira
+  // verticalmente como un muro y no se mueve hasta encogerse otra vez.
+  class Mushroom extends Enemy {
+    constructor(tx, ty) { super('mushroom', tx, ty); this.turnAtLedge = true; this.baseH = this.h; this.stretch = 0; this.stretchT = 1.2; }
+    think(g, dt) {
+      if (diesInLight(this, g)) return;
+      const p = g.player;
+      this.stretchT -= dt * g.enemySpeedMul;
+      if (this.stretchT <= 0) {
+        this.stretchT = this.stretch > 0.5 ? 1.6 : 2.4;
+        if (Math.abs(p.x + p.w / 2 - this.cx()) < 5 * T) this.stretch = this.stretch > 0.5 ? 0 : 1;
+      }
+      const targetH = this.baseH + this.stretch * 48;
+      const oldH = this.h;
+      this.h = U.approach(this.h, targetH, dt * 120);
+      this.y -= this.h - oldH; // conserva los pies en el suelo mientras se estira
+      if (this.stretch > 0.15 || this.h > this.baseH + 2) { this.vx = 0; return; }
+      this.walk(g, 34);
+    }
+  }
+  // Pyceranha: planta fija. Apunta al Glob y sus bolas de fuego se destruyen contra paredes.
+  class Piranha extends Enemy {
+    constructor(tx, ty) { super('piranha', tx, ty); this.gravity = 0; this.fireT = 1.4; }
+    think(g, dt) {
+      if (diesInLight(this, g)) return;
+      this.vx = 0; this.vy = 0;
+      const p = g.player, dx = p.x + p.w / 2 - this.cx(), dy = p.y + p.h / 2 - this.cy();
+      this.dir = Math.sign(dx) || this.dir;
+      this.fireT -= dt * g.enemySpeedMul;
+      if (this.fireT <= 0 && Math.abs(dx) < 12 * T) {
+        this.fireT = 2.5;
+        const d = Math.hypot(dx, dy) || 1, speed = 180 * g.enemySpeedMul;
+        this.shoot(g, 'fire', dx / d * speed, dy / d * speed, { gravity: 0, life: 2.8 });
+      }
+    }
+    physics() {} // fijo: no cae ni se desplaza
+  }
+  // Vampire se queda quieto hasta que el jugador se acerca; entonces se transforma en Bat.
+  class Vampire extends Enemy {
+    constructor(tx, ty) { super('vampire', tx, ty); this.gravity = 0; this.awake = false; }
+    becomeBat(g) {
+      const cx = this.cx(), cy = this.cy(), d = C.OBJECTS.bat;
+      this.type = 'bat'; this.w = d.w; this.h = d.h; this.x = cx - this.w / 2; this.y = cy - this.h / 2;
+      this.awake = true; this.tiles = true; this.dir = dirTo(this, g.player);
+      g.emit('enemyAngry', { x: cx, y: cy });
+    }
+    think(g) {
+      if (diesInLight(this, g)) return;
+      if (!this.awake) { this.vx = 0; this.vy = 0; if (near(this, g.player, 6 * T)) this.becomeBat(g); return; }
+      this.vx = this.dir * 72 * g.enemySpeedMul; this.vy = 0;
+    }
+    onWall(w) { this.dir = -w; }
+  }
+  // Bat: vuelo horizontal continuo, rebota en muros.
+  class Bat extends Enemy {
+    constructor(tx, ty) { super('bat', tx, ty); this.gravity = 0; }
+    think(g) { if (diesInLight(this, g)) return; this.vx = this.dir * 72 * g.enemySpeedMul; this.vy = 0; }
+    onWall(w) { this.dir = -w; }
+  }
+
   [['stupid', Stupid], ['so', SO], ['symbol', Symbol], ['pyce2', Pyce2], ['guest', Guest], ['noob', Noob], ['elf', Elf],
     ['umbrella', Umbrella], ['zom', Zom], ['crystal', Crystal], ['knight', Knight], ['rebel', Rebel], ['skelebone', SkeleBone], ['snowcap', SnowCap],
     ['festive', Festive], ['bomb', Bomb], ['toybomb', ToyBomb], ['wingel', Wingel], ['strechy', Strechy], ['flower', Flower], ['cannon', Cannon],
-    ['starbullet', StarBullet], ['ghost', Ghost], ['astralbpyce', AstralBPyce], ['dreamyspyce', DreamySPyce], ['holo', Holo], ['motions', Motions], ['hacker', Hacker]
+    ['starbullet', StarBullet], ['ghost', Ghost], ['astralbpyce', AstralBPyce], ['dreamyspyce', DreamySPyce], ['holo', Holo], ['motions', Motions], ['hacker', Hacker],
+    ['mushroom', Mushroom], ['piranha', Piranha], ['vampire', Vampire], ['bat', Bat]
   ].forEach(([k, K]) => reg(k, K));
   S.Model.Enemy = Enemy;
 })(window.SGM);

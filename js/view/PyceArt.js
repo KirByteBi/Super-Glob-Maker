@@ -50,6 +50,10 @@
     mimic: { src: 'Enemigos/Mimic Pyce (ENEMY-SKIN)/Mimic Pyce.png', w: 1080, h: 1080, box: [112, 30, 783, 1038] },
     dirty: { src: 'Enemigos/Mimic Pyce (ENEMY-SKIN)/Dirty Pyce (SK-EVO2).png', w: 1080, h: 1080, box: [203, 14, 660, 1052] },
     nomic: { src: 'Enemigos/Mimic Pyce (ENEMY-SKIN)/NOmic Pyce (SK-EVO3).png', w: 1080, h: 1080, box: [167, 25, 783, 1038] },
-    goldmimic: { src: 'Enemigos/Mimic Pyce (ENEMY-SKIN)/Golden MimicPyce (SK-EVO4).png', w: 1080, h: 1080, box: [41, 30, 998, 1038] }
+    goldmimic: { src: 'Enemigos/Mimic Pyce (ENEMY-SKIN)/Golden MimicPyce (SK-EVO4).png', w: 1080, h: 1080, box: [41, 30, 998, 1038] },
+    mushroom: { src: 'Enemigos/Pyces/Mushroom Pyce.png', w: 1080, h: 1080, box: [118, 160, 781, 767] },
+    piranha: { src: 'Enemigos/Pyces/Pyceranha.png', w: 1080, h: 1080, box: [128, 194, 797, 723] },
+    vampire: { src: 'Enemigos/Pyces/Vampire Pyce.png', w: 1080, h: 1080, box: [50, 188, 897, 731] },
+    bat: { src: 'Enemigos/Pyces/Bat Pyce.png', w: 1080, h: 1080, box: [52, 262, 977, 353] }
   };
 })(window.SGM);

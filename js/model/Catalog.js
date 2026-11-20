@@ -111,6 +111,10 @@
     holo: { name: 'HoloPyce', w: 28, h: 28, tier: 4, desc: 'Holograma: a ratos es intangible.' },
     motions: { name: '4motions Pyce', w: 28, h: 28, tier: 4, desc: 'Cambia de emoción: feliz, enfadado, triste o asustado.' },
     hacker: { name: '1x1x1x1 Pyce', w: 28, h: 30, tier: 5, desc: 'Hacker: sus píxeles atraviesan paredes.' },
+    mushroom: { name: 'Mushroom Pyce', w: 30, h: 30, tier: 3, desc: 'Camina sin caer por precipicios. Se estira como muro para bloquearte y entonces no puede moverse.' },
+    piranha: { name: 'Pyceranha', w: 34, h: 32, tier: 4, desc: 'No se mueve. Su planta piraña apunta y dispara fuego, que se desmorona contra las paredes.' },
+    vampire: { name: 'Vampire Pyce', w: 32, h: 32, tier: 4, desc: 'Permanece quieto; al acercarte se transforma en murciélago y va a por ti.' },
+    bat: { name: 'Bat Pyce', w: 34, h: 20, anchor: 'center', tier: 3, desc: 'Murciélago que vuela horizontalmente y se da la vuelta al tocar una pared.' },
     // acuáticos (familia Pysh): Clown Pysh es la versión fuerte de Pysh
     pysh: { name: 'Pysh', w: 28, h: 24, anchor: 'center', tier: 2, water: true, desc: 'Nada y salta fuera del agua o del líquido. En lava/veneno se vuelve ígneo/venenoso. Sin agua solo brinca.' },
     clownpysh: { name: 'Clown Pysh', w: 28, h: 26, anchor: 'center', tier: 3, water: true, hp: 2, desc: 'Versión fuerte de Pysh: más rápido y salta más alto hacia ti. 2 golpes.' },
@@ -209,8 +213,8 @@
   const PALETTE = [
     { id: 'terrain', name: 'Terreno', items: tiles([1, 53, 5, 17]).concat(objs(['treeplat'])).concat(tiles([56, 58, 11, 29, 30, 31, 32, 33, 34, 37, 52, 8, 6, 9, 16, 14, 15, 48])) },
     { id: 'blocks', name: 'Bloques', items: tiles([2, 3, 13, 4, 7, 19, 18, 36, 12, 38, 55, 39, 41, 40, 47, 46, 20, 21, 22, 23, 24, 25, 26, 27, 28, 49, 50, 51, 35, 42, 43]) },
-    { id: 'pyces', name: 'Pyces', items: objs(['stupid', 'so', 'symbol', 'pyce2', 'guest', 'noob', 'elf', 'umbrella', 'zom', 'knight', 'rebel', 'skelebone', 'builder', 'snowcap', 'festive', 'bomb', 'toybomb', 'wingel', 'strechy', 'flower', 'cannon']) },
-    { id: 'pyces2', name: 'Pyces raros', items: objs(['ghost', 'holo', 'motions', 'hacker', 'pysh', 'clownpysh', 'axolotl', 'squid', 'shark', 'mimic', 'dirty', 'nomic', 'goldmimic']) },
+    { id: 'pyces', name: 'Pyces', items: objs(['stupid', 'so', 'symbol', 'pyce2', 'guest', 'noob', 'elf', 'umbrella', 'zom', 'knight', 'rebel', 'skelebone', 'builder', 'snowcap', 'festive', 'bomb', 'toybomb', 'wingel', 'strechy', 'flower', 'cannon', 'mushroom', 'bat']) },
+    { id: 'pyces2', name: 'Pyces raros', items: objs(['ghost', 'holo', 'motions', 'hacker', 'piranha', 'vampire', 'pysh', 'clownpysh', 'axolotl', 'squid', 'shark', 'mimic', 'dirty', 'nomic', 'goldmimic']) },
     { id: 'jefes', name: 'Jefes', items: objs(['noeye', 'nosense', 'noir', 'moonstar']) },
     { id: 'items', name: 'Objetos', items: objs(['evo', 'flor', 'caca', 'vacio', 'brillo', 'miniglob'].concat(S.Model.Characters.list.map((c) => 'cap_' + c.id)).concat(['coin10', 'coin30', 'coin50', 'coin100', 'spring', 'checkpoint', 'starcoin', 'starcoin_giga', 'starcoin_moon', 'starcoin_rg', 'starcoin_magic', 'starcoin_traitor'])) },
     { id: 'cristal', name: 'Cristalizados', items: objs(['crystal', 'miner', 'astralbpyce', 'dreamyspyce']) },
