@@ -273,7 +273,20 @@
         gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(0.5, 'rgba(0,0,0,0.85)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
         d.fillStyle = gr; d.beginPath(); d.arc(x, y, r, 0, 7); d.fill();
       };
-      if (!p.dead || g.state === 'dying') light(p.x + p.w / 2, p.y + p.h / 2, (p.star > 0 ? 230 : 120) + Math.sin(t * 3) * 4);
+      const gl = g.globLight && g.globLight();
+      if (!p.dead || g.state === 'dying') {
+        // Familia gris: el aura ilumina un poco más que el resto de Globs
+        light(p.x + p.w / 2, p.y + p.h / 2, (p.star > 0 ? 230 : gl ? gl.aura + 40 : 120) + Math.sin(t * 3) * 4);
+        // Linterna: recorta un cono de la oscuridad hacia delante, con el mismo alcance que usa la lógica
+        if (gl && gl.lamp) {
+          const px = p.x + p.w / 2 - cam.x, py = p.y + p.h / 2 - cam.y;
+          const tipX = px + gl.face * gl.reach;
+          const grad = d.createLinearGradient(px, py, tipX, py);
+          grad.addColorStop(0, 'rgba(0,0,0,1)'); grad.addColorStop(0.7, 'rgba(0,0,0,0.8)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
+          d.fillStyle = grad; d.beginPath();
+          d.moveTo(px, py - gl.near); d.lineTo(tipX, py - gl.far); d.lineTo(tipX, py + gl.far); d.lineTo(px, py + gl.near); d.closePath(); d.fill();
+        }
+      }
       // Bloques de luz: iluminan su zona en el Apagón
       const L = g.level, x0 = Math.max(0, Math.floor(cam.x / T)), x1 = Math.min(L.width - 1, Math.ceil((cam.x + cam.w) / T));
       const y0 = Math.max(0, Math.floor(cam.y / T)), y1 = Math.min(L.height - 1, Math.ceil((cam.y + cam.h) / T));
@@ -288,8 +301,32 @@
       ctx.drawImage(this.dark, 0, 0);
     }
 
+    // Resplandor del aura y cono de la linterna de la familia gris (visible en cualquier nivel)
+    globGlow(ctx, g, t) {
+      const gl = g.globLight && g.globLight(), p = g.player, cam = g.camera;
+      if (!gl || p.dead) return;
+      const x = p.x + p.w / 2 - cam.x, y = p.y + p.h / 2 - cam.y;
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      // aura: círculo suave con un leve latido
+      const r = gl.aura * (1 + Math.sin(t * 3) * 0.03);
+      const ag = ctx.createRadialGradient(x, y, 4, x, y, r);
+      ag.addColorStop(0, 'rgba(255,248,200,0.22)'); ag.addColorStop(0.6, 'rgba(255,240,170,0.10)'); ag.addColorStop(1, 'rgba(255,240,170,0)');
+      ctx.fillStyle = ag; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+      // linterna: cono amarillo pálido que se abre y se desvanece
+      if (gl.lamp) {
+        const tipX = x + gl.face * gl.reach;
+        const lg = ctx.createLinearGradient(x, y, tipX, y);
+        lg.addColorStop(0, 'rgba(255,248,200,0.45)'); lg.addColorStop(0.6, 'rgba(255,244,180,0.22)'); lg.addColorStop(1, 'rgba(255,244,180,0)');
+        ctx.fillStyle = lg; ctx.beginPath();
+        ctx.moveTo(x, y - gl.near); ctx.lineTo(tipX, y - gl.far); ctx.lineTo(tipX, y + gl.far); ctx.lineTo(x, y + gl.near); ctx.closePath(); ctx.fill();
+      }
+      ctx.restore();
+    }
+
     overlays(ctx, g, t) {
       const fx = g.fx, p = g.player, cam = g.camera;
+      this.globGlow(ctx, g, t);
       if (g.theme.swim) { ctx.fillStyle = 'rgba(0,60,160,0.12)'; ctx.fillRect(0, 0, W, H); }
       if (fx.darkness) this.darkness(ctx, g, t);
       if (fx.ghosts) {

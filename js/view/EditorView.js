@@ -176,7 +176,8 @@
         else S.View.Sprites.drawIcon(x, it, 36, pal, ch, theme);
         b.appendChild(cv);
         const name = it.name || C.itemName(it);
-        b.title = name;
+        const dsc = C.itemDesc ? C.itemDesc(it) : '';
+        b.title = dsc ? name + ' — ' + dsc : name;
         const sel = ed.tool.kind === it.kind && (ed.tool.id === it.id && it.kind === 'tile' || ed.tool.type === it.type && it.kind === 'obj' || it.kind === 'erase') && (!it.deco || ed.tool.deco === it.deco) && (!it.npc || ed.tool.npc === it.npc);
         if (sel) b.classList.add('on');
         b.onclick = () => { ed.setTool(it); S.events.emit('ui:click'); this.refreshItems(ed); };
@@ -200,6 +201,8 @@
       this.info.appendChild(el('span', '', S.Model.Themes.name(theme, L.mode) + ' · ' + ch.name + ' · ' + L.width + '×' + L.height + ' · ⏱' + L.time));
       this.info.appendChild(el('span', 'hint', 'Clic: colocar · Clic der.: borrar · Rueda / flechas: mover · Objeto sobre caja = contenido'));
       this.info.appendChild(el('span', 'tool', 'Herramienta: ' + C.itemName(ed.tool)));
+      const toolDesc = C.itemDesc ? C.itemDesc(ed.tool) : '';
+      if (toolDesc) this.info.appendChild(el('span', 'hint', toolDesc));
     }
   }
 

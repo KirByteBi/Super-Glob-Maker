@@ -285,3 +285,5 @@ body.touch #stage { touch-action: none; }
 
 /* Logo de Super Glob Maker en la pantalla de título */
 .logo-img { display: block; max-width: min(360px, 80vw); height: auto; margin: 0 auto; pointer-events: none; }
+.logo-modal { max-width: min(240px, 70vw); margin: 0 auto 8px; }
+.load-fact { max-width: 420px; margin: 10px auto 0; opacity: .85; }

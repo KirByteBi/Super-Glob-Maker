@@ -8,6 +8,22 @@
   S.View.button = button;
   function globImg(path, cls) { const i = document.createElement('img'); i.src = S.View.Assets.url(path); i.className = cls || 'glob-img'; i.alt = ''; i.draggable = false; return i; }
 
+  // Datos curiosos para la pantalla de carga (todos salen de reglas reales del juego)
+  const LOAD_FACTS = [
+    'Cada 100 monedas ganas una vida.',
+    'Cada 8 monedas rojas ganas una vida extra.',
+    'Los fantasmas avanzan cuando les das la espalda y se paran si los miras.',
+    'Los bloques de luz eliminan a los fantasmas que se acercan y sueltan una moneda.',
+    'El Glob Antiguo es pesado: su culetazo rompe bloques y su aura elimina fantasmas.',
+    'El Glob de Jabón no sufre daño de los pinchos mientras resbala.',
+    'El bloque POW elimina a los enemigos que están en el suelo.',
+    'El Crystal Pyce tiene cristales en la cabeza: no se puede pisar.',
+    'Los Pysh se vuelven de fuego o de veneno si caen en lava o en líquido peligroso.',
+    'Solo el Void Glob puede pisar a los Pyces cristalizados más peligrosos.',
+    'Puedes enlazar tuberías y puertas con la herramienta de enlace del editor.',
+    'Un NPC puede soltar una llave o un powerup cuando cumples su condición.'
+  ];
+
   class MenuView {
     constructor(screen, modal, toastEl) { this.screen = screen; this.modal = modal; this.toastEl = toastEl; this.toastT = null; }
 
@@ -224,6 +240,8 @@
     // Diálogo de cuenta Glob Defenders. h = { login(user,pass,cb), logout(cb), linked, username }
     accountDialog(h) {
       const b = this.openModal('Cuenta Glob Defenders');
+      const lg = document.createElement('img'); lg.src = S.View.Assets.url('LogosSuperGlobMaker/LogoSuperGlobMaker.png'); lg.alt = 'Super Glob Maker'; lg.draggable = false; lg.className = 'logo-img logo-modal';
+      b.appendChild(lg);
       if (!S.Model.Gld.configured()) { b.appendChild(el('p', '', 'La conexión con Glob Defenders no está disponible ahora mismo.')); b.appendChild(button('Cerrar', '', () => this.closeModal())); return; }
       if (h.linked) {
         b.appendChild(el('p', '', 'Sesión iniciada como: ' + (h.username || 'tu cuenta de GlD')));
@@ -905,9 +923,13 @@
 
     loading(p) {
       const s = this.open('loading');
-      s.appendChild(el('div', 'logo-main', 'GLOB MAKER'));
+      const li = document.createElement('img'); li.src = S.View.Assets.url('LogosSuperGlobMaker/LogoSuperGlobMaker.png'); li.alt = 'Super Glob Maker'; li.draggable = false; li.className = 'logo-img';
+      s.appendChild(li);
       const bar = el('div', 'bar'); const fill = el('div', 'fill'); fill.style.width = Math.round(p * 100) + '%'; bar.appendChild(fill); s.appendChild(bar);
       s.appendChild(el('p', '', 'Cargando Globs…'));
+      // un dato curioso del juego (el mismo durante toda la carga, para que no parpadee)
+      if (!this._loadFact) this._loadFact = LOAD_FACTS[Math.floor(Math.random() * LOAD_FACTS.length)];
+      s.appendChild(el('p', 'small load-fact', '💡 ' + this._loadFact));
     }
   }
 

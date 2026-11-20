@@ -143,18 +143,33 @@
     // Glob Antiguo: el aura (siempre encendida) mata fantasmas a 2 casillas;
     // la linterna (encendida al pulsar disparo o mientras lo mantienes) mata fantasmas en un cono de 6 casillas
     // hacia delante, pero solo en niveles oscuros.
-    updateGlobLight() {
+    // Luz de la familia gris (Glob Antiguo y sus evoluciones): aura fija + linterna con alcance por evolución.
+    // La usan la lógica (matar fantasmas) y el dibujo, para que lo que se ve sea lo que mata.
+    globLight() {
       const p = this.player;
-      if (!p || p.ch.id !== 'gray' || this.state !== 'play') return;
-      const cx = p.x + p.w / 2, cy = p.y + p.h / 2, face = p.face >= 0 ? 1 : -1;
+      if (!p || p.ch.id !== 'gray') return null;
       const lampOn = !!(p.flashlight || p.lampHeld) && !!(this.fx && this.fx.darkness);
+      return {
+        aura: 2 * T,                                  // radio del aura (siempre encendida)
+        lamp: lampOn,                                 // linterna encendida (solo en niveles oscuros)
+        reach: (4 + 2 * (p.evo | 0)) * T,             // alcance: 4 casillas base, +2 por evolución
+        near: 0.8 * T, far: 1.5 * T,                  // medio ancho del cono: cerca del Glob / en la punta
+        face: p.face >= 0 ? 1 : -1
+      };
+    }
+    updateGlobLight() {
+      const p = this.player, gl = this.globLight();
+      if (!p || !gl || this.state !== 'play') return;
+      const cx = p.x + p.w / 2, cy = p.y + p.h / 2;
       this.entities.forEach((e) => {
         if (e.type !== 'ghost' || e.dying || e.remove) return;
         const dx = e.cx() - cx, dy = e.cy() - cy;
-        const inAura = dx * dx + dy * dy <= (2 * T) * (2 * T);
-        // el alcance de la linterna crece con la evolución: 4 casillas en la forma base, +2 por evolución
-        const reach = (4 + 2 * (p.evo | 0)) * T;
-        const inBeam = lampOn && dx * face > 0 && Math.abs(dx) <= reach && Math.abs(dy) <= 1.5 * T;
+        const inAura = dx * dx + dy * dy <= gl.aura * gl.aura;
+        let inBeam = false;
+        if (gl.lamp && dx * gl.face > 0 && Math.abs(dx) <= gl.reach) {
+          const half = gl.near + (gl.far - gl.near) * (Math.abs(dx) / gl.reach); // el cono se abre con la distancia
+          inBeam = Math.abs(dy) <= half;
+        }
         if (inAura || inBeam) e.kill(this);
       });
     }

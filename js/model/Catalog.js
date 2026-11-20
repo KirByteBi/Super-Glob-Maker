@@ -265,6 +265,13 @@
       if (it.kind === 'erase') return tr('Borrador');
       if (it.kind === 'link') return tr('Enlazar tubería/puerta');
       return tr((OBJECTS[it.type] && OBJECTS[it.type].name) || it.type);
+    },
+    // Qué hace el objeto/enemigo (para el tooltip y la barra del editor); '' si no tiene descripción
+    itemDesc(it) {
+      const tr = S.tr || ((s) => s);
+      if (!it || it.kind !== 'obj') return '';
+      const d = OBJECTS[it.type] && OBJECTS[it.type].desc;
+      return d ? tr(d) : '';
     }
   };
 })(window.SGM);
