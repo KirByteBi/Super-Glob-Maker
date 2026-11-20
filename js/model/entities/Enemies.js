@@ -14,9 +14,9 @@
   const dirTo = (e, p) => (p.x + p.w / 2 < e.cx() ? -1 : 1);
   // La luz de un bloque LIGHT alcanza un radio de dos casillas.
   const diesInLight = (e, g) => {
-    const gx = Math.floor(e.cx() / T), gy = Math.floor(e.cy() / T), LIGHT = C.T.LIGHT;
+    const gx = Math.floor(e.cx() / T), gy = Math.floor(e.cy() / T), LIGHT = (S.Model.Catalog.T && S.Model.Catalog.T.LIGHT) || 48;
     for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
-      if (dx * dx + dy * dy <= 4 && g.level.get(gx + dx, gy + dy) === LIGHT) {
+      if (dx * dx + dy * dy <= 4 && Number(g.level.get(gx + dx, gy + dy)) === LIGHT) {
         e.kill(g); g.addCoin(e.cx(), e.cy()); return true;
       }
     }
@@ -552,15 +552,12 @@
   // Mushroom: en base camina sin caer por precipicios; al acercarse el Glob se estira
   // verticalmente como un muro y no se mueve hasta encogerse otra vez.
   class Mushroom extends Enemy {
-    constructor(tx, ty) { super('mushroom', tx, ty); this.turnAtLedge = true; this.baseH = this.h; this.stretch = 0; this.stretchT = 1.2; }
+    constructor(tx, ty) { super('mushroom', tx, ty); this.turnAtLedge = true; this.baseH = this.h; this.stretch = 0; }
     think(g, dt) {
       if (diesInLight(this, g)) return;
       const p = g.player;
-      this.stretchT -= dt * g.enemySpeedMul;
-      if (this.stretchT <= 0) {
-        this.stretchT = this.stretch > 0.5 ? 1.6 : 2.4;
-        if (Math.abs(p.x + p.w / 2 - this.cx()) < 5 * T) this.stretch = this.stretch > 0.5 ? 0 : 1;
-      }
+      // Se estira inmediatamente cuando el Glob entra delante de él; en forma base vuelve a caminar.
+      this.stretch = Math.abs(p.x + p.w / 2 - this.cx()) < 5 * T ? 1 : 0;
       const targetH = this.baseH + this.stretch * 48;
       const oldH = this.h;
       this.h = U.approach(this.h, targetH, dt * 120);
@@ -586,19 +583,27 @@
     }
     physics() {} // fijo: no cae ni se desplaza
   }
-  // Vampire se queda quieto hasta que el jugador se acerca; entonces se transforma en Bat.
+  // Vampire se queda quieto hasta que el jugador se acerca; se vuelve Bat al despegar y recupera
+  // su forma de Vampire cuando el murciélago toca el suelo.
   class Vampire extends Enemy {
     constructor(tx, ty) { super('vampire', tx, ty); this.gravity = 0; this.awake = false; }
+    setForm(type) {
+      const cx = this.cx(), foot = this.y + this.h, d = C.OBJECTS[type];
+      this.type = type; this.w = d.w; this.h = d.h; this.x = cx - this.w / 2; this.y = foot - this.h;
+    }
     becomeBat(g) {
-      const cx = this.cx(), cy = this.cy(), d = C.OBJECTS.bat;
-      this.type = 'bat'; this.w = d.w; this.h = d.h; this.x = cx - this.w / 2; this.y = cy - this.h / 2;
-      this.awake = true; this.tiles = true; this.dir = dirTo(this, g.player);
-      g.emit('enemyAngry', { x: cx, y: cy });
+      this.setForm('bat'); this.awake = true; this.gravity = 950; this.vy = -260; this.tiles = true; this.dir = dirTo(this, g.player);
+      g.emit('enemyAngry', { x: this.cx(), y: this.cy() });
+    }
+    becomeVampire() {
+      this.setForm('vampire'); this.awake = false; this.gravity = 0; this.vx = 0; this.vy = 0;
     }
     think(g) {
       if (diesInLight(this, g)) return;
       if (!this.awake) { this.vx = 0; this.vy = 0; if (near(this, g.player, 6 * T)) this.becomeBat(g); return; }
-      this.vx = this.dir * 72 * g.enemySpeedMul; this.vy = 0;
+      // Tras su vuelo, al tocar suelo vuelve a su forma inmóvil de Vampire.
+      if (this.onGround) { this.becomeVampire(); return; }
+      this.dir = dirTo(this, g.player); this.vx = this.dir * 72 * g.enemySpeedMul;
     }
     onWall(w) { this.dir = -w; }
   }
