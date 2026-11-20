@@ -89,7 +89,7 @@
     'Glob Ducky Dorado': 'Golden Ducky Glob', 'Glob Ducky Rico': 'Rich Ducky Glob', 'Glob Oscuro': 'Dark Glob', 'Glob Pyce': 'Pyce Glob', 'Glob Espía': 'SpyGlob',
     // descripciones de personajes
     'Equilibrado, no destaca en nada.': 'Balanced, no standout traits.', 'Un pelín más rápido.': 'A touch faster.',
-    'Resbala al caminar; mientras resbala no le afectan cintas ni pinchos.': 'Slides when walking; while sliding, conveyors and spikes do nothing to it.',
+    'Resbala al caminar o sobre cintas; mientras resbala, los pinchos no le hacen daño.': 'Slides when walking or on conveyors; while sliding, spikes do no damage to it.',
     'Planea al caer unos segundos y suma +1 a cada moneda que coge.': 'Glides for a few seconds when falling and adds +1 to every coin it collects.',
     'Salta más alto y dispara con el power-up.': 'Jumps higher and shoots with the power-up.',
     'Pesado (su culetazo rompe bloques); dispara con el power-up. Aura que mata fantasmas; el botón de disparo enciende la linterna en niveles oscuros.': 'Heavy (its ground pound breaks blocks); shoots with the power-up. An aura that kills ghosts; the shoot button turns on the flashlight in dark levels.',

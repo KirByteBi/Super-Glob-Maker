@@ -82,7 +82,7 @@
       this.sliding = false;
       if (this.ch.slippery) {
         traction *= 0.5;
-        if (this.onGround && Math.abs(this.vx) > 120) this.sliding = true;
+        if (this.onGround && (Math.abs(this.vx) > 120 || this.groundTile === C.T.CONV_L || this.groundTile === C.T.CONV_R)) this.sliding = true; // una cinta también hace resbalar
       }
       // Glob Cometa/Antiguo con power-up especial: nadan más rápido
       const swimMul = (this.special && this.ch.swimSpecial) ? this.ch.swimSpecial : 1;

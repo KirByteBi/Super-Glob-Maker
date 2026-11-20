@@ -17,7 +17,7 @@
     { id: 'blue', name: 'Glob de Jabón', folder: 'BlueRewamp_SKIN', color: '#7fd6ff', shot: '#9fe8ff',
       evos: ['Soap Glob (EVO1).png', 'Cotton Glob (SK-EVO2).png', 'ElectroClean Glob (EVO3).png'],
       evoNames: ['Glob de Jabón', 'Glob de Cotón', 'Glob Electroclean'],
-      stats: { speed: 1, jump: 1, traction: 0.5, float: 0, swim: 1.4 }, slippery: true, ability: 'none', desc: 'Resbala al caminar; mientras resbala no le afectan cintas ni pinchos.' },
+      stats: { speed: 1, jump: 1, traction: 0.5, float: 0, swim: 1.4 }, slippery: true, ability: 'none', desc: 'Resbala al caminar o sobre cintas; mientras resbala, los pinchos no le hacen daño.' },
     { id: 'ducky', name: 'Glob Ducky', folder: 'DuckyRewamp-SKIN', color: '#ffd000', shot: '#ffb000',
       evos: ['Ducky Glob (EVO1).png', 'Golden Ducky Glob (EVO2).png', 'Rich Ducky Glob (EVO3).png'],
       evoNames: ['Glob Ducky', 'Glob Ducky Dorado', 'Glob Ducky Rico'],
