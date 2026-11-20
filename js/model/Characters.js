@@ -29,7 +29,7 @@
     { id: 'gray', name: 'Glob Antiguo', folder: 'GrayRewamp-SKIN', color: '#9a9a9a', shot: '#d0d0d0',
       evos: ['RewampedGray1.png', 'RewampedGray2.png', 'RewampedGray3.png'],
       evoNames: ['Glob Antiguo', 'Glob Pyce', 'Glob Espía'],
-      stats: { speed: 1, jump: 1, traction: 1, float: 0, swim: 1, heavy: true }, ability: 'shoot', swimSpecial: 0, desc: 'Pesado (su culetazo rompe bloques); dispara con el power-up. Aura que mata fantasmas; el botón de disparo enciende la linterna en niveles oscuros.' }
+      stats: { speed: 1, jump: 1, traction: 1, float: 0, swim: 1, heavy: true }, ability: 'shoot', swimSpecial: 0, desc: 'Pesado (su culetazo rompe bloques); dispara con el power-up. Aura que mata fantasmas; el botón de disparo enciende la linterna en niveles oscuros, que alcanza más cuanto más evolucionado está.' }
   ];
   list.forEach((c) => { c.paths = c.evos.map((f) => 'Globs/' + c.folder + '/' + f); });
 

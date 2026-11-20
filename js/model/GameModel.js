@@ -152,7 +152,9 @@
         if (e.type !== 'ghost' || e.dying || e.remove) return;
         const dx = e.cx() - cx, dy = e.cy() - cy;
         const inAura = dx * dx + dy * dy <= (2 * T) * (2 * T);
-        const inBeam = lampOn && dx * face > 0 && Math.abs(dx) <= 6 * T && Math.abs(dy) <= 1.5 * T;
+        // el alcance de la linterna crece con la evolución: 4 casillas en la forma base, +2 por evolución
+        const reach = (4 + 2 * (p.evo | 0)) * T;
+        const inBeam = lampOn && dx * face > 0 && Math.abs(dx) <= reach && Math.abs(dy) <= 1.5 * T;
         if (inAura || inBeam) e.kill(this);
       });
     }
