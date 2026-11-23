@@ -129,6 +129,7 @@
     clownpysh: { name: 'Clown Pysh', w: 28, h: 26, anchor: 'center', tier: 3, water: true, hp: 2, desc: 'Versión fuerte de Pysh: más rápido y salta más alto hacia ti. 2 golpes.' },
     axolotl: { name: 'Axolotl Pyce', w: 30, h: 26, anchor: 'center', tier: 3, water: true, desc: 'Nada y dispara burbujas. Fuera del agua es lento.' },
     squid: { name: 'Squid Pyce', w: 28, h: 30, anchor: 'center', tier: 3, water: true, desc: 'Calamar tipo Blooper: se hunde despacio y da tirones hacia ti. Suelta nubes de tinta. Solo se pisa fuera del líquido.' },
+    inkedsquid: { name: 'Inked Squid Pyce', w: 28, h: 30, anchor: 'center', tier: 4, water: true, unlock: 'w1', desc: 'Squid más oscuro que usa la tinta: acelera a chorro en el agua, fuera de ella se impulsa muy alto y suelta nubes de tinta grandes. Solo se pisa fuera del líquido.' },
     shark: { name: 'Shark Pyce', w: 34, h: 26, anchor: 'center', tier: 4, water: true, desc: 'Te embiste en el agua. No se pisa. Fuera del agua se arrastra.' },
     // raros: 10 pisotones y dan vida
     mimic: { name: 'Mimic Pyce', w: 30, h: 34, tier: 5, rare: true, desc: 'RARO: cofre que muerde. 10 pisotones. Da 1UP.' },
@@ -229,7 +230,7 @@
     { id: 'terrain', name: 'Terreno', items: tiles([1, 53, 5, 17]).concat(objs(['treeplat'])).concat(tiles([56, 58, 11, 29, 30, 31, 32, 33, 34, 37, 52, 8, 6, 9, 16, 14, 15, 48])) },
     { id: 'blocks', name: 'Bloques', items: tiles([2, 3, 13, 4, 7, 19, 18, 36, 12, 38, 55, 39, 41, 40, 47, 46, 20, 21, 22, 23, 24, 25, 26, 27, 28, 49, 50, 51, 35, 42, 43]) },
     { id: 'pyces', name: 'Pyces', items: objs(['stupid', 'so', 'symbol', 'pyce2', 'guest', 'noob', 'elf', 'umbrella', 'zom', 'knight', 'rebel', 'skelebone', 'builder', 'snowcap', 'festive', 'bomb', 'toybomb', 'wingel', 'strechy', 'flower', 'cannon', 'mushroom', 'fungus', 'bat', 'bloat', 'banbuilder']) },
-    { id: 'pyces2', name: 'Pyces raros', items: objs(['ghost', 'holo', 'motions', 'hacker', 'piranha', 'venerana', 'vampire', 'bloodpire', 'pysh', 'clownpysh', 'axolotl', 'squid', 'shark', 'mimic', 'dirty', 'nomic', 'goldmimic']) },
+    { id: 'pyces2', name: 'Pyces raros', items: objs(['ghost', 'holo', 'motions', 'hacker', 'piranha', 'venerana', 'vampire', 'bloodpire', 'pysh', 'clownpysh', 'axolotl', 'squid', 'inkedsquid', 'shark', 'mimic', 'dirty', 'nomic', 'goldmimic']) },
     { id: 'jefes', name: 'Jefes', items: objs(['noeye', 'nosense', 'noir', 'moonstar']) },
     { id: 'items', name: 'Objetos', items: objs(['evo', 'flor', 'caca', 'vacio', 'brillo', 'miniglob'].concat(S.Model.Characters.list.map((c) => 'cap_' + c.id)).concat(['coin10', 'coin30', 'coin50', 'coin100', 'spring', 'checkpoint', 'starcoin', 'starcoin_giga', 'starcoin_moon', 'starcoin_rg', 'starcoin_magic', 'starcoin_traitor'])) },
     { id: 'cristal', name: 'Cristalizados y eternium', items: objs(['crystal', 'miner', 'eminer', 'astralbpyce', 'dreamyspyce']) },
@@ -279,6 +280,7 @@
     venerana: 'La prima lila de Pyceranha: su planta de cabeza amarilla escupe veneno en vez de fuego. Recuperado de un juego anterior de la saga.',
     bloodpire: 'Un Vampire Pyce más antiguo y vistoso. Sus Bloat Pyces lo protegen mientras caza. Recuperado de un juego anterior de la saga.',
     bloat: 'La forma alada de Bloodpire y de sus escoltas. Recuperado de un juego anterior de la saga.',
+    inkedsquid: 'Un Squid Pyce empapado en su propia tinta. La usa para moverse, saltar y esconderse. Recuperado de un juego anterior de la saga.',
     fungus: 'Seta de cabeza azul y bigote celeste que siembra esporas de Mushroom Pyce por donde pasa. Recuperado de un juego anterior de la saga.'
   };
 

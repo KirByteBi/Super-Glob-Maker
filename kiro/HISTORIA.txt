@@ -261,3 +261,14 @@ desbloqueo se guarda junto al progreso del mundo (sgm.story.v1).
   - Se cuenta con dialogos, cinematicas, carteles y pistas
   - HISTORIA CORRUPTA desbloqueable: relectura que altera niveles
     y revela mas del lore
+
+
+--------------------------------------------------------------
+ GOBERNANTES Y ESCALA DE LOS NPCs
+--------------------------------------------------------------
+- Regla de escala: los Globs y Pyces "de a pie" son 1x1 (cohesión
+  entre todos; los Rewamps de las familias Blanca y Rosa también).
+  Solo los que hacen de GOBERNANTE o figura especial pueden ser más
+  grandes (p. ej. un fantasma enorme o una flor muy crecida).
+- Mundo 1 - Globland Isle: de momento NO hay un gobernante claro.
+- Mundo 2 - Wildsand Leaf: su gobernante es FLOWER GLOB.

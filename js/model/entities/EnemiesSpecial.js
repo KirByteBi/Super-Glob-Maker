@@ -356,7 +356,70 @@
     inLiquid() { return false; }
   }
 
-  [['pysh', Pysh], ['clownpysh', ClownPysh], ['axolotl', Axolotl], ['squid', Squid], ['shark', Shark],
+  // Inked Squid Pyce (DESBLOQUEABLE, W1): Squid más oscuro que usa la tinta para todo.
+  //  - En el líquido: además de sus tirones, a veces da un ACELERÓN a chorro de tinta.
+  //  - Fuera del líquido: en vez de dar brinquitos, se IMPULSA hacia arriba con tinta (salto alto).
+  //  - Nubla la vista con nubes de tinta más grandes que las del Squid normal.
+  // Más difícil que el Squid, pero con esperas claras entre cada truco.
+  class InkedSquid extends Squid {
+    constructor(tx, ty) { super(tx, ty); this.type = 'inkedsquid'; this.dashT = U.rand(2, 3); this.rocketT = U.rand(1.2, 2); this.inkT = U.rand(2.5, 4); }
+    puff(g, x, y, big) {
+      const f = Ents.create('sprayfog', 0, 0); f.ink = true;
+      f.w = big ? 190 : 60; f.h = big ? 140 : 46; f.life = f.max = big ? 4.5 : 1.1;
+      f.x = x - f.w / 2; f.y = y - f.h / 2; f.active = true; g.spawn(f);
+      g.emit('squidInk', { x, y });
+    }
+    think(g, dt) {
+      this.sense(g);
+      const p = g.player, sp = g.enemySpeedMul;
+      this.stompable = this.poundable = !this.element && !this.inLiq;
+      if (!this.inLiq) {
+        // fuera del líquido: cohete de tinta hacia arriba (y un poco hacia ti)
+        this.pulse = 0; this.gravity = 1500; this.maxFall = 600;
+        if (this.onGround) {
+          this.vx = U.approach(this.vx, 0, 400 * dt);
+          this.rocketT -= dt * sp;
+          if (this.rocketT <= 0) {
+            this.rocketT = U.rand(1.8, 2.6);
+            this.dir = near(this, p, 12 * T) ? dirTo(this, p) : (Math.random() < 0.5 ? -1 : 1);
+            this.vy = -640; this.vx = this.dir * 90 * sp; this.onGround = false;
+            this.puff(g, this.cx(), this.y + this.h, false);
+          }
+        }
+        return;
+      }
+      // en el líquido: como el Squid (se hunde y da tirones) + acelerón con tinta + nube grande
+      this.gravity = 0;
+      this.pulseT -= dt * sp; this.inkT -= dt * sp; this.dashT -= dt * sp;
+      if (this.pulse > 0) { this.pulse -= dt; this.vx = U.approach(this.vx, 0, 220 * dt); this.vy = U.approach(this.vy, 0, 380 * dt); }
+      else { this.vx = U.approach(this.vx, 0, 160 * dt); this.vy = U.approach(this.vy, 32, 300 * dt); }
+      const close = near(this, p, 10 * T);
+      if (this.dashT <= 0 && this.pulse <= 0 && near(this, p, 9 * T)) {
+        // ACELERÓN: chorro de tinta hacia ti, mucho más rápido que un tirón normal
+        this.dashT = U.rand(2.6, 3.6); this.pulseT = Math.max(this.pulseT, 0.8);
+        this.dir = dirTo(this, p);
+        this.vx = this.dir * 290 * sp; this.vy = U.clamp((p.y - this.y) * 1.2, -140, 140); this.pulse = 0.7;
+        this.puff(g, this.cx() - this.dir * 18, this.cy(), false);
+        g.emit('squidPulse', { x: this.cx(), y: this.y + this.h });
+      } else if (this.pulseT <= 0) {
+        this.pulseT = U.rand(1, 1.5);
+        if (close) {
+          this.dir = dirTo(this, p);
+          const below = p.y + p.h / 2 > this.cy() + T;
+          this.vx = this.dir * 165 * sp; this.vy = below ? 130 * sp : -200 * sp; this.pulse = 0.6;
+          g.emit('squidPulse', { x: this.cx(), y: this.y + this.h });
+        }
+      }
+      if (this.vy < 0 && g.liquidAt(this.cx(), this.y - 4) == null) this.vy = 0;
+      // nube de tinta GRANDE para nublarte la vista
+      if (this.inkT <= 0) {
+        this.inkT = U.rand(3.5, 5);
+        if (near(this, p, 8 * T)) this.puff(g, this.cx() - this.dir * 20, this.cy(), true);
+      }
+    }
+  }
+
+  [['pysh', Pysh], ['clownpysh', ClownPysh], ['axolotl', Axolotl], ['squid', Squid], ['inkedsquid', InkedSquid], ['shark', Shark],
     ['mimic', Mimic], ['dirty', Dirty], ['nomic', NOmic], ['goldmimic', GoldMimic],
     ['noeye', NOeye], ['nosense', NOsense], ['noir', NOIRrupt], ['moonstar', MoonStar], ['eshot', EShot]
   ].forEach(([k, K]) => reg(k, K));

@@ -12,6 +12,8 @@
   const D = {
     // ---- Pyces desbloqueables
     '🔓 ¡Nuevos Pyces en el editor!': '🔓 New Pyces in the editor!',
+    'Squid más oscuro que usa la tinta: acelera a chorro en el agua, fuera de ella se impulsa muy alto y suelta nubes de tinta grandes. Solo se pisa fuera del líquido.': 'A darker Squid that uses its ink: jet-dashes in water, launches itself high out of it and releases big ink clouds. Can only be stomped out of liquid.',
+    'Un Squid Pyce empapado en su propia tinta. La usa para moverse, saltar y esconderse. Recuperado de un juego anterior de la saga.': 'A Squid Pyce soaked in its own ink. It uses it to move, jump and hide. Brought back from an earlier game in the series.',
     'Minero mucho más afectado por el eternium: lanza su pico de cristal lila como un bumerán y lo recoge.': 'A miner far more affected by eternium: throws its lilac crystal pick like a boomerang and catches it.',
     'Lanza un banhammer cada cierto tiempo (uno a la vez) que te elimina de un golpe. Deja minas que explotan al tocarlas.': 'Every so often throws a banhammer (one at a time) that takes you out in one hit. Leaves mines that explode on touch.',
     'Pyceranha venenosa: no se mueve y te lanza veneno en arco (poco alcance). El veneno deja un charco que daña unos segundos. La luz lo elimina.': 'Poisonous Pyceranha: does not move and lobs poison at you (short range). The poison leaves a puddle that hurts for a few seconds. Light destroys it.',

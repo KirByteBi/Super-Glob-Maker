@@ -57,11 +57,14 @@
     bat: { src: 'Enemigos/Pyces/Bat Pyce.png', w: 1080, h: 1080, box: [52, 262, 977, 353] },
     // ---- DESBLOQUEABLES (Modo Historia). Su PNG va en Enemigos/Desbloqueables/.
     // Mientras no esté, se usa el Pyce original recoloreado (fallback + tint).
-    eminer: { src: 'Enemigos/Desbloqueables/Minery Eterniumed Pyce.png', fallback: 'miner', tint: 'hue-rotate(250deg) saturate(1.3)' },
-    banbuilder: { src: 'Enemigos/Desbloqueables/Banned Builder Pyce.png', fallback: 'builder', tint: 'hue-rotate(320deg) saturate(1.5) brightness(0.85)' },
-    venerana: { src: 'Enemigos/Desbloqueables/Venerana Pyce.png', fallback: 'piranha', tint: 'hue-rotate(195deg) saturate(1.3)' },
-    bloodpire: { src: 'Enemigos/Desbloqueables/Bloodpire Pyce.png', fallback: 'vampire', tint: 'hue-rotate(-25deg) saturate(1.8) brightness(1.1)' },
-    bloat: { src: 'Enemigos/Desbloqueables/Bloat Pyce.png', fallback: 'bat', tint: 'hue-rotate(-35deg) saturate(1.8)' },
-    fungus: { src: 'Enemigos/Desbloqueables/Fungus Pyce.png', fallback: 'mushroom', tint: 'hue-rotate(-60deg) saturate(1.3)' }
+    // W1 (superar el Mundo 1)
+    eminer: { src: 'Enemigos/Desbloqueables/W1/Minery Eterniumed Pyce.png', fallback: 'miner', tint: 'hue-rotate(250deg) saturate(1.3)' },
+    banbuilder: { src: 'Enemigos/Desbloqueables/W1/Banned Builder Pyce.png', fallback: 'builder', tint: 'hue-rotate(320deg) saturate(1.5) brightness(0.85)' },
+    inkedsquid: { src: 'Enemigos/Desbloqueables/W1/Inked Squid Pyce.png', fallback: 'squid', tint: 'brightness(0.5) saturate(1.3) contrast(1.2)' },
+    // W2 (superar el Mundo 2)
+    venerana: { src: 'Enemigos/Desbloqueables/W2/Venerana Pyce.png', fallback: 'piranha', tint: 'hue-rotate(195deg) saturate(1.3)' },
+    bloodpire: { src: 'Enemigos/Desbloqueables/W2/Bloodpire Pyce.png', fallback: 'vampire', tint: 'hue-rotate(-25deg) saturate(1.8) brightness(1.1)' },
+    bloat: { src: 'Enemigos/Desbloqueables/W2/Bloat Pyce.png', fallback: 'bat', tint: 'hue-rotate(-35deg) saturate(1.8)' },
+    fungus: { src: 'Enemigos/Desbloqueables/W2/Fungus Pyce.png', fallback: 'mushroom', tint: 'hue-rotate(-60deg) saturate(1.3)' }
   };
 })(window.SGM);
