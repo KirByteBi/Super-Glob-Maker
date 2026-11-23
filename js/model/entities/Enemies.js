@@ -12,9 +12,8 @@
 
   const near = (e, p, dist) => Math.abs(p.x + p.w / 2 - e.cx()) < dist && Math.abs(p.y + p.h / 2 - e.cy()) < dist * 0.7;
   const dirTo = (e, p) => (p.x + p.w / 2 < e.cx() ? -1 : 1);
-  // La luz de un bloque LIGHT alcanza un radio de dos casillas desde toda la hitbox,
-  // no solo desde su centro (importante para Pyces altos como Mushroom estirado).
-  const diesInLight = (e, g) => {
+  // LIGHT alcanza dos casillas desde toda la hitbox, no solo desde su centro.
+  const inLight = (e, g) => {
     const LIGHT = (S.Model.Catalog.T && S.Model.Catalog.T.LIGHT) || 48, radius = 2 * T;
     const x0 = Math.floor((e.x - radius) / T), x1 = Math.floor((e.x + e.w + radius) / T);
     const y0 = Math.floor((e.y - radius) / T), y1 = Math.floor((e.y + e.h + radius) / T);
@@ -23,11 +22,13 @@
       const lx = tx * T + T / 2, ly = ty * T + T / 2;
       const dx = Math.max(e.x - lx, 0, lx - (e.x + e.w));
       const dy = Math.max(e.y - ly, 0, ly - (e.y + e.h));
-      if (dx * dx + dy * dy <= radius * radius) {
-        e.kill(g); g.addCoin(e.cx(), e.cy()); return true;
-      }
+      if (dx * dx + dy * dy <= radius * radius) return true;
     }
     return false;
+  };
+  const diesInLight = (e, g) => {
+    if (!inLight(e, g)) return false;
+    e.kill(g); g.addCoin(e.cx(), e.cy()); return true;
   };
 
   // ---------------------------------------------------------------- base
@@ -163,6 +164,7 @@
   class Zom extends Enemy {
     constructor(tx, ty) { super('zom', tx, ty); this.revived = false; this.downT = 0; }
     think(g, dt) {
+      if (diesInLight(this, g)) return;
       if (this.downT > 0) { this.vx = 0; this.downT -= dt; if (this.downT <= 0) { this.harmful = true; g.emit('zomRise', { x: this.cx(), y: this.y }); } return; }
       this.walk(g, this.revived ? 34 : 22);
     }
@@ -250,20 +252,31 @@
   }
   reg('builder', Builder); reg('miner', Miner);
 
-  // SkeleBone: pisado se desmonta y se recompone; muerto de verdad se desmonta del todo
+  // SkeleBone: pisado se desmonta y se recompone. La luz destruye sus almas/cara:
+  // desde entonces camina sin ella, no evita bordes, no se recompone y un pisotón lo mata.
   class SkeleBone extends Enemy {
-    constructor(tx, ty) { super('skelebone', tx, ty); this.turnAtLedge = true; this.pile = 0; this.throwT = 2.5; }
+    constructor(tx, ty) { super('skelebone', tx, ty); this.turnAtLedge = true; this.pile = 0; this.throwT = 2.5; this.soulless = false; }
+    loseSoulFace(g) {
+      if (this.soulless) return;
+      this.soulless = true; this.pile = 0; this.turnAtLedge = false;
+      this.harmful = true; this.stompable = true; this.shootable = true; this.poundable = true;
+      g.emit('bonesScatter', { x: this.cx(), y: this.cy(), soft: true });
+    }
     think(g, dt) {
+      if (inLight(this, g)) this.loseSoulFace(g);
       if (this.pile > 0) {
         this.vx = 0; this.pile -= dt;
         if (this.pile <= 0) { this.harmful = true; this.stompable = true; this.shootable = true; g.emit('boneRise', { x: this.cx(), y: this.y }); }
         return;
       }
-      this.throwT -= dt * g.enemySpeedMul;
-      if (this.throwT <= 0) { this.throwT = 3; const p = g.player; if (near(this, p, 10 * T)) { this.dir = dirTo(this, p); this.shoot(g, 'bone', this.dir * 150, -380, { gravity: 900 }); } }
+      if (!this.soulless) {
+        this.throwT -= dt * g.enemySpeedMul;
+        if (this.throwT <= 0) { this.throwT = 3; const p = g.player; if (near(this, p, 10 * T)) { this.dir = dirTo(this, p); this.shoot(g, 'bone', this.dir * 150, -380, { gravity: 900 }); } }
+      }
       this.walk(g, 30);
     }
     onStomp(g) {
+      if (this.soulless) { super.onStomp(g); return; }
       if (this.pile > 0) return;
       this.pile = 3.5; this.harmful = false; this.stompable = false; this.shootable = false;
       g.emit('bonesScatter', { x: this.cx(), y: this.cy(), soft: true });
@@ -387,32 +400,12 @@
     }
   }
   // Flower Pyce: planta-ventilador fija que lanza RÁFAGAS DE AIRE (empujan al jugador).
-  // Si se coloca sobre una tubería, se comporta como planta piraña piromana: emerge del tubo,
-  // escupe fuego y se esconde (no se puede pisar).
+  // Flower Pyce: ventilador fijo que lanza ráfagas de aire. Pyceranha es otro enemigo (piranha).
   class Flower extends Enemy {
-    constructor(tx, ty) { super('flower', tx, ty); this.stompable = false; this.poundable = false; this.fireT = 1.5; this.open = 0; this.inPipe = false; this.rise = 1; this.hideT = 0; }
-    init(o) { this.inPipe = !!(o && o.inPipe); if (this.inPipe) { this.rise = 0; this.harmful = false; } }
+    constructor(tx, ty) { super('flower', tx, ty); this.stompable = false; this.poundable = false; this.fireT = 1.5; this.open = 0; }
     think(g, dt) {
       this.vx = 0; this.open = Math.max(0, this.open - dt * 2);
       const p = g.player;
-      // La Flower sobre tubería es una Pyceranha y comparte su vulnerabilidad a la luz.
-      if (this.inPipe && diesInLight(this, g)) return;
-      // Variante piraña piromana (en tubo): sube, escupe fuego, se esconde. No sale si estás pegado.
-      if (this.inPipe) {
-        this.fireT -= dt * g.enemySpeedMul;
-        if (this.fireT <= 0) {
-          this.fireT = 3;
-          const tooClose = Math.abs(p.x + p.w / 2 - this.cx()) < T * 1.5;
-          this.wantUp = !tooClose;
-        }
-        const target = this.wantUp ? 1 : 0;
-        this.rise = U.approach(this.rise, target, dt * 2.5);
-        this.harmful = this.rise > 0.3;
-        if (this.rise > 0.9 && !this.spat) { this.spat = true; const d = dirTo(this, p); this.shoot(g, 'fire', d * 150, -40, { gravity: 240, life: 2.5 }); g.emit('cannon', { x: this.cx(), y: this.y }); }
-        if (this.rise < 0.5) this.spat = false;
-        return;
-      }
-      // Ventilador normal: ráfaga de aire que empuja
       this.fireT -= dt * g.enemySpeedMul;
       if (this.fireT <= 0) {
         this.fireT = 2.4;

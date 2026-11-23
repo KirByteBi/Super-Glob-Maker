@@ -17,7 +17,10 @@
     'WASD / flechas: mover · Espacio: saltar · Shift: correr · Q/E: girar cámara (o ratón) · Esc: salir': 'WASD / arrows: move · Space: jump · Shift: run · Q/E: turn camera (or mouse) · Esc: exit',
     // ---- menú principal y generales
     '▶ Modo Historia': '▶ Story Mode', '✏ Crear nivel': '✏ Create level', '📁 Mis niveles': '📁 My levels', '🌐 Online': '🌐 Online',
-    '🌌 Modo 3D (próximamente)': '🌌 3D Mode (coming soon)', '🎮 Controles': '🎮 Controls', '🔊 Sonido': '🔊 Sound', '🔇 Sonido': '🔇 Sound',
+    '🌌 Modo 3D (próximamente)': '🌌 3D Mode (coming soon)', '🎮 Controles': '🎮 Controls', '📖 Guía del editor': '📖 Editor guide', '🔊 Sonido': '🔊 Sound', '🔇 Sonido': '🔇 Sound',
+    'Consulta qué hace cada bloque, Pyce, objeto y mecanismo. La lista coincide con las herramientas disponibles en el editor.': 'See what every block, Pyce, item and gizmo does. The list matches the tools available in the editor.',
+    'Decoración y NPCs dependen del mapa elegido y se consultan desde sus respectivas categorías del editor.': 'Decoration and NPCs depend on the selected map and can be checked in their respective editor categories.',
+    'Elemento de terreno o bloque colocable en el editor.': 'Terrain or block element that can be placed in the editor.', 'Elemento colocable en el editor.': 'Element that can be placed in the editor.', 'Jefe': 'Boss', 'Acuático': 'Aquatic', 'Raro': 'Rare', 'Se puede girar': 'Can rotate',
     'Versión 2D · Los Globs y sus amigos': '2D version · The Globs and friends', 'El modo 3D estilo SM64 / Galaxy llegará en la próxima versión.': 'The SM64 / Galaxy style 3D mode is coming in a future version.',
     '← Volver': '← Back', 'Cerrar': 'Close', 'Cancelar': 'Cancel', 'Aceptar': 'OK', 'Sí': 'Yes', 'No': 'No', 'Entendido': 'Got it', '¿Seguro?': 'Are you sure?',
     'Continuar': 'Continue', 'Reiniciar': 'Restart', 'Reintentar': 'Retry', 'Salir al menú': 'Quit to menu', 'Volver al editor': 'Back to editor', 'Pausa': 'Pause',

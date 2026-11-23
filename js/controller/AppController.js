@@ -182,8 +182,14 @@
         mode3d: this.canUse3D() ? () => this.show3D() : null,
         lang: () => { S.i18n.set(S.i18n.lang === 'es' ? 'en' : 'es'); this.showTitle(); },
         controls: () => this.menu.controls(),
+        guide: () => this.showGuide(),
         account: () => this.accountDialog()
       });
+    }
+
+    showGuide() {
+      this.clearAll();
+      this.menu.guide({ back: () => this.showTitle() });
     }
 
     // Bandeja de ✉ Mensajes: noticias globales + (si estás sancionado) el correo rojo de disculpa.

@@ -54,8 +54,9 @@
       this.entities = [];
       this.level.objects.forEach((o) => {
         if (o.type === 'start' || o.type === 'goal') return;
-        // Flower Pyce sobre una tubería = planta piraña piromana
-        if (o.type === 'flower' && this.level.get(o.x, o.y) === TT.PIPE) o = Object.assign({}, o, { inPipe: true });
+        // Compatibilidad con niveles viejos: Flower colocada sobre PIPE era la antigua Pyceranha.
+        // Ahora Pyceranha es su propio enemigo y Flower conserva siempre su ráfaga de aire.
+        if (o.type === 'flower' && this.level.get(o.x, o.y) === TT.PIPE) o = Object.assign({}, o, { type: 'piranha' });
         const e = Ents.create(o.type, o.x, o.y, o);
         if (!e) return;
         if (o.type === 'checkpoint' && this.checkpoint && this.checkpoint.x === o.x && this.checkpoint.y === o.y) e.taken = true;

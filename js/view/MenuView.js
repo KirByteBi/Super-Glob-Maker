@@ -64,6 +64,7 @@
       menu.appendChild(b3d);
       const row = el('div', 'row');
       row.appendChild(button('🎮 Controles', '', h.controls));
+      row.appendChild(button('📖 Guía del editor', '', h.guide));
       // Idioma: Español / English (se vuelve a dibujar la pantalla)
       if (S.i18n && h.lang) row.appendChild(button(S.i18n.lang === 'es' ? '🌍 ES → EN' : '🌍 EN → ES', '', h.lang));
       const snd = button(S.View.SoundView.isMuted() ? '🔇 Sonido' : '🔊 Sonido', '', () => { const m = S.View.SoundView.toggleMute(); const t = m ? '🔇 Sonido' : '🔊 Sonido'; snd.textContent = S.tr ? S.tr(t) : t; });
@@ -96,6 +97,44 @@
       b.appendChild(tbl);
       b.appendChild(el('p', 'small', 'Evoluciones: EVO1 → EVO2 (grande, rompe bloques) → EVO3 (dispara). Si te golpean bajas una evolución. Glob Caca y Glob Vacío son power-ups especiales.'));
       b.appendChild(button('Cerrar', 'primary', () => { this.closeModal(); if (onClose) onClose(); }));
+    }
+
+    guide(h) {
+      const s = this.open('guide');
+      const C = S.Model.Catalog;
+      const head = el('div', 'head');
+      head.appendChild(button('← Volver', '', h.back));
+      head.appendChild(el('h1', '', '📖 Guía del editor'));
+      s.appendChild(head);
+      s.appendChild(el('p', 'guide-intro', 'Consulta qué hace cada bloque, Pyce, objeto y mecanismo. La lista coincide con las herramientas disponibles en el editor.'));
+      const tabs = el('div', 'guide-tabs'), list = el('div', 'guide-list');
+      const categories = C.PALETTE.filter((cat) => cat.items.length);
+      const show = (cat) => {
+        [...tabs.children].forEach((b) => b.classList.toggle('on', b.dataset.cat === cat.id));
+        list.innerHTML = '';
+        cat.items.forEach((it) => {
+          const card = el('article', 'guide-card');
+          card.appendChild(el('h3', '', C.itemName(it)));
+          const desc = C.itemDesc(it);
+          card.appendChild(el('p', '', desc || (it.kind === 'tile' ? 'Elemento de terreno o bloque colocable en el editor.' : 'Elemento colocable en el editor.')));
+          if (it.kind === 'obj') {
+            const d = C.OBJECTS[it.type], tags = [];
+            if (d && d.boss) tags.push('Jefe');
+            if (d && d.water) tags.push('Acuático');
+            if (d && d.rare) tags.push('Raro');
+            if (d && (d.rotH || d.rotV)) tags.push('Se puede girar');
+            if (tags.length) card.appendChild(el('span', 'guide-tags', tags.join(' · ')));
+          }
+          list.appendChild(card);
+        });
+      };
+      categories.forEach((cat, i) => {
+        const b = button(cat.name, 'tab' + (i === 0 ? ' on' : ''), () => show(cat));
+        b.dataset.cat = cat.id; tabs.appendChild(b);
+      });
+      s.appendChild(tabs); s.appendChild(list);
+      s.appendChild(el('p', 'guide-note', 'Decoración y NPCs dependen del mapa elegido y se consultan desde sus respectivas categorías del editor.'));
+      show(categories[0]);
     }
 
     // ---------- selección de personaje ----------

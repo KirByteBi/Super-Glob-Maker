@@ -287,3 +287,16 @@ body.touch #stage { touch-action: none; }
 .logo-img { display: block; max-width: min(360px, 80vw); height: auto; margin: 0 auto; pointer-events: none; }
 .logo-modal { max-width: min(240px, 70vw); margin: 0 auto 8px; }
 .load-fact { max-width: 420px; margin: 10px auto 0; opacity: .85; }
+
+/* ---------- guía del editor ---------- */
+.screen.guide { background: rgba(12, 0, 20, .82); }
+.guide-intro, .guide-note { width: min(880px, 100%); margin: 0 0 10px; font-weight: 700; text-align: center; }
+.guide-note { color: #ffe69b; font-size: 13px; margin-top: 10px; }
+.guide-tabs { display: flex; gap: 6px; flex-wrap: wrap; width: min(880px, 100%); margin-bottom: 8px; }
+.guide-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; overflow-y: auto; width: min(880px, 100%); padding: 3px 6px 14px; }
+.guide-card { background: #fff; color: #17111f; border: 3px solid #000; border-radius: 12px; padding: 8px 10px; box-shadow: 0 3px 0 #000; }
+.guide-card h3 { font-size: 15px; margin: 0 0 4px; }
+.guide-card p { font-size: 12px; line-height: 1.25; margin: 0; }
+.guide-tags { display: inline-block; margin-top: 6px; padding: 2px 6px; border-radius: 8px; background: #dfffea; color: #075a2b; font-weight: 900; font-size: 11px; }
+@media (max-width: 700px) { .guide-list { grid-template-columns: repeat(2, 1fr); } }
+.screen.guide .guide-list { flex: 1; min-height: 0; }

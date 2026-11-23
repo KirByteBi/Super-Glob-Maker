@@ -27,12 +27,26 @@ $RECYCLE.BIN/
 *.sublime-workspace
 *.sublime-project
 
-# --- Logs y basura ---
+# --- Logs, resultados y basura de herramientas ---
 *.log
+*.out
+*.pid
+*.seed
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 *.tmp
+*.temp
 *.bak
 *.orig
+.eslintcache
+.stylelintcache
+.nyc_output/
+reports/
+screenshots/
+videos/
+blob-report/
 
 # --- Dependencias (por si algún día se añaden) ---
 node_modules/

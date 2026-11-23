@@ -1041,6 +1041,11 @@
     // para no descolocarlo (el arte del Cannon viene inclinado).
     if (art.rot) { ctx.translate(0, -dhE / 2); ctx.rotate(art.rot * Math.PI / 180); ctx.translate(0, dhE / 2); }
     ctx.drawImage(img, -dw / 2, -dhE, dw, dhE);
+    // La luz ha dispersado las almas que formaban la cara de SkeleBone.
+    if (e.soulless) {
+      ctx.fillStyle = '#05060a';
+      ctx.fillRect(-dw * 0.19, -dhE * 0.73, dw * 0.38, dhE * 0.55);
+    }
     ctx.restore();
   }
 
