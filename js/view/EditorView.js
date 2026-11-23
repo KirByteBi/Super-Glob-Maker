@@ -159,7 +159,8 @@
       const cat = C.PALETTE.find((c) => c.id === this.cat);
       this.items.innerHTML = '';
       // Decoración: items dinámicos según el mapa (set temático de S.View.Decorations)
-      let items = cat.items;
+      // Pyces desbloqueables: no salen hasta superar su mundo del Modo Historia
+      let items = cat.items.filter((it) => it.kind !== 'obj' || !C.isUnlocked || C.isUnlocked(it.type));
       if (cat.dynamic === 'deco' && S.View.Decorations) {
         items = S.View.Decorations.forMap(L.theme).map((d) => ({ kind: 'obj', type: 'deco', deco: d.id, name: d.name }));
         if (!items.length) { this.items.appendChild(el('p', 'empty', 'Este mapa no tiene decoraciones todavía.')); return; }

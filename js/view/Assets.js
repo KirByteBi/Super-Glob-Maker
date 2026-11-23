@@ -23,19 +23,27 @@
   // Pyces: se recortan a su zona visible y se escalan manteniendo la proporción
   const pyces = {};
   const PYCE_MAX = 128;
-  function loadPyce(id, art) {
+  // art.box/w/h son opcionales (arte nuevo sin medir: se usa la imagen entera).
+  // art.fallback + art.tint: si falta el PNG, se usa el arte de otro Pyce recoloreado
+  // con un filtro (los desbloqueables, mientras no esté su dibujo propio).
+  function loadPyce(id, art, tint) {
     return new Promise((res) => {
       const img = new Image();
       img.onload = () => {
-        const [bx, by, bw, bh] = art.box;
-        const k = Math.min(1, PYCE_MAX / Math.max(bw, bh)) * (img.naturalWidth / art.w);
+        const s = art.w ? img.naturalWidth / art.w : 1;
+        const [bx, by, bw, bh] = art.box || [0, 0, img.naturalWidth / s, img.naturalHeight / s];
+        const k = Math.min(1, PYCE_MAX / Math.max(bw, bh)) * s;
         const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(bw * k)); c.height = Math.max(1, Math.round(bh * k));
         const x = c.getContext('2d'); x.imageSmoothingQuality = 'high';
-        const s = img.naturalWidth / art.w;
+        if (tint) x.filter = tint;
         x.drawImage(img, bx * s, by * s, bw * s, bh * s, 0, 0, c.width, c.height);
         pyces[id] = c; res(true);
       };
-      img.onerror = () => { pyces[id] = null; res(false); };
+      img.onerror = () => {
+        const fb = art.fallback && S.View.PyceArt && S.View.PyceArt[art.fallback];
+        if (fb && !tint) { loadPyce(id, fb, art.tint || 'none').then(res); return; }
+        pyces[id] = null; res(false);
+      };
       img.src = encodeURI(art.src);
     });
   }

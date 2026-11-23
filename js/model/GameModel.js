@@ -162,7 +162,10 @@
       if (!p || !gl || this.state !== 'play') return;
       const cx = p.x + p.w / 2, cy = p.y + p.h / 2;
       this.entities.forEach((e) => {
-        if (e.type !== 'ghost' || e.dying || e.remove) return;
+        // La luz del Glob gris afecta a TODOS los Pyces débiles a la luz (Ghost, Mushroom,
+        // Pyceranha, Bat, Vampire y sus versiones desbloqueables), no solo al Ghost.
+        const def = C.OBJECTS[e.type];
+        if (!def || !def.lightWeak || e.dying || e.remove || !e.enemy) return;
         const dx = e.cx() - cx, dy = e.cy() - cy;
         const inAura = dx * dx + dy * dy <= gl.aura * gl.aura;
         let inBeam = false;
@@ -170,7 +173,7 @@
           const half = gl.near + (gl.far - gl.near) * (Math.abs(dx) / gl.reach); // el cono se abre con la distancia
           inBeam = Math.abs(dy) <= half;
         }
-        if (inAura || inBeam) e.kill(this);
+        if (inAura || inBeam) { e.kill(this); if (e.type !== 'ghost') this.addCoin(e.cx(), e.cy()); }
       });
     }
     solidEntities() { return this.entities.filter((e) => (e.platform || e.solid) && e.active && !e.remove); }
@@ -969,6 +972,9 @@
     }
     hurtPlayer(src) {
       if (src && src.tx != null) { this.npcEvent('hurt', src.tx + ',' + src.ty); this.npcEvent('hurt', 'type:' + src.type); }
+      // Golpe letal (banhammer del Banned Builder): elimina de una aunque seas grande,
+      // pero respeta la invencibilidad tras un golpe y el Brillo Estelar.
+      if (src && src.lethal) { const pl = this.player; if (pl.inv > 0 || pl.star > 0 || pl.dead) return; this.die('enemy'); return; }
       const r = this.player.hurt();
       if (r === true) this.die('enemy');
       else if (r === 'shrink') this.emit('shrink', { x: this.player.x, y: this.player.y });

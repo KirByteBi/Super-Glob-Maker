@@ -54,6 +54,14 @@
     mushroom: { src: 'Enemigos/Pyces/Mushroom Pyce.png', w: 1080, h: 1080, box: [118, 160, 781, 767] },
     piranha: { src: 'Enemigos/Pyces/Pyceranha.png', w: 1080, h: 1080, box: [128, 194, 797, 723] },
     vampire: { src: 'Enemigos/Pyces/Vampire Pyce.png', w: 1080, h: 1080, box: [50, 188, 897, 731] },
-    bat: { src: 'Enemigos/Pyces/Bat Pyce.png', w: 1080, h: 1080, box: [52, 262, 977, 353] }
+    bat: { src: 'Enemigos/Pyces/Bat Pyce.png', w: 1080, h: 1080, box: [52, 262, 977, 353] },
+    // ---- DESBLOQUEABLES (Modo Historia). Su PNG va en Enemigos/Desbloqueables/.
+    // Mientras no esté, se usa el Pyce original recoloreado (fallback + tint).
+    eminer: { src: 'Enemigos/Desbloqueables/Minery Eterniumed Pyce.png', fallback: 'miner', tint: 'hue-rotate(250deg) saturate(1.3)' },
+    banbuilder: { src: 'Enemigos/Desbloqueables/Banned Builder Pyce.png', fallback: 'builder', tint: 'hue-rotate(320deg) saturate(1.5) brightness(0.85)' },
+    venerana: { src: 'Enemigos/Desbloqueables/Venerana Pyce.png', fallback: 'piranha', tint: 'hue-rotate(195deg) saturate(1.3)' },
+    bloodpire: { src: 'Enemigos/Desbloqueables/Bloodpire Pyce.png', fallback: 'vampire', tint: 'hue-rotate(-25deg) saturate(1.8) brightness(1.1)' },
+    bloat: { src: 'Enemigos/Desbloqueables/Bloat Pyce.png', fallback: 'bat', tint: 'hue-rotate(-35deg) saturate(1.8)' },
+    fungus: { src: 'Enemigos/Desbloqueables/Fungus Pyce.png', fallback: 'mushroom', tint: 'hue-rotate(-60deg) saturate(1.3)' }
   };
 })(window.SGM);

@@ -280,6 +280,12 @@
         setTimeout(() => this.showStoryDialog(wid + '/intro'), 300);
         return;
       }
+      // Pyces desbloqueados al superar el mundo (se ven en el editor)
+      if (this._pyceUnlocks) {
+        const ids = this._pyceUnlocks; this._pyceUnlocks = null;
+        const names = ids.map((k) => S.Model.Catalog.OBJECTS[k].name).join(', ');
+        setTimeout(() => this.menu.toast((S.tr ? S.tr('🔓 ¡Nuevos Pyces en el editor!') : '🔓 ¡Nuevos Pyces en el editor!') + ' ' + names, 6000), 200);
+      }
       // ¿se acaba de desbloquear un mundo nuevo? avisar y ofrecer ir
       if (SM && this._worldUnlocked) {
         const nx = this._worldUnlocked; this._worldUnlocked = null;
@@ -843,9 +849,15 @@
         if (lp.opts.story.world && lp.opts.story.node && S.Model.StoryMap) {
           const SM = S.Model.StoryMap;
           const wId = lp.opts.story.world, nId = lp.opts.story.node;
+          const wasComplete = SM.isWorldComplete ? SM.isWorldComplete(wId) : true;
           SM.markCleared(wId, nId, !!g.secretClear);
           // ¿era el castillo final? -> desbloquea el mundo siguiente (se avisa al volver al mapa)
           this._worldUnlocked = SM.onNodeCleared(wId, nId);
+          // ¿mundo superado por PRIMERA vez? -> Pyces desbloqueables para el editor
+          if (!wasComplete && SM.isWorldComplete(wId) && S.Model.Catalog.unlocksFor) {
+            const ids = S.Model.Catalog.unlocksFor(wId);
+            if (ids.length) this._pyceUnlocks = ids;
+          }
           // ¿era un CASTILLO? -> cinematica de jefe al volver al mapa (una vez por mundo, Normal)
           const node = SM.world(wId).map[nId];
           if (node && node.type === 'castle' && lp.opts.story.mode !== 'corrupt' && SM.seen && !SM.seen(wId, 'boss') && S.Model.StoryDialogs && S.Model.StoryDialogs.has(wId + '/boss')) {

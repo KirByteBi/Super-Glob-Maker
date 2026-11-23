@@ -96,7 +96,7 @@
     rebel: { name: 'Rebel Pyce', w: 28, h: 30, tier: 3, desc: 'Su spray crea nubes de niebla.' },
     skelebone: { name: 'SkeleBone Pyce', w: 28, h: 30, tier: 3, desc: 'Se desmonta al pisarlo y se vuelve a montar. La luz destruye su cara de almas: no se regenera y un pisotón lo elimina.' },
     builder: { name: 'Builder Pyce', w: 28, h: 30, tier: 3, desc: 'Tipo Hammer Bro: va y viene, salta y te lanza martillos en arco (atraviesan paredes).' },
-    miner: { name: 'Miner Pyce', w: 28, h: 30, tier: 4, desc: 'Tipo Boomerang Bro, poseído por cristales: lanza su pico de cristal, que vuelve a sus manos.' },
+    miner: { name: 'Miner Pyce', w: 28, h: 30, tier: 4, desc: 'Minero envuelto en eternium: lanza su pico de eternium, que vuelve a sus manos.' },
     snowcap: { name: 'SnowCapsule Pyce', w: 28, h: 28, tier: 3, desc: 'Al pisarlo se vuelve cápsula: ¡patéala!' },
     festive: { name: 'Festive Pyce', w: 28, h: 30, tier: 3, desc: 'Lanza regalos en parábola.' },
     bomb: { name: 'Bomb Pyce', w: 26, h: 30, tier: 3, desc: 'Al pisarlo se enciende la mecha y explota.' },
@@ -109,12 +109,21 @@
     cannon: { name: 'Cannon Pycer', w: 32, h: 32, tier: 3, desc: 'Cañón que dispara balas estelares.' },
     ghost: { name: 'Ghost Pyce', w: 30, h: 30, anchor: 'center', tier: 4, desc: 'Se acerca cuando le das la espalda.' },
     holo: { name: 'HoloPyce', w: 28, h: 28, tier: 4, desc: 'Holograma: a ratos es intangible.' },
-    motions: { name: '4motions Pyce', w: 28, h: 28, tier: 4, desc: 'Cambia de emoción: feliz, enfadado, triste o asustado.' },
+    motions: { name: '4motions Pyce', w: 28, h: 28, tier: 4, desc: 'Cambia entre patrullar y saltar, perseguirte enfadado, llorar proyectiles y huir asustado.' },
     hacker: { name: '1x1x1x1 Pyce', w: 28, h: 30, tier: 5, desc: 'Hacker: sus píxeles atraviesan paredes.' },
     mushroom: { name: 'Mushroom Pyce', w: 30, h: 30, tier: 3, desc: 'Camina sin caer por precipicios. Se estira como muro para bloquearte y entonces no puede moverse.' },
     piranha: { name: 'Pyceranha', w: 34, h: 32, tier: 4, desc: 'Pyce piraña independiente: no se mueve, apunta y dispara fuego. La luz lo elimina.' },
-    vampire: { name: 'Vampire Pyce', w: 32, h: 32, tier: 4, desc: 'Permanece quieto; al acercarte se transforma en murciélago y va a por ti.' },
+    vampire: { name: 'Vampire Pyce', w: 32, h: 32, tier: 4, desc: 'Permanece quieto; al acercarte se vuelve murciélago y te persigue volando. Al aterrizar recupera su forma terrestre.' },
     bat: { name: 'Bat Pyce', w: 34, h: 20, anchor: 'center', tier: 3, desc: 'Murciélago que vuela horizontalmente y se da la vuelta al tocar una pared.' },
+    // ----- DESBLOQUEABLES (versiones alternas de juegos anteriores de la saga) -----
+    // unlock: mundo del Modo Historia que hay que superar para que salgan en el editor.
+    // Los niveles que ya los usen se juegan siempre (el bloqueo solo afecta a la paleta).
+    eminer: { name: 'Minery Eterniumed Pyce', w: 28, h: 30, tier: 4, unlock: 'w1', desc: 'Minero mucho más afectado por el eternium: lanza su pico de cristal lila como un bumerán y lo recoge.' },
+    banbuilder: { name: 'Banned Builder Pyce', w: 28, h: 30, tier: 4, unlock: 'w1', desc: 'Lanza un banhammer cada cierto tiempo (uno a la vez) que te elimina de un golpe. Deja minas que explotan al tocarlas.' },
+    venerana: { name: 'Veneraña Pyce', w: 34, h: 32, tier: 4, unlock: 'w2', desc: 'Pyceranha venenosa: no se mueve y te lanza veneno en arco (poco alcance). El veneno deja un charco que daña unos segundos. La luz lo elimina.' },
+    bloodpire: { name: 'Bloodpire Pyce', w: 32, h: 32, tier: 4, unlock: 'w2', desc: 'Quieto genera Bat Pyces. Al acercarte se vuelve Bloat Pyce y suelta otros dos Bloat Pyces para confundirte. La luz lo elimina.' },
+    bloat: { name: 'Bloat Pyce', w: 34, h: 22, anchor: 'center', tier: 3, unlock: 'w2', desc: 'Murciélago de Bloodpire: te persigue volando haciendo eses. La luz lo elimina.' },
+    fungus: { name: 'Fungus Pyce', w: 30, h: 30, tier: 4, unlock: 'w2', desc: 'Seta que se estira y SIGUE andando. Deja esporas: cada 3 sale un Mushroom Pyce (máximo 4 a la vez). La luz lo elimina.' },
     // acuáticos (familia Pysh): Clown Pysh es la versión fuerte de Pysh
     pysh: { name: 'Pysh', w: 28, h: 24, anchor: 'center', tier: 2, water: true, desc: 'Nada y salta fuera del agua o del líquido. En lava/veneno se vuelve ígneo/venenoso. Sin agua solo brinca.' },
     clownpysh: { name: 'Clown Pysh', w: 28, h: 26, anchor: 'center', tier: 3, water: true, hp: 2, desc: 'Versión fuerte de Pysh: más rápido y salta más alto hacia ti. 2 golpes.' },
@@ -184,12 +193,18 @@
     starbullet: { w: 28, h: 22, anchor: 'center' }, eshot: { w: 14, h: 10, anchor: 'center' }, shot: { w: 14, h: 14, anchor: 'center' }, coinpop: { w: 20, h: 20, anchor: 'center' },
     poop: { w: 16, h: 16, anchor: 'center' }, goo: { w: 32, h: 6 }, starwave: { w: 18, h: 18, anchor: 'center' },
     explosion: { w: 96, h: 96, anchor: 'center' }, sprayfog: { w: 200, h: 140, anchor: 'center' }, meteor: { w: 30, h: 30, anchor: 'center' },
-    lightning: { w: 14, h: 32 }, donutfall: { w: 32, h: 32 }, bonepile: { w: 28, h: 14 }
+    lightning: { w: 14, h: 32 }, donutfall: { w: 32, h: 32 }, bonepile: { w: 28, h: 14 },
+    // peligros de los desbloqueables: mina del Banned Builder, charco de veneno de Veneraña, espora de Fungus
+    banmine: { w: 20, h: 12 }, poisonpool: { w: 46, h: 10 }, spore: { w: 12, h: 12 }
   };
   // Cápsulas para cambiar de personaje (una por Glob)
   S.Model.Characters.list.forEach((c) => {
     OBJECTS['cap_' + c.id] = { name: 'Cápsula ' + c.name, cat: 'item', w: 26, h: 26, char: c.id, desc: 'Te transforma en ' + c.name + '.' };
   });
+
+  // Débiles a la luz (bloque de luz y linterna/aura del Glob gris): mueren al iluminarlos
+  ['ghost', 'mushroom', 'piranha', 'vampire', 'bat', 'venerana', 'bloodpire', 'bloat', 'fungus']
+    .forEach((k) => { if (OBJECTS[k]) OBJECTS[k].lightWeak = true; });
 
   const ENEMY_TYPES = Object.keys(OBJECTS).filter((k) => OBJECTS[k].tier);
   ENEMY_TYPES.forEach((k) => { OBJECTS[k].cat = 'enemy'; });
@@ -213,11 +228,11 @@
   const PALETTE = [
     { id: 'terrain', name: 'Terreno', items: tiles([1, 53, 5, 17]).concat(objs(['treeplat'])).concat(tiles([56, 58, 11, 29, 30, 31, 32, 33, 34, 37, 52, 8, 6, 9, 16, 14, 15, 48])) },
     { id: 'blocks', name: 'Bloques', items: tiles([2, 3, 13, 4, 7, 19, 18, 36, 12, 38, 55, 39, 41, 40, 47, 46, 20, 21, 22, 23, 24, 25, 26, 27, 28, 49, 50, 51, 35, 42, 43]) },
-    { id: 'pyces', name: 'Pyces', items: objs(['stupid', 'so', 'symbol', 'pyce2', 'guest', 'noob', 'elf', 'umbrella', 'zom', 'knight', 'rebel', 'skelebone', 'builder', 'snowcap', 'festive', 'bomb', 'toybomb', 'wingel', 'strechy', 'flower', 'cannon', 'mushroom', 'bat']) },
-    { id: 'pyces2', name: 'Pyces raros', items: objs(['ghost', 'holo', 'motions', 'hacker', 'piranha', 'vampire', 'pysh', 'clownpysh', 'axolotl', 'squid', 'shark', 'mimic', 'dirty', 'nomic', 'goldmimic']) },
+    { id: 'pyces', name: 'Pyces', items: objs(['stupid', 'so', 'symbol', 'pyce2', 'guest', 'noob', 'elf', 'umbrella', 'zom', 'knight', 'rebel', 'skelebone', 'builder', 'snowcap', 'festive', 'bomb', 'toybomb', 'wingel', 'strechy', 'flower', 'cannon', 'mushroom', 'fungus', 'bat', 'bloat', 'banbuilder']) },
+    { id: 'pyces2', name: 'Pyces raros', items: objs(['ghost', 'holo', 'motions', 'hacker', 'piranha', 'venerana', 'vampire', 'bloodpire', 'pysh', 'clownpysh', 'axolotl', 'squid', 'shark', 'mimic', 'dirty', 'nomic', 'goldmimic']) },
     { id: 'jefes', name: 'Jefes', items: objs(['noeye', 'nosense', 'noir', 'moonstar']) },
     { id: 'items', name: 'Objetos', items: objs(['evo', 'flor', 'caca', 'vacio', 'brillo', 'miniglob'].concat(S.Model.Characters.list.map((c) => 'cap_' + c.id)).concat(['coin10', 'coin30', 'coin50', 'coin100', 'spring', 'checkpoint', 'starcoin', 'starcoin_giga', 'starcoin_moon', 'starcoin_rg', 'starcoin_magic', 'starcoin_traitor'])) },
-    { id: 'cristal', name: 'Cristalizados', items: objs(['crystal', 'miner', 'astralbpyce', 'dreamyspyce']) },
+    { id: 'cristal', name: 'Cristalizados y eternium', items: objs(['crystal', 'miner', 'eminer', 'astralbpyce', 'dreamyspyce']) },
     { id: 'gizmos', name: 'Mecanismos', items: tiles([54]).concat(objs(['platform', 'platformV', 'platformD1', 'platformD2', 'shroomH', 'shroomV', 'warp', 'lockwarp', 'door', 'lockdoor', 'key', 'firebar', 'icicle', 'exswitch0', 'exswitch1', 'exswitch2'])) },
     // Decoración: los items se rellenan dinámicamente según el mapa (ver EditorView.refreshItems)
     { id: 'deco', name: 'Decoración', items: [], dynamic: 'deco' },
@@ -242,9 +257,44 @@
   const isPCoin = (t, pActive) => (t === T.PBLK && !pActive) || (t === T.PCOIN && pActive);
   const exInfo = (t) => (t >= T.EX0 && t <= T.EX2 ? t - T.EX0 : -1);
 
+  // Lore opcional: la guía lo muestra separado de las reglas de juego.
+  const LORE = {
+    mushroom: 'No está claro si fue un Pyce intoxicado por las esporas alucinógenas del bosque o una seta que aprendió a usar una carcasa Pyce. En ambos casos, crece para bloquear el paso de los Globs.',
+    piranha: 'Una planta piraña azulada se introdujo en una carcasa Pyce vacía y se desarrolló desde dentro. La usa como maceta, coraza y base para apuntar sus ataques.',
+    vampire: 'Los Vampire Pyces dominan los claros nocturnos. Cuando detectan un Glob, ordenan a su forma alada salir a cazar desde el aire.',
+    bat: 'Los Bat Pyces sirven de exploradores y escolta para los Vampire Pyces. Vuelan por delante para localizar intrusos y guiar a su maestro.',
+    skelebone: 'Las almas de Pyces antiguos forman la cara que mantiene sus huesos unidos. La luz las dispersa y deja al esqueleto sin voluntad para recomponerse.',
+    zom: 'La energía corrupta hace que un ZomPyce se levante una vez más tras caer. La luz limpia esa energía antes de que pueda volver.',
+    motions: 'Cuatro emociones compiten por controlar este Pyce inestable. Cada una altera su manera de enfrentarse a los Globs.',
+    pyce2: 'Los Pyce 2.0 fueron una generación resistente. Algunos acabaron cristalizándose y dieron lugar a los Crystal Pyces.',
+    crystal: 'La versión cristalizada y más fuerte de Pyce 2.0. Los cristales en su cabeza endurecen su coraza y la vuelven imposible de pisar.',
+    bomb: 'La familia explosiva de los Pyces. Su rama mayor acumula una carga estable hasta que alguien enciende su mecha.',
+    toybomb: 'El hermano pequeño de Bomb Pyce: parece un juguete de cuerda, pero es mucho más impulsivo y letal.',
+    astralbpyce: 'La evolución cristalizada de Bomb Pyce. Su energía astral transforma cualquier golpe en una explosión peligrosa.',
+    symbol: 'Un símbolo antiguo de las pirámides que cobró vida. Nadie sabe si es un Pyce ancestral o un prototipo diseñado antes de que existieran los Pyces modernos.',
+    dreamyspyce: 'La versión cristalizada de Symbol Pyce. Sus sueños tienen suficiente fuerza para invocar símbolos menores a su alrededor.',
+    miner: 'Un minero Pyce que quedó envuelto en eternium, la gema de la eternidad. No es un cristalizado: el mineral amplifica su resistencia y vincula su pico a sus manos.',
+    eminer: 'El mismo minero, pero el eternium ya le ha calado hasta los circuitos. Recuperado de un juego anterior de la saga.',
+    banbuilder: 'Un Builder Pyce expulsado de la obra. Desde entonces reparte baneos con su martillo. Recuperado de un juego anterior de la saga.',
+    venerana: 'La prima lila de Pyceranha: su planta de cabeza amarilla escupe veneno en vez de fuego. Recuperado de un juego anterior de la saga.',
+    bloodpire: 'Un Vampire Pyce más antiguo y vistoso. Sus Bloat Pyces lo protegen mientras caza. Recuperado de un juego anterior de la saga.',
+    bloat: 'La forma alada de Bloodpire y de sus escoltas. Recuperado de un juego anterior de la saga.',
+    fungus: 'Seta de cabeza azul y bigote celeste que siembra esporas de Mushroom Pyce por donde pasa. Recuperado de un juego anterior de la saga.'
+  };
+
+  // Desbloqueables: ¿ya se puede usar este tipo en el editor? (superar el mundo de su 'unlock')
+  function isUnlocked(type) {
+    const d = OBJECTS[type];
+    if (!d || !d.unlock) return true;
+    const SM = S.Model.StoryMap;
+    return !!(SM && SM.isWorldComplete && SM.isWorldComplete(d.unlock));
+  }
+  // Tipos que desbloquea un mundo (para avisar al superarlo)
+  const unlocksFor = (worldId) => Object.keys(OBJECTS).filter((k) => OBJECTS[k].unlock === worldId);
+
   S.Model.Catalog = {
-    T, OBJECTS, PALETTE, TILE_NAMES, BOX_ITEMS, AB, ENEMY_TYPES, COIN_VALUE, EXCLAIM, PURPLE_NEED,
-    isSolid, abInfo, canRotate, exInfo, isPCoin,
+    T, OBJECTS, PALETTE, TILE_NAMES, LORE, BOX_ITEMS, AB, ENEMY_TYPES, COIN_VALUE, EXCLAIM, PURPLE_NEED,
+    isSolid, abInfo, canRotate, exInfo, isPCoin, isUnlocked, unlocksFor,
     isSemi: (t) => SEMI.has(t),
     isSlope: (t) => SLOPES.has(t),
     isContainer: (t) => CONTAINERS.has(t),

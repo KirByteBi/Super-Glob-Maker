@@ -109,22 +109,69 @@
       s.appendChild(el('p', 'guide-intro', 'Consulta qué hace cada bloque, Pyce, objeto y mecanismo. La lista coincide con las herramientas disponibles en el editor.'));
       const tabs = el('div', 'guide-tabs'), list = el('div', 'guide-list');
       const categories = C.PALETTE.filter((cat) => cat.items.length);
+      // Variantes del mismo sistema: una ficha las explica juntas para evitar una lista repetitiva.
+      const groupDefs = {
+        terrain: [
+          { title: 'Suelos', ids: [1, 53], desc: 'Superficies sólidas básicas: el suelo temático conserva la misma colisión y cambia solo su aspecto según el mapa.' },
+          { title: 'Semisólidos', ids: [5, 17, 56, 57], desc: 'Se atraviesan desde abajo y se pisan por arriba. El semisólido de fondo crea automáticamente su relleno visual.' },
+          { title: 'Pendientes', ids: [29, 30, 31, 32, 33, 34], desc: 'Las seis variantes forman cuestas empinadas o suaves en ambos sentidos.' },
+          { title: 'Tuberías de terreno', ids: [37, 52], desc: 'La tubería grande es sólida; la pequeña solo sirve de decoración.' },
+          { title: 'Líquidos', ids: [9, 16], desc: 'El agua permite nadar; el líquido peligroso daña al tocarlo.' }
+        ],
+        blocks: [
+          { title: 'Cajas y bloques rompibles', ids: [2, 3, 13], desc: 'Los bloques Gel se rompen; las cajas normal y oculta pueden contener objetos.' },
+          { title: 'Monedas', ids: [12, 38, 39, 40, 41, 47, 55], desc: 'Variantes de moneda: la roja da 1UP al reunir 8; las verdes dependen del interruptor G; las púrpuras desbloquean la Medalla.' },
+          { title: 'Sistema A/B', ids: [20, 21, 22, 23, 24, 25, 26, 27, 28], desc: 'Cada interruptor alterna entre sus dos bloques A/B del mismo color.' },
+          { title: 'Sistema P', ids: [35, 42, 43], desc: 'El interruptor P cambia temporalmente entre los bloques P sólidos y las monedas P.' },
+          { title: 'Sistema “!”', ids: [49, 50, 51], desc: 'Los bloques “!” se activan al usar su interruptor del mismo color.' }
+        ],
+        items: [
+          { title: 'Power-ups', ids: ['evo', 'flor', 'brillo', 'caca', 'vacio'], desc: 'Mejoran o transforman temporalmente al Glob.' },
+          { title: 'Monedas Estrella', ids: ['starcoin', 'starcoin_giga', 'starcoin_moon', 'starcoin_rg', 'starcoin_magic', 'starcoin_traitor'], desc: 'Coleccionables 2×2; las variantes cambian el aspecto o tienen una regla especial.' },
+          { title: 'Monedas de valor', ids: ['coin10', 'coin30', 'coin50', 'coin100'], desc: 'Coleccionables 2×2 que otorgan la cantidad indicada.' }
+        ],
+        gizmos: [
+          { title: 'Plataformas móviles', ids: ['platform', 'platformV', 'platformD1', 'platformD2', 'shroomH', 'shroomV'], desc: 'Las plataformas y setas se desplazan según su dirección o raíl; algunas empiezan al subirte.' },
+          { title: 'Puertas y llaves', ids: ['door', 'lockdoor', 'key'], desc: 'Conecta puertas entre sí; las puertas con llave requieren recoger una llave antes.' },
+          { title: 'Entradas de tubería', ids: ['warp', 'lockwarp'], desc: 'Conecta tuberías entre sí; la variante con tapa necesita una llave.' },
+          { title: 'Interruptores “!”', ids: ['exswitch0', 'exswitch1', 'exswitch2'], desc: 'Activa permanentemente los bloques “!” de su color.' }
+        ]
+      };
+      const groupsFor = (cat) => {
+        const rest = cat.items.slice(), groups = [];
+        (groupDefs[cat.id] || []).forEach((def) => {
+          const items = rest.filter((it) => def.ids.includes(it.kind === 'tile' ? it.id : it.type));
+          if (!items.length) return;
+          items.forEach((it) => rest.splice(rest.indexOf(it), 1));
+          groups.push(Object.assign({ items }, def));
+        });
+        rest.forEach((it) => groups.push({ title: C.itemName(it), items: [it] }));
+        return groups;
+      };
       const show = (cat) => {
         [...tabs.children].forEach((b) => b.classList.toggle('on', b.dataset.cat === cat.id));
         list.innerHTML = '';
-        cat.items.forEach((it) => {
+        groupsFor(cat).forEach((group) => {
           const card = el('article', 'guide-card');
-          card.appendChild(el('h3', '', C.itemName(it)));
-          const desc = C.itemDesc(it);
-          card.appendChild(el('p', '', desc || (it.kind === 'tile' ? 'Elemento de terreno o bloque colocable en el editor.' : 'Elemento colocable en el editor.')));
-          if (it.kind === 'obj') {
-            const d = C.OBJECTS[it.type], tags = [];
-            if (d && d.boss) tags.push('Jefe');
-            if (d && d.water) tags.push('Acuático');
-            if (d && d.rare) tags.push('Raro');
-            if (d && (d.rotH || d.rotV)) tags.push('Se puede girar');
-            if (tags.length) card.appendChild(el('span', 'guide-tags', tags.join(' · ')));
-          }
+          card.appendChild(el('h3', '', group.title));
+          if (group.desc) card.appendChild(el('p', 'guide-group-desc', group.desc));
+          group.items.forEach((it) => {
+            const entry = el('div', 'guide-entry');
+            entry.appendChild(el('b', '', C.itemName(it)));
+            const desc = C.itemDesc(it);
+            if (desc) entry.appendChild(el('span', '', desc));
+            const lore = it.kind === 'obj' && C.LORE && C.LORE[it.type];
+            if (lore) { entry.appendChild(el('b', 'guide-lore-title', '📜 Origen')); entry.appendChild(el('span', 'guide-lore', lore)); }
+            if (it.kind === 'obj') {
+              const d = C.OBJECTS[it.type], tags = [];
+              if (d && d.boss) tags.push('Jefe');
+              if (d && d.water) tags.push('Acuático');
+              if (d && d.rare) tags.push('Raro');
+              if (d && (d.rotH || d.rotV)) tags.push('Se puede girar');
+              if (tags.length) entry.appendChild(el('em', 'guide-tags', tags.join(' · ')));
+            }
+            card.appendChild(entry);
+          });
           list.appendChild(card);
         });
       };

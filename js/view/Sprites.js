@@ -317,6 +317,26 @@
     [[-0.3, -0.3, 0.14], [0.25, -0.2, 0.1], [-0.05, 0.1, 0.08]].forEach(([u, v, r]) => { ctx.beginPath(); ctx.ellipse(cx + u * rw, cy + v * rh, r * rw, r * rh * 0.6, -0.4, 0, 7); ctx.fill(); });
     ctx.restore();
   };
+  // Mina del Banned Builder: parpadea en rojo mientras se arma; luego luz fija
+  D.banmine = (ctx, e, t) => {
+    const cx = e.cx(), by = e.y + e.h;
+    ctx.beginPath(); ctx.ellipse(cx, by - 4, 9, 5, 0, Math.PI, 0); ctx.lineTo(cx + 9, by); ctx.lineTo(cx - 9, by); ctx.closePath(); fillStroke(ctx, '#2a2a33', 2);
+    const on = e.armT > 0 ? Math.floor(t * 10) % 2 === 0 : true;
+    ctx.fillStyle = on ? '#ff3b3b' : '#5a1a1a'; ctx.beginPath(); ctx.arc(cx, by - 7, 2.6, 0, 7); ctx.fill();
+  };
+  // Charco de veneno de Veneraña: se encoge y se desvanece al final
+  D.poisonpool = (ctx, e, t) => {
+    const k = Math.min(1, (e.life || 0) / 0.6);
+    ctx.save(); ctx.globalAlpha = 0.85 * k;
+    ctx.beginPath(); ctx.ellipse(e.cx(), e.y + e.h - 3, e.w / 2 * (0.7 + 0.3 * k), 5, 0, 0, 7); fillStroke(ctx, '#9b3dff', 2);
+    ctx.fillStyle = '#d9a8ff'; for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(e.x + 10 + i * 13, e.y + e.h - 5 - Math.abs(Math.sin(t * 4 + i)) * 3, 2, 0, 7); ctx.fill(); }
+    ctx.restore();
+  };
+  // Espora de Fungus: bolita celeste que palpita (la que va a crecer brilla más)
+  D.spore = (ctx, e, t) => {
+    const r = 4 + Math.sin(t * 8) * 0.8 + (e.grow ? 1.5 : 0);
+    ctx.beginPath(); ctx.arc(e.cx(), e.y + e.h - r, r, 0, 7); fillStroke(ctx, e.grow ? '#7fe3ff' : '#bfefff', 1.5);
+  };
   // Proyectiles enemigos (eshot), según su 'kind'
   D.eshot = (ctx, e, t) => {
     const cx = e.cx(), cy = e.cy(), k = e.kind;
@@ -333,11 +353,22 @@
       // Pico de cristal del Miner Pyce (bumerán)
       case 'pickaxe': {
         ctx.save(); ctx.translate(cx, cy); ctx.rotate(t * 14 * (e.boomer || 1));
-        ctx.fillStyle = 'rgba(255,111,200,0.35)'; ctx.beginPath(); ctx.arc(0, 0, 13, 0, 7); ctx.fill();
+        ctx.fillStyle = e.lilac ? 'rgba(170,90,255,0.4)' : 'rgba(255,111,200,0.35)'; ctx.beginPath(); ctx.arc(0, 0, 13, 0, 7); ctx.fill();
         rr(ctx, -2, -3, 4, 14, 2); fillStroke(ctx, '#7a4a2a', 2);
-        ctx.beginPath(); ctx.moveTo(-11, -3); ctx.quadraticCurveTo(0, -12, 11, -3); ctx.lineTo(8, -1); ctx.quadraticCurveTo(0, -7, -8, -1); ctx.closePath(); fillStroke(ctx, '#ff6fc8', 2);
+        ctx.beginPath(); ctx.moveTo(-11, -3); ctx.quadraticCurveTo(0, -12, 11, -3); ctx.lineTo(8, -1); ctx.quadraticCurveTo(0, -7, -8, -1); ctx.closePath(); fillStroke(ctx, e.lilac ? '#b46bff' : '#ff6fc8', 2);
         ctx.restore(); break;
       }
+      // Banhammer del Banned Builder (letal): martillo grande negro con "BAN" en rosa
+      case 'banhammer': {
+        ctx.save(); ctx.translate(cx, cy); ctx.rotate(t * 10 * (e.dir || 1));
+        ctx.fillStyle = 'rgba(255,60,140,0.3)'; ctx.beginPath(); ctx.arc(0, 0, 15, 0, 7); ctx.fill();
+        rr(ctx, -2.5, -1, 5, 15, 2); fillStroke(ctx, '#6b4a2e', 2);
+        rr(ctx, -11, -11, 22, 11, 3); fillStroke(ctx, '#1d1d24', 2);
+        ctx.fillStyle = '#ff4fa0'; ctx.font = 'bold 7px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('BAN', 0, -5.5);
+        ctx.restore(); break;
+      }
+      // Veneno de Veneraña (cae en arco)
+      case 'poison': drop(ctx, cx, cy, 7, '#b44dff'); ctx.fillStyle = '#e6c2ff'; ctx.beginPath(); ctx.arc(cx - 2, cy - 2, 2, 0, 7); ctx.fill(); break;
       case 'gift': rr(ctx, cx - 7, cy - 7, 14, 14, 2); fillStroke(ctx, '#e8323f', 2.5); ctx.fillStyle = '#ffd000'; ctx.fillRect(cx - 7, cy - 1.5, 14, 3); ctx.fillRect(cx - 1.5, cy - 7, 3, 14); break;
       case 'petal': drop(ctx, cx, cy, 6, '#ff9de0'); break;
       case 'bubble': ctx.beginPath(); ctx.arc(cx, cy, 7, 0, 7); fillStroke(ctx, 'rgba(140,220,255,0.6)', 2.5); shine(ctx, cx - 3, cy - 3, 3, 2); break;
@@ -1028,7 +1059,7 @@
     let dw = w * 1.25, dh = dw / ar;
     if (dh > h * 1.25) { dh = h * 1.25; dw = dh * ar; }
     // Mushroom conserva sus pies y estira también el arte al aumentar su hitbox.
-    if (e.type === 'mushroom' && e.baseH && !e.squashed) dh *= e.h / e.baseH;
+    if ((e.type === 'mushroom' || e.type === 'fungus') && e.baseH && !e.squashed) dh *= e.h / e.baseH;
     // ¿voltear? El original mira a la derecha (o a la izquierda si faceLeft).
     // Queremos que mire hacia e.dir (-1 izq, 1 der).
     const originalRight = !art.faceLeft;
@@ -1121,6 +1152,16 @@
     if (!e.kick && e.wakeT < 1.5 && Math.floor(t * 10) % 2) { ctx.fillStyle = '#0a0a0a'; ctx.fillRect(cx - 5, cy - 2, 3, 3); ctx.fillRect(cx + 2, cy - 2, 3, 3); } // a punto de salir
   }
 
+  function motionMood(ctx, e) {
+    const faces = { happy: ['#fff07a', '☺'], angry: ['#ff7a7a', '☹'], sad: ['#85caff', '☹'], scared: ['#d9a4ff', '😨'] };
+    const face = faces[e.mood] || faces.happy, x = e.cx(), y = e.y - 9;
+    ctx.save(); ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(x, y, 9, 0, 7); ctx.fill();
+    ctx.fillStyle = face[0]; ctx.beginPath(); ctx.arc(x, y, 7, 0, 7); ctx.fill();
+    ctx.fillStyle = '#111'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(face[1], x, y + .5);
+    if (e.mood === 'sad') { ctx.fillStyle = '#39bfff'; ctx.beginPath(); ctx.arc(x + 6, y + 7, 2, 0, 7); ctx.fill(); }
+    ctx.restore();
+  }
+
   function drawEntity(ctx, e, t, opt) {
     const f = D[e.type];
     const img = !f && S.View.Assets ? S.View.Assets.pyce(e.type) : null;
@@ -1156,6 +1197,7 @@
         for (let i = 0; i < 3; i++) { const a = tt * 4 + i * 2.1; star(ctx, e.cx() + Math.cos(a) * e.w * 0.45, e.y - 6 + Math.sin(a) * 6, 6, 2.6, 5, a); fillStroke(ctx, '#ffe600', 1.5); }
         ctx.restore(); return;
       }
+      if (e.type === 'motions') motionMood(ctx, e);
       drawPyce(ctx, e, tt, img); ctx.restore(); return;
     }
     const facing = e.dir > 0 && ['gloopy', 'pinchoglob', 'saltagel', 'tornibot', 'medusa'].includes(e.type);

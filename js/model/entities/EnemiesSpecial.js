@@ -341,6 +341,12 @@
       if (this.tiles === false) { this.x += this.vx * dt; this.y += this.vy * dt; return; }
       const r = Physics.move(this, g.level, dt, { noSlopes: this.kind !== 'shock' });
       if (this.kind === 'shock') { if (r.wall) this.remove = true; return; }
+      if (r.landed && this.kind === 'poison') {
+        // veneno de Veneraña: al tocar el suelo deja un charco que daña unos segundos
+        const pool = Ents.create('poisonpool', 0, 0);
+        if (pool) { pool.x = this.cx() - pool.w / 2; pool.y = this.y + this.h - pool.h; pool.active = true; g.spawn(pool); }
+        this.remove = true; g.emit('shotHit', { x: this.cx(), y: this.cy(), color: '#b44dff' }); return;
+      }
       if (r.landed) {
         if (this.bounce > 0) { this.bounce--; this.vy = -280; }
         else { this.remove = true; g.emit('shotHit', { x: this.cx(), y: this.cy(), color: '#ffffff' }); }

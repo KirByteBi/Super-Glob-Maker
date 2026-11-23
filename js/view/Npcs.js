@@ -11,12 +11,13 @@
 
   // Familias que se pueden colocar (los Trampas y Sunmons quedan fuera de momento)
   const LIST = [
-    { id: 'blanca_1', name: 'Balloon Glob (EVO1)', src: 'Globs/NPCs/Familia Blanca/Balloon Glob (EVO1).png' },
-    { id: 'blanca_2', name: 'Heliglob (EVO2)', src: 'Globs/NPCs/Familia Blanca/Heliglob (EVO2).png' },
-    { id: 'blanca_3', name: 'Alien Glob (EVO3)', src: 'Globs/NPCs/Familia Blanca/Alien Glob (EVO3).png' },
-    { id: 'rosa_1', name: 'Streamer Glob (EVO1)', src: 'Globs/NPCs/Familia Rosa/Streamer Glob (EVO1).png' },
-    { id: 'rosa_2', name: 'Gamer Glob (EVO2)', src: 'Globs/NPCs/Familia Rosa/Gamer Glob (EVO2).png' },
-    { id: 'rosa_3', name: 'Youtuber Glob (EVO3)', src: 'Globs/NPCs/Familia Rosa/Youtuber Glob (EVO3).png' },
+    // Familias Blanca y Rosa: arte nuevo (carpetas _REWAMPED). Mismos ids para no romper niveles guardados.
+    { id: 'blanca_1', name: 'White Glob (EVO1)', src: 'Globs/NPCs/Familia Blanca_REWAMPED/WhiteRewampEVO1.png' },
+    { id: 'blanca_2', name: 'White Glob (EVO2)', src: 'Globs/NPCs/Familia Blanca_REWAMPED/WhiteRewampEVO2.png' },
+    { id: 'blanca_3', name: 'White Glob (EVO3)', src: 'Globs/NPCs/Familia Blanca_REWAMPED/WhiteRewampEVO3.png' },
+    { id: 'rosa_1', name: 'Pink Glob (EVO1)', src: 'Globs/NPCs/Familia Rosa_REWAMPED/PinkRewampEVO1.png' },
+    { id: 'rosa_2', name: 'Pink Glob (EVO2)', src: 'Globs/NPCs/Familia Rosa_REWAMPED/PinkRewampEVO2.png' },
+    { id: 'rosa_3', name: 'Pink Glob (EVO3)', src: 'Globs/NPCs/Familia Rosa_REWAMPED/PinkRewampEVO3.png' },
     { id: 'marina_1', name: 'Crew Glob (EVO1)', src: 'Globs/NPCs/F. Marina/Crew Glob (EVO1).png' },
     { id: 'marina_2', name: 'PMate Glob (EVO2)', src: 'Globs/NPCs/F. Marina/PMate Glob (EVO2).png' },
     { id: 'marina_3', name: 'Bearded King Glob (EVO3)', src: 'Globs/NPCs/F. Marina/Bearded King Glob (EVO3).png' },

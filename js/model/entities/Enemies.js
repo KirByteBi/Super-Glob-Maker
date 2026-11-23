@@ -527,14 +527,21 @@
   }
   const MOODS = ['happy', 'angry', 'sad', 'scared'];
   class Motions extends Enemy {
-    constructor(tx, ty) { super('motions', tx, ty); this.mood = 'happy'; this.moodT = 3; this.cry = 0.6; }
+    constructor(tx, ty) { super('motions', tx, ty); this.mood = 'happy'; this.moodT = 3; this.cry = 0; this.hopT = 0.8; }
+    setMood(mood, g) {
+      this.mood = mood; this.moodT = 3; this.cry = mood === 'sad' ? 0.45 : 0; this.hopT = 0.8;
+      g.emit('mood', { x: this.cx(), y: this.y, mood });
+    }
     think(g, dt) {
       this.moodT -= dt * g.enemySpeedMul;
-      if (this.moodT <= 0) { this.moodT = 3; this.mood = MOODS[(MOODS.indexOf(this.mood) + 1) % 4]; g.emit('mood', { x: this.cx(), y: this.y, mood: this.mood }); }
+      if (this.moodT <= 0) this.setMood(MOODS[(MOODS.indexOf(this.mood) + 1) % MOODS.length], g);
       const p = g.player;
-      if (this.mood === 'happy') { if (this.onGround && Math.random() < dt) this.vy = -280; this.walk(g, 40); }
-      else if (this.mood === 'angry') { this.dir = dirTo(this, p); this.walk(g, 115); }
-      else if (this.mood === 'sad') { this.vx = 0; this.cry -= dt; if (this.cry <= 0) { this.cry = 0.5; this.shoot(g, 'tear', U.rand(-50, 50), -150, { gravity: 900 }); } }
+      if (this.mood === 'happy') {
+        this.hopT -= dt * g.enemySpeedMul;
+        if (this.onGround && this.hopT <= 0) { this.vy = -280; this.hopT = 1.1; g.emit('enemyHop', { x: this.cx(), y: this.y }); }
+        this.walk(g, 40);
+      } else if (this.mood === 'angry') { this.dir = dirTo(this, p); this.walk(g, 115); }
+      else if (this.mood === 'sad') { this.vx = 0; this.cry -= dt; if (this.cry <= 0) { this.cry = 0.5; this.dir = dirTo(this, p); this.shoot(g, 'tear', this.dir * 55, -150, { gravity: 900 }); } }
       else { this.dir = -dirTo(this, p); this.walk(g, 90); }
     }
   }
@@ -585,8 +592,8 @@
     }
     physics() {} // fijo: no cae ni se desplaza
   }
-  // Vampire se queda quieto hasta que el jugador se acerca; se vuelve Bat al despegar y recupera
-  // su forma de Vampire cuando el murciélago toca el suelo.
+  // Vampire: al acercarte adopta forma de murciélago y te persigue por el aire;
+  // si aterriza, vuelve a su forma terrestre y puede despegar de nuevo.
   class Vampire extends Enemy {
     constructor(tx, ty) { super('vampire', tx, ty); this.gravity = 0; this.awake = false; }
     setForm(type) {
@@ -594,20 +601,23 @@
       this.type = type; this.w = d.w; this.h = d.h; this.x = cx - this.w / 2; this.y = foot - this.h;
     }
     becomeBat(g) {
-      this.setForm('bat'); this.awake = true; this.gravity = 950; this.vy = -260; this.tiles = true; this.dir = dirTo(this, g.player);
+      this.setForm('bat'); this.awake = true; this.gravity = 0; this.tiles = true; this.y -= 20; this.vy = -90; this.onGround = false; this.dir = dirTo(this, g.player);
       g.emit('enemyAngry', { x: this.cx(), y: this.cy() });
     }
     becomeVampire() {
-      this.setForm('vampire'); this.awake = false; this.gravity = 0; this.vx = 0; this.vy = 0;
+      this.setForm('vampire'); this.awake = false; this.gravity = 0; this.tiles = true; this.vx = 0; this.vy = 0;
     }
-    think(g) {
+    think(g, dt) {
       if (diesInLight(this, g)) return;
       if (!this.awake) { this.vx = 0; this.vy = 0; if (near(this, g.player, 6 * T)) this.becomeBat(g); return; }
-      // Tras su vuelo, al tocar suelo vuelve a su forma inmóvil de Vampire.
+      // El murciélago persigue el aire sobre el Glob; solo vuelve a Vampire si aterriza.
       if (this.onGround) { this.becomeVampire(); return; }
-      this.dir = dirTo(this, g.player); this.vx = this.dir * 72 * g.enemySpeedMul;
+      const p = g.player, dx = p.x + p.w / 2 - this.cx(), targetY = p.y + p.h / 2 - 36;
+      this.dir = dx < 0 ? -1 : 1;
+      this.vx = U.approach(this.vx, U.clamp(dx * 2.2, -108, 108) * g.enemySpeedMul, 360 * dt);
+      this.vy = U.approach(this.vy, U.clamp((targetY - this.cy()) * 3, -92, 92), 300 * dt);
     }
-    onWall(w) { this.dir = -w; }
+    onWall(w) { this.vx = -w * 70; }
   }
   // Bat: vuelo horizontal continuo, rebota en muros.
   class Bat extends Enemy {
@@ -615,6 +625,177 @@
     think(g) { if (diesInLight(this, g)) return; this.vx = this.dir * 72 * g.enemySpeedMul; this.vy = 0; }
     onWall(w) { this.dir = -w; }
   }
+
+  // ================================================================ DESBLOQUEABLES
+  // Versiones alternas de juegos anteriores de la saga. Algo más difíciles que el original,
+  // pero sin pasarse: siempre avisan antes de atacar y tienen límites (1 banhammer, 2 minas,
+  // 2 murciélagos, 4 setas...). Los de bosque/noche siguen siendo débiles a la luz.
+  const alive = (list) => list.filter((e) => e && !e.remove && !(e.dying > 0));
+  const spawnAt = (g, type, x, y, o) => {
+    const e = Ents.create(type, 0, 0); if (!e) return null;
+    e.x = x - e.w / 2; e.y = y - e.h; e.spawnX = e.x; e.spawnY = e.y; Object.assign(e, o || {});
+    e.active = true; g.spawn(e); return e;
+  };
+
+  // Minery Eterniumed Pyce: el Miner más afectado por el eternium. Lanza un poco más seguido.
+  class EMiner extends Miner {
+    constructor(tx, ty) { super(tx, ty); this.type = 'eminer'; }
+    think(g, dt) {
+      this.pace(g, dt);
+      if (this.pick && (this.pick.remove || this.pick.dying)) this.pick = null;
+      if (this.pick) return;
+      this.throwT -= dt * g.enemySpeedMul;
+      if (this.throwT > 0 || !near(this, g.player, 11 * T)) return;
+      this.throwT = U.rand(0.9, 1.5);
+      this.pick = this.shoot(g, 'pickaxe', this.dir * 330, 0, { tiles: false, w: 22, h: 22, life: 5, owner: this, boomer: this.dir, homeY: this.y + this.h * 0.35, lilac: true });
+    }
+  }
+
+  // Banned Builder Pyce: un banhammer a la vez (letal, pero lento y con aviso) y minas (máx. 2).
+  class BanBuilder extends Bro {
+    constructor(tx, ty) { super('banbuilder', tx, ty); this.hammer = null; this.mines = []; this.mineT = U.rand(3, 4.5); this.windup = 0; this.throwT = U.rand(1.5, 2.5); }
+    think(g, dt) {
+      this.pace(g, dt);
+      if (this.hammer && (this.hammer.remove || this.hammer.dying)) this.hammer = null;
+      const close = near(this, g.player, 11 * T);
+      // aviso antes de lanzar (se para y levanta el martillo ~0.45 s)
+      if (this.windup > 0) {
+        this.vx = 0; this.windup -= dt;
+        if (this.windup <= 0) {
+          this.hammer = this.shoot(g, 'banhammer', this.dir * U.rand(110, 160), -U.rand(440, 500), { gravity: 1000, tiles: false, w: 22, h: 22, life: 3, lethal: true });
+          this.throwT = U.rand(2.4, 3.2);
+        }
+        return;
+      }
+      this.throwT -= dt * g.enemySpeedMul;
+      if (!this.hammer && this.throwT <= 0 && close) { this.windup = 0.45; g.emit('enemyAngry', { x: this.cx(), y: this.y }); }
+      // minas: deja una a sus pies de vez en cuando, como mucho 2 a la vez
+      this.mineT -= dt * g.enemySpeedMul;
+      if (this.mineT <= 0 && this.onGround) {
+        this.mineT = U.rand(4, 6);
+        this.mines = alive(this.mines);
+        if (this.mines.length < 2) { const m = spawnAt(g, 'banmine', this.cx(), this.y + this.h); if (m) this.mines.push(m); }
+      }
+    }
+  }
+  // Mina del Banned Builder: tarda un momento en armarse (parpadea) y explota al tocarla.
+  class BanMine extends Entity {
+    constructor(tx, ty) { super('banmine', tx, ty); this.armT = 0.8; }
+    think(g, dt) { this.vx = 0; if (this.armT > 0) this.armT -= dt; }
+    onTouch(g) {
+      if (this.armT > 0) return true;              // aún sin armar: se puede pasar por encima
+      this.remove = true; g.explode(this.cx(), this.cy(), 40, this);
+      return true;
+    }
+  }
+
+  // Veneraña Pyce: Pyceranha venenosa. Poco alcance; el veneno cae en arco y deja charco.
+  class Venerana extends Piranha {
+    constructor(tx, ty) { super(tx, ty); this.type = 'venerana'; this.fireT = 1.6; }
+    think(g, dt) {
+      if (diesInLight(this, g)) return;
+      this.vx = 0; this.vy = 0;
+      const p = g.player, dx = p.x + p.w / 2 - this.cx();
+      this.dir = Math.sign(dx) || this.dir;
+      this.fireT -= dt * g.enemySpeedMul;
+      if (this.fireT <= 0 && Math.abs(dx) < 6 * T && Math.abs(p.y - this.y) < 4 * T) {
+        this.fireT = 2.6;
+        // arco corto hacia ti (llega como mucho ~5 casillas)
+        const vx = U.clamp(dx * 1.6, -230, 230);
+        this.shoot(g, 'poison', vx, -360, { gravity: 900, life: 3, w: 14, h: 14 });
+      }
+    }
+  }
+  // Charco de veneno: daña si lo tocas y desaparece a los pocos segundos.
+  class PoisonPool extends Entity {
+    constructor(tx, ty) { super('poisonpool', tx, ty); this.gravity = 0; this.life = 3; }
+    think(g, dt) { this.life -= dt; if (this.life <= 0) this.remove = true; }
+    physics() {}
+    onTouch(g) { if (this.life > 0.25) g.hurtPlayer(this); return true; }
+  }
+
+  // Bloat Pyce: murciélago de Bloodpire. Persigue haciendo eses, más lento que el Glob.
+  class Bloat extends Enemy {
+    constructor(tx, ty) { super('bloat', tx, ty); this.gravity = 0; this.phase = Math.random() * 6; }
+    think(g, dt) {
+      if (diesInLight(this, g)) return;
+      const p = g.player, dx = p.x + p.w / 2 - this.cx(), dy = p.y + p.h / 2 - 30 - this.cy();
+      this.dir = dx < 0 ? -1 : 1;
+      this.vx = U.approach(this.vx, U.clamp(dx * 1.5, -85, 85) * g.enemySpeedMul, 240 * dt);
+      this.vy = U.approach(this.vy, U.clamp(dy * 2, -70, 70) + Math.sin(this.t * 3 + this.phase) * 45, 260 * dt);
+    }
+    onWall(w) { this.vx = -w * 60; }
+  }
+  // Bloodpire Pyce: quieto invoca Bat Pyces (máx. 2). Al acercarte se vuelve Bloat Pyce y
+  // suelta otros dos Bloat Pyces de señuelo (solo si los anteriores ya no están).
+  class Bloodpire extends Vampire {
+    constructor(tx, ty) { super(tx, ty); this.type = 'bloodpire'; this.bats = []; this.decoys = []; this.batT = 2.5; }
+    becomeBat(g) {
+      this.setForm('bloat'); this.awake = true; this.gravity = 0; this.tiles = true; this.y -= 20; this.vy = -90; this.onGround = false; this.dir = dirTo(this, g.player);
+      g.emit('enemyAngry', { x: this.cx(), y: this.cy() });
+      this.decoys = alive(this.decoys);
+      if (!this.decoys.length) [-1, 1].forEach((s) => { const d = spawnAt(g, 'bloat', this.cx() + s * 28, this.y + 10); if (d) { d.vy = -80; this.decoys.push(d); } });
+    }
+    becomeVampire() { this.setForm('bloodpire'); this.awake = false; this.gravity = 0; this.tiles = true; this.vx = 0; this.vy = 0; }
+    think(g, dt) {
+      if (diesInLight(this, g)) return;
+      if (!this.awake) {
+        this.vx = 0; this.vy = 0;
+        this.batT -= dt * g.enemySpeedMul;
+        if (this.batT <= 0) {
+          this.batT = 4;
+          this.bats = alive(this.bats);
+          if (this.bats.length < 2) { const b = spawnAt(g, 'bat', this.cx(), this.y - 4); if (b) { b.dir = dirTo(this, g.player); this.bats.push(b); } }
+        }
+        if (near(this, g.player, 6 * T)) this.becomeBat(g);
+        return;
+      }
+      if (this.onGround) { this.becomeVampire(); return; }
+      const p = g.player, dx = p.x + p.w / 2 - this.cx(), targetY = p.y + p.h / 2 - 36;
+      this.dir = dx < 0 ? -1 : 1;
+      this.vx = U.approach(this.vx, U.clamp(dx * 2.2, -108, 108) * g.enemySpeedMul, 360 * dt);
+      this.vy = U.approach(this.vy, U.clamp((targetY - this.cy()) * 3, -92, 92), 300 * dt);
+    }
+  }
+
+  // Fungus Pyce: seta que se estira y SIGUE andando. Cada 3 esporas sale un Mushroom Pyce
+  // (máximo 4 vivos; si los derrotas puede volver a invocar).
+  class Fungus extends Mushroom {
+    constructor(tx, ty) { super(tx, ty); this.type = 'fungus'; this.sporeT = 1.6; this.spores = 0; this.kids = []; }
+    think(g, dt) {
+      if (diesInLight(this, g)) return;
+      const p = g.player;
+      this.stretch = Math.abs(p.x + p.w / 2 - this.cx()) < 5 * T ? 1 : 0;
+      const oldH = this.h;
+      this.h = U.approach(this.h, this.baseH + this.stretch * 48, dt * 120);
+      this.y -= this.h - oldH;
+      this.walk(g, this.stretch ? 26 : 34);       // estirado anda algo más lento, pero anda
+      this.sporeT -= dt * g.enemySpeedMul;
+      if (this.sporeT <= 0 && this.onGround) {
+        this.sporeT = 1.8;
+        this.kids = alive(this.kids);
+        if (this.kids.length >= 4) return;          // con 4 setas fuera no siembra más
+        this.spores++;
+        spawnAt(g, 'spore', this.cx(), this.y + this.h, { owner: this, grow: this.spores % 3 === 0 });
+      }
+    }
+  }
+  // Espora: se queda en el suelo un momento; la 3ª de cada tanda se convierte en Mushroom Pyce.
+  class Spore extends Entity {
+    constructor(tx, ty) { super('spore', tx, ty); this.life = 2.2; }
+    think(g, dt) {
+      this.vx = 0; this.life -= dt;
+      if (this.life > 0) return;
+      this.remove = true;
+      const o = this.owner;
+      if (this.grow && o && !o.remove && !(o.dying > 0) && alive(o.kids).length < 4) {
+        const m = spawnAt(g, 'mushroom', this.cx(), this.y + this.h); if (m) { m.dir = o.dir; o.kids.push(m); }
+      }
+    }
+  }
+
+  [['eminer', EMiner], ['banbuilder', BanBuilder], ['banmine', BanMine], ['venerana', Venerana], ['poisonpool', PoisonPool],
+    ['bloat', Bloat], ['bloodpire', Bloodpire], ['fungus', Fungus], ['spore', Spore]].forEach(([k, K]) => reg(k, K));
 
   [['stupid', Stupid], ['so', SO], ['symbol', Symbol], ['pyce2', Pyce2], ['guest', Guest], ['noob', Noob], ['elf', Elf],
     ['umbrella', Umbrella], ['zom', Zom], ['crystal', Crystal], ['knight', Knight], ['rebel', Rebel], ['skelebone', SkeleBone], ['snowcap', SnowCap],
