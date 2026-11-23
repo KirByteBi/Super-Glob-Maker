@@ -12,11 +12,18 @@
 
   const near = (e, p, dist) => Math.abs(p.x + p.w / 2 - e.cx()) < dist && Math.abs(p.y + p.h / 2 - e.cy()) < dist * 0.7;
   const dirTo = (e, p) => (p.x + p.w / 2 < e.cx() ? -1 : 1);
-  // La luz de un bloque LIGHT alcanza un radio de dos casillas.
+  // La luz de un bloque LIGHT alcanza un radio de dos casillas desde toda la hitbox,
+  // no solo desde su centro (importante para Pyces altos como Mushroom estirado).
   const diesInLight = (e, g) => {
-    const gx = Math.floor(e.cx() / T), gy = Math.floor(e.cy() / T), LIGHT = (S.Model.Catalog.T && S.Model.Catalog.T.LIGHT) || 48;
-    for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
-      if (dx * dx + dy * dy <= 4 && Number(g.level.get(gx + dx, gy + dy)) === LIGHT) {
+    const LIGHT = (S.Model.Catalog.T && S.Model.Catalog.T.LIGHT) || 48, radius = 2 * T;
+    const x0 = Math.floor((e.x - radius) / T), x1 = Math.floor((e.x + e.w + radius) / T);
+    const y0 = Math.floor((e.y - radius) / T), y1 = Math.floor((e.y + e.h + radius) / T);
+    for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) {
+      if (Number(g.level.get(tx, ty)) !== LIGHT) continue;
+      const lx = tx * T + T / 2, ly = ty * T + T / 2;
+      const dx = Math.max(e.x - lx, 0, lx - (e.x + e.w));
+      const dy = Math.max(e.y - ly, 0, ly - (e.y + e.h));
+      if (dx * dx + dy * dy <= radius * radius) {
         e.kill(g); g.addCoin(e.cx(), e.cy()); return true;
       }
     }
@@ -388,6 +395,8 @@
     think(g, dt) {
       this.vx = 0; this.open = Math.max(0, this.open - dt * 2);
       const p = g.player;
+      // La Flower sobre tubería es una Pyceranha y comparte su vulnerabilidad a la luz.
+      if (this.inPipe && diesInLight(this, g)) return;
       // Variante piraña piromana (en tubo): sube, escupe fuego, se esconde. No sale si estás pegado.
       if (this.inPipe) {
         this.fireT -= dt * g.enemySpeedMul;

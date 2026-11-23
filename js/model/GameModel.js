@@ -141,17 +141,16 @@
     }
 
     // Glob Antiguo: el aura (siempre encendida) mata fantasmas a 2 casillas;
-    // la linterna (encendida al pulsar disparo o mientras lo mantienes) mata fantasmas en un cono de 6 casillas
-    // hacia delante, pero solo en niveles oscuros.
+    // la linterna (encendida al pulsar disparo o mientras lo mantienes) mata fantasmas hacia delante.
     // Luz de la familia gris (Glob Antiguo y sus evoluciones): aura fija + linterna con alcance por evolución.
     // La usan la lógica (matar fantasmas) y el dibujo, para que lo que se ve sea lo que mata.
     globLight() {
       const p = this.player;
       if (!p || p.ch.id !== 'gray') return null;
-      const lampOn = !!(p.flashlight || p.lampHeld) && !!(this.fx && this.fx.darkness);
+      const lampOn = !!(p.flashlight || p.lampHeld);
       return {
         aura: 2 * T,                                  // radio del aura (siempre encendida)
-        lamp: lampOn,                                 // linterna encendida (solo en niveles oscuros)
+        lamp: lampOn,                                 // visible en cualquier mapa; perfora oscuridad solo cuando existe
         reach: (4 + 2 * (p.evo | 0)) * T,             // alcance: 4 casillas base, +2 por evolución
         near: 0.8 * T, far: 1.5 * T,                  // medio ancho del cono: cerca del Glob / en la punta
         face: p.face >= 0 ? 1 : -1
@@ -220,7 +219,6 @@
       if (this.time <= 0) { this.time = 0; this.die('time'); return; }
       this.updateEffects(dt);
       this.updateWorld(dt);
-      this.updateGlobLight(dt);
 
       const p = this.player;
       // Entrando por una tubería o puerta: animación y teletransporte
@@ -235,6 +233,8 @@
       // las puertas se miran antes de mover (↑ en una puerta entra en vez de saltar)
       if (!input.stunned) { this.tryWarp(p, input); if (this.warping) { this.updateCamera(dt); return; } }
       p.update(this, dt, input);
+      // Se actualiza tras la entrada para que el interruptor de linterna responda en este mismo frame.
+      this.updateGlobLight(dt);
       if (p.carrying) this.carryUpdate(dt);
 
       this.collectTiles(p);

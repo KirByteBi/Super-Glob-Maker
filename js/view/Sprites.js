@@ -1027,6 +1027,8 @@
     const ar = img.width / img.height;
     let dw = w * 1.25, dh = dw / ar;
     if (dh > h * 1.25) { dh = h * 1.25; dw = dh * ar; }
+    // Mushroom conserva sus pies y estira también el arte al aumentar su hitbox.
+    if (e.type === 'mushroom' && e.baseH && !e.squashed) dh *= e.h / e.baseH;
     // ¿voltear? El original mira a la derecha (o a la izquierda si faceLeft).
     // Queremos que mire hacia e.dir (-1 izq, 1 der).
     const originalRight = !art.faceLeft;
