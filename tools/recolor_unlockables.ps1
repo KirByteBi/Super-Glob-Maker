@@ -30,6 +30,19 @@ public static class Recolor {
       Marshal.Copy(px,0,data.Scan0,n); bmp.UnlockBits(data); bmp.Save(outPath,ImageFormat.Png);
     }
   }
+  // Texto girado (p. ej. "BAN" en la cabeza del banhammer), con contorno negro
+  public static void Label(string path, string text, int cx, int cy, float angle, float size, string hex){
+    Bitmap bmp; using(var tmp=new Bitmap(path)) bmp=new Bitmap(tmp);
+    using(var gr=Graphics.FromImage(bmp)){
+      gr.SmoothingMode=System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+      gr.TranslateTransform(cx,cy); gr.RotateTransform(angle);
+      var p=new System.Drawing.Drawing2D.GraphicsPath(); var fmt=new StringFormat{Alignment=StringAlignment.Center,LineAlignment=StringAlignment.Center};
+      p.AddString(text,new FontFamily("Arial"),(int)FontStyle.Bold,size,new PointF(0,0),fmt);
+      gr.DrawPath(new Pen(Color.FromArgb(255,13,13,13),6){LineJoin=System.Drawing.Drawing2D.LineJoin.Round},p);
+      gr.FillPath(new SolidBrush(ColorTranslator.FromHtml(hex)),p);
+    }
+    bmp.Save(path,ImageFormat.Png); bmp.Dispose();
+  }
   // Bigote (Fungus): dos lóbulos curvos con contorno negro
   public static void Mustache(string path, int cx, int cy, string hex){
     Bitmap bmp; using(var tmp=new Bitmap(path)) bmp=new Bitmap(tmp);
@@ -71,6 +84,8 @@ function NewRule($h) { $r = New-Object Rule; foreach ($k in $h.Keys) { $r.$k = $
   (NewRule @{ hMin=15; hMax=39; sMin=0.5; newH=275; sSet=0.5; vSet=0.33 }),
   (NewRule @{ x1=880; y0=440; sMax=0.25; vMax=0.55; newH=275; sSet=0.4; vMul=1.1 })
 ))
+# ...y lleva en la mano el banhammer: "BAN" rosa sobre la cabeza negra del martillo
+[Recolor]::Label("$W1\Banned Builder Pyce.png", 'BAN', 873, 252, 18, 62, '#ff4fa0')
 # Inked Squid: todo hacia índigo oscuro (los ojos negros no se tocan)
 [Recolor]::Run("$P\Squid Pyce.png", "$W1\Inked Squid Pyce.png", @(
   # pantalla (azul claro) algo más clara que el cuerpo, para que se lea la cara

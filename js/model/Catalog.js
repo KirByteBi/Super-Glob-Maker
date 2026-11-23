@@ -118,7 +118,7 @@
     // ----- DESBLOQUEABLES (versiones alternas de juegos anteriores de la saga) -----
     // unlock: mundo del Modo Historia que hay que superar para que salgan en el editor.
     // Los niveles que ya los usen se juegan siempre (el bloqueo solo afecta a la paleta).
-    eminer: { name: 'Minery Eterniumed Pyce', w: 28, h: 30, tier: 4, unlock: 'w1', desc: 'Minero mucho más afectado por el eternium: lanza su pico de cristal lila como un bumerán y lo recoge.' },
+    eminer: { name: 'Minery Eterniumed Pyce', w: 28, h: 30, tier: 4, unlock: 'w1', desc: 'Lanza dos picos de eternium a la vez, uno hacia delante y otro hacia atrás. Vuelven como bumeranes y no lanza más hasta recoger los dos.' },
     banbuilder: { name: 'Banned Builder Pyce', w: 28, h: 30, tier: 4, unlock: 'w1', desc: 'Lanza un banhammer cada cierto tiempo (uno a la vez) que te elimina de un golpe. Deja minas que explotan al tocarlas.' },
     venerana: { name: 'Poisoranha Pyce', w: 34, h: 32, tier: 4, unlock: 'w2', desc: 'Pyceranha venenosa: no se mueve y te lanza veneno en arco (poco alcance). El veneno deja un charco que daña unos segundos. La luz lo elimina.' },
     bloodpire: { name: 'Bloodpire Pyce', w: 32, h: 32, tier: 4, unlock: 'w2', desc: 'Quieto genera Bat Pyces. Al acercarte se vuelve Bloat Pyce y suelta otros dos Bloat Pyces para confundirte. La luz lo elimina.' },
@@ -196,7 +196,7 @@
     explosion: { w: 96, h: 96, anchor: 'center' }, sprayfog: { w: 200, h: 140, anchor: 'center' }, meteor: { w: 30, h: 30, anchor: 'center' },
     lightning: { w: 14, h: 32 }, donutfall: { w: 32, h: 32 }, bonepile: { w: 28, h: 14 },
     // peligros de los desbloqueables: mina del Banned Builder, charco de veneno de Veneraña, espora de Fungus
-    banmine: { w: 20, h: 12 }, poisonpool: { w: 46, h: 10 }, spore: { w: 12, h: 12 }
+    banmine: { w: 18, h: 18 }, poisonpool: { w: 46, h: 10 }, spore: { w: 12, h: 12 }
   };
   // Cápsulas para cambiar de personaje (una por Glob)
   S.Model.Characters.list.forEach((c) => {

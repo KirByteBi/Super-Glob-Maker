@@ -318,11 +318,21 @@
     ctx.restore();
   };
   // Mina del Banned Builder: parpadea en rojo mientras se arma; luego luz fija
+  // Mina del Banned Builder: cuadrado negro con una estrella roja de 4 puntas en el centro y
+  // una estrella negra de 4 puntas en cada esquina. Mientras se arma, la estrella roja parpadea.
   D.banmine = (ctx, e, t) => {
-    const cx = e.cx(), by = e.y + e.h;
-    ctx.beginPath(); ctx.ellipse(cx, by - 4, 9, 5, 0, Math.PI, 0); ctx.lineTo(cx + 9, by); ctx.lineTo(cx - 9, by); ctx.closePath(); fillStroke(ctx, '#2a2a33', 2);
+    const cx = e.cx(), cy = e.cy(), hs = Math.min(e.w, e.h) / 2 - 2;
+    ctx.save(); ctx.lineJoin = 'round';
+    // estrellas negras en las esquinas (asoman por fuera del cuadrado)
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy]) => {
+      star(ctx, cx + sx * hs, cy + sy * hs, 5.5, 1.8, 4, 0); ctx.fillStyle = '#0d0d0d'; ctx.fill();
+    });
+    // cuerpo cuadrado negro
+    rr(ctx, cx - hs, cy - hs, hs * 2, hs * 2, 2); fillStroke(ctx, '#1b1b22', 2);
+    // estrella roja central (parpadea mientras se arma)
     const on = e.armT > 0 ? Math.floor(t * 10) % 2 === 0 : true;
-    ctx.fillStyle = on ? '#ff3b3b' : '#5a1a1a'; ctx.beginPath(); ctx.arc(cx, by - 7, 2.6, 0, 7); ctx.fill();
+    star(ctx, cx, cy, hs * 0.85, hs * 0.28, 4, 0); ctx.fillStyle = on ? '#ff2a3a' : '#5a1218'; ctx.fill();
+    ctx.restore();
   };
   // Charco de veneno de Veneraña: se encoge y se desvanece al final
   D.poisonpool = (ctx, e, t) => {

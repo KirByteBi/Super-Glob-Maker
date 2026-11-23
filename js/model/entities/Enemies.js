@@ -637,18 +637,23 @@
     e.active = true; g.spawn(e); return e;
   };
 
-  // Minery Eterniumed Pyce: el Miner más afectado por el eternium. Lanza un poco más seguido.
+  // Minery Eterniumed Pyce: el Miner convertido en eternium. Lanza DOS picos a la vez, uno
+  // hacia delante y otro hacia atrás (los dos vuelven como bumerán). No lanza más hasta
+  // recoger ambos. Misma espera que el Miner original para que no sea agobiante.
   class EMiner extends Miner {
-    constructor(tx, ty) { super(tx, ty); this.type = 'eminer'; }
+    constructor(tx, ty) { super(tx, ty); this.type = 'eminer'; this.picks = []; }
     think(g, dt) {
       this.pace(g, dt);
-      if (this.pick && (this.pick.remove || this.pick.dying)) this.pick = null;
-      if (this.pick) return;
+      this.picks = this.picks.filter((b) => b && !b.remove && !b.dying);
+      if (this.picks.length) return;
       this.throwT -= dt * g.enemySpeedMul;
       if (this.throwT > 0 || !near(this, g.player, 11 * T)) return;
-      this.throwT = U.rand(0.9, 1.5);
-      this.pick = this.shoot(g, 'pickaxe', this.dir * 330, 0, { tiles: false, w: 22, h: 22, life: 5, owner: this, boomer: this.dir, homeY: this.y + this.h * 0.35, lilac: true });
+      this.throwT = U.rand(1.2, 2);
+      [this.dir, -this.dir].forEach((d) => {
+        this.picks.push(this.shoot(g, 'pickaxe', d * 330, 0, { tiles: false, w: 22, h: 22, life: 5, owner: this, boomer: d, homeY: this.y + this.h * 0.35, lilac: true }));
+      });
     }
+    died(g) { this.picks.forEach((b) => { if (b) b.owner = null; }); super.died(g); }
   }
 
   // Banned Builder Pyce: un banhammer a la vez (letal, pero lento y con aviso) y minas (máx. 2).
