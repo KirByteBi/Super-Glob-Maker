@@ -120,7 +120,7 @@
     // Los niveles que ya los usen se juegan siempre (el bloqueo solo afecta a la paleta).
     eminer: { name: 'Minery Eterniumed Pyce', w: 28, h: 30, tier: 4, unlock: 'w1', desc: 'Minero mucho más afectado por el eternium: lanza su pico de cristal lila como un bumerán y lo recoge.' },
     banbuilder: { name: 'Banned Builder Pyce', w: 28, h: 30, tier: 4, unlock: 'w1', desc: 'Lanza un banhammer cada cierto tiempo (uno a la vez) que te elimina de un golpe. Deja minas que explotan al tocarlas.' },
-    venerana: { name: 'Veneraña Pyce', w: 34, h: 32, tier: 4, unlock: 'w2', desc: 'Pyceranha venenosa: no se mueve y te lanza veneno en arco (poco alcance). El veneno deja un charco que daña unos segundos. La luz lo elimina.' },
+    venerana: { name: 'Poisoranha Pyce', w: 34, h: 32, tier: 4, unlock: 'w2', desc: 'Pyceranha venenosa: no se mueve y te lanza veneno en arco (poco alcance). El veneno deja un charco que daña unos segundos. La luz lo elimina.' },
     bloodpire: { name: 'Bloodpire Pyce', w: 32, h: 32, tier: 4, unlock: 'w2', desc: 'Quieto genera Bat Pyces. Al acercarte se vuelve Bloat Pyce y suelta otros dos Bloat Pyces para confundirte. La luz lo elimina.' },
     bloat: { name: 'Bloat Pyce', w: 34, h: 22, anchor: 'center', tier: 3, unlock: 'w2', desc: 'Murciélago de Bloodpire: te persigue volando haciendo eses. La luz lo elimina.' },
     fungus: { name: 'Fungus Pyce', w: 30, h: 30, tier: 4, unlock: 'w2', desc: 'Seta que se estira y SIGUE andando. Deja esporas: cada 3 sale un Mushroom Pyce (máximo 4 a la vez). La luz lo elimina.' },
@@ -275,13 +275,13 @@
     symbol: 'Un símbolo antiguo de las pirámides que cobró vida. Nadie sabe si es un Pyce ancestral o un prototipo diseñado antes de que existieran los Pyces modernos.',
     dreamyspyce: 'La versión cristalizada de Symbol Pyce. Sus sueños tienen suficiente fuerza para invocar símbolos menores a su alrededor.',
     miner: 'Un minero Pyce que quedó envuelto en eternium, la gema de la eternidad. No es un cristalizado: el mineral amplifica su resistencia y vincula su pico a sus manos.',
-    eminer: 'El mismo minero, pero el eternium ya le ha calado hasta los circuitos. Recuperado de un juego anterior de la saga.',
-    banbuilder: 'Un Builder Pyce expulsado de la obra. Desde entonces reparte baneos con su martillo. Recuperado de un juego anterior de la saga.',
-    venerana: 'La prima lila de Pyceranha: su planta de cabeza amarilla escupe veneno en vez de fuego. Recuperado de un juego anterior de la saga.',
-    bloodpire: 'Un Vampire Pyce más antiguo y vistoso. Sus Bloat Pyces lo protegen mientras caza. Recuperado de un juego anterior de la saga.',
-    bloat: 'La forma alada de Bloodpire y de sus escoltas. Recuperado de un juego anterior de la saga.',
-    inkedsquid: 'Un Squid Pyce empapado en su propia tinta. La usa para moverse, saltar y esconderse. Recuperado de un juego anterior de la saga.',
-    fungus: 'Seta de cabeza azul y bigote celeste que siembra esporas de Mushroom Pyce por donde pasa. Recuperado de un juego anterior de la saga.'
+    eminer: 'Un minero que tuvo el infortunio de acabar convertido por completo en eternium, la gran gema de la eternidad. A cambio, ahora posee unos poderes enormes.',
+    banbuilder: 'El constructor ya no es el que era: ahora es un desterrado mejorado que no tiene piedad con nadie. Viene de un lugar conocido como Bitlands.',
+    venerana: 'Cuando una piraña absorbe una gran cantidad de veneno se transforma en esto, para desgracia del Pyce que vive sometido a su influencia. Proviene de Glob Defenders.',
+    bloodpire: 'Un vampiro mucho más sangriento, que recuerda un pasado desolador e interminable... Pero no está dispuesto a dejarse iluminar tan fácilmente. Proviene de un planeta olvidado llamado Techspawn.',
+    bloat: 'Secuaces del renovado Bloodpire Pyce. Son de temer por su naturaleza más agresiva, quizá por su sed de sangre. Su coloración la heredaron de Techspawn.',
+    inkedsquid: 'Parece que la tinta puede enfadar incluso a los mayores Pyshes del océano... Tú no te acerques, o lo pagarás caro.',
+    fungus: 'Las alucinaciones de la raza de setas del bosque le han dado a este Pyce la capacidad de sembrar el caos allá donde va.'
   };
 
   // Desbloqueables: ¿ya se puede usar este tipo en el editor? (superar el mundo de su 'unlock')

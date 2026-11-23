@@ -81,7 +81,9 @@ function NewRule($h) { $r = New-Object Rule; foreach ($k in $h.Keys) { $r.$k = $
   (NewRule @{ newH=250; sSet=0.5; vMul=0.38 })
 ))
 # Veneraña: cabeza azul -> amarilla; verdes oscuros (cuerpo/teclado) -> lila; las lianas verdes claras se quedan
-[Recolor]::Run("$P\Pyceranha.png", "$W2\Venerana Pyce.png", @(
+[Recolor]::Run("$P\Pyceranha.png", "$W2\Poisoranha Pyce.png", @(
+  # pantalla verde oscuro -> marrón tierra (es muy oscura: necesita regla 'dark'; el contorno gris puro no entra)
+  (NewRule @{ dark=1; x0=370; x1=725; y0=400; y1=675; hMin=100; hMax=190; sMin=0.25; vMax=0.3; newH=28; sSet=0.62; vMul=2.1 }),
   (NewRule @{ hMin=200; hMax=235; sMin=0.45; newH=48; sSet=0.85; vSet=1.0 }),
   (NewRule @{ hMin=85; hMax=175; vMax=0.62; newH=275; sMul=0.9 }),
   (NewRule @{ hMin=85; hMax=175; sMax=0.35; newH=275 })

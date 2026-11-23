@@ -62,7 +62,7 @@
     banbuilder: { src: 'Enemigos/Desbloqueables/W1/Banned Builder Pyce.png', fallback: 'builder', tint: 'hue-rotate(320deg) saturate(1.5) brightness(0.85)' },
     inkedsquid: { src: 'Enemigos/Desbloqueables/W1/Inked Squid Pyce.png', fallback: 'squid', tint: 'brightness(0.5) saturate(1.3) contrast(1.2)' },
     // W2 (superar el Mundo 2)
-    venerana: { src: 'Enemigos/Desbloqueables/W2/Venerana Pyce.png', fallback: 'piranha', tint: 'hue-rotate(195deg) saturate(1.3)' },
+    venerana: { src: 'Enemigos/Desbloqueables/W2/Poisoranha Pyce.png', fallback: 'piranha', tint: 'hue-rotate(195deg) saturate(1.3)' },
     bloodpire: { src: 'Enemigos/Desbloqueables/W2/Bloodpire Pyce.png', fallback: 'vampire', tint: 'hue-rotate(-25deg) saturate(1.8) brightness(1.1)' },
     bloat: { src: 'Enemigos/Desbloqueables/W2/Bloat Pyce.png', fallback: 'bat', tint: 'hue-rotate(-35deg) saturate(1.8)' },
     fungus: { src: 'Enemigos/Desbloqueables/W2/Fungus Pyce.png', fallback: 'mushroom', tint: 'hue-rotate(-60deg) saturate(1.3)' }
